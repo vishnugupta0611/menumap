@@ -1,0 +1,71 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import MaterialIcon from "@/components/stitch/MaterialIcon";
+import { useAuth } from "@/contexts/AuthContext";
+
+export default function RestaurantHeader({ restaurant }) {
+  const { user } = useAuth();
+  const pathname = usePathname();
+  const isMenuPage = pathname?.endsWith("/menu");
+  return (
+    <nav className="fixed top-0 left-0 w-full z-[60] bg-white/90 backdrop-blur-md flex justify-between items-center px-margin-mobile py-3.5 border-b border-surface-container max-w-7xl mx-auto">
+      <Link href={`/${restaurant.city}/${restaurant.slug}`} className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 mr-2">
+        <div className="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden shrink-0">
+          {restaurant.logoImage ? (
+            <img src={restaurant.logoImage} alt={restaurant.name} className="w-full h-full object-cover" />
+          ) : (
+            <MaterialIcon name="restaurant_menu" className="text-primary text-[18px]" />
+          )}
+        </div>
+        <span className="font-display-lg-mobile text-[19px] leading-tight text-on-surface font-bold truncate">
+          {restaurant.name}
+        </span>
+      </Link>
+      <div className="flex items-center gap-1 md:gap-3 shrink-0">
+        {/* Navigation Links */}
+        <div className="flex items-center">
+          {isMenuPage ? (
+            <Link href={`/${restaurant.city}/${restaurant.slug}`} className="px-2.5 py-1.5 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-variant transition-colors whitespace-nowrap">
+              Home
+            </Link>
+          ) : (
+            <Link href={`/${restaurant.city}/${restaurant.slug}/menu`} className="px-2.5 py-1.5 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-variant transition-colors whitespace-nowrap">
+              Menu
+            </Link>
+          )}
+        </div>
+
+        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-variant/60 transition-colors text-on-surface-variant">
+          <MaterialIcon name="shopping_cart" className="text-[20px]" />
+        </button>
+        {user ? (
+          <Link
+            href="/customer/profile"
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors font-bold overflow-hidden"
+            title="My Profile"
+          >
+            {user.photo ? (
+              <img src={user.photo} alt={user.name} className="w-full h-full object-cover" />
+            ) : (
+              <img
+                className="w-full h-full object-cover"
+                alt={user.name}
+                src="https://media1.tenor.com/m/b52O7R4-l1IAAAAC/milk-and-mocha-bear.gif"
+              />
+            )}
+          </Link>
+        ) : (
+          <Link
+            href="/login"
+            className="px-3 h-9 flex items-center justify-center gap-1.5 rounded-full border border-outline-variant shadow-sm text-on-surface hover:bg-surface-variant transition-colors font-bold"
+          >
+            <MaterialIcon name="login" className="text-[16px]" />
+            <span className="text-sm">Login</span>
+          </Link>
+        )}
+      </div>
+    </nav>
+  );
+}

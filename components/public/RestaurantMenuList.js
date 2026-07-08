@@ -1,0 +1,297 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import MaterialIcon from "@/components/stitch/MaterialIcon";
+import { useCartStore } from "@/stores/cart-store";
+
+export default function RestaurantMenuList({ restaurant, menu }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [foodFilter, setFoodFilter] = useState("all"); // "all" | "veg" | "non-veg"
+  const [activeCategory, setActiveCategory] = useState("");
+
+  const { cart, addItem, removeItem, getTotalAmount, getTotalItems } = useCartStore();
+
+  const categories = [...new Set(menu.map((item) => item.category))];
+  const settings = restaurant.menuUiSettings || {
+    colorPalette: "clay",
+    font: "jakarta",
+    layout: "bento",
+    showBanner: true,
+    showDescription: true,
+    showBadges: true,
+    showImage: true,
+  };
+
+  // Filtering logic
+  const filteredMenu = menu.filter((item) => {
+    const matchesSearch =
+      !searchQuery ||
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesFoodType =
+      foodFilter === "all" ||
+      (foodFilter === "veg" && item.veg) ||
+      (foodFilter === "non-veg" && !item.veg);
+
+    return matchesSearch && matchesFoodType;
+  });
+
+  const getQuantity = (itemId) => {
+    const cartItem = cart.find(i => i.menuItemId === itemId);
+    return cartItem ? cartItem.quantity : 0;
+  };
+
+  return (
+    <div className="custom-scrollbar menu-gradient-bg pb-28">
+      <main className="pt-4 md:pt-8 px-5 md:px-8 max-w-3xl mx-auto">
+        {settings.showBanner && restaurant.heroImage && (
+          <section className="mb-8 md:mb-10 rounded-[32px] overflow-hidden h-56 md:h-72 shadow-[0_8px_30px_rgba(0,0,0,0.06)] relative group">
+             <img src={restaurant.heroImage} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+          </section>
+        )}
+
+        {/* Search and Filter Section */}
+        <section className="mt-8 md:mt-12 mb-6 space-y-4">
+          <div className="relative group">
+            <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">
+              search
+            </span>
+            <input
+              className="w-full pl-14 pr-5 py-4 md:py-5 bg-white/80 backdrop-blur-md border border-outline-variant/30 rounded-[28px] shadow-[0_8px_24px_rgba(0,0,0,0.03)] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/50 font-body-md text-[16px]"
+              placeholder="Search for flavors..."
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          {settings.showTabs !== false && (
+            <div className="flex items-center justify-between p-1.5 bg-surface-container-low rounded-[24px] border border-surface-container-highest/30 shadow-inner">
+              <button
+              onClick={() => setFoodFilter("all")}
+              className={`flex-1 py-2.5 px-4 rounded-[20px] text-[13px] font-bold tracking-wide transition-all duration-300 cursor-pointer ${
+                foodFilter === "all"
+                  ? "bg-white text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                  : "text-on-surface-variant hover:bg-surface-variant/50"
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFoodFilter("veg")}
+              className={`flex-1 py-2.5 px-4 rounded-[20px] text-[13px] font-bold tracking-wide transition-all duration-300 cursor-pointer ${
+                foodFilter === "veg"
+                  ? "bg-white text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                  : "text-on-surface-variant hover:bg-surface-variant/50"
+              }`}
+            >
+              Veg
+            </button>
+            <button
+              onClick={() => setFoodFilter("non-veg")}
+              className={`flex-1 py-2.5 px-4 rounded-[20px] text-[13px] font-bold tracking-wide transition-all duration-300 cursor-pointer ${
+                foodFilter === "non-veg"
+                  ? "bg-white text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                  : "text-on-surface-variant hover:bg-surface-variant/50"
+              }`}
+            >
+              Non-Veg
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* Category Chips Scroll */}
+        <nav className="overflow-x-auto no-scrollbar flex gap-3 sticky top-[72px] md:top-[90px] py-4 z-30 bg-background/85 backdrop-blur-xl border-b border-surface-container-highest/20 -mx-5 px-5 md:-mx-8 md:px-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+          <button
+            onClick={() => setActiveCategory("")}
+            className={`px-6 py-2.5 rounded-full text-[13px] whitespace-nowrap transition-all duration-300 cursor-pointer ${
+              activeCategory === "" ? "bg-primary/10 text-primary font-bold" : "bg-surface-container-high text-on-surface-variant font-medium"
+            }`}
+          >
+            All Items
+          </button>
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setActiveCategory(category)}
+              className={`px-6 py-2.5 rounded-full text-[13px] whitespace-nowrap transition-all duration-300 cursor-pointer ${
+                activeCategory === category ? "bg-primary/10 text-primary font-bold" : "bg-surface-container-high text-on-surface-variant font-medium"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </nav>
+
+        {/* Menu Sections */}
+        {categories
+          .filter((cat) => !activeCategory || cat === activeCategory)
+          .map((cat) => {
+            const categoryItems = filteredMenu.filter((item) => item.category === cat);
+            if (categoryItems.length === 0) return null;
+
+            return (
+              <section key={cat} className="mb-12 mt-8 md:mt-10">
+                <div className="flex items-center gap-4 mb-6 md:mb-8">
+                  <h2 className="font-headline-md text-2xl md:text-3xl tracking-tight text-on-surface font-extrabold">{cat}</h2>
+                  <div className="h-[1px] flex-grow bg-gradient-to-r from-surface-container-highest/80 to-transparent"></div>
+                </div>
+                <div className={
+                  settings.layout === "list" ? "space-y-4" :
+                  settings.layout === "grid" ? "grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5" :
+                  settings.layout === "simple-list" ? "space-y-3" :
+                  "space-y-5 md:space-y-6" // bento
+                }>
+                  {categoryItems.map((item, index) => (
+                    <div
+                      key={item.id}
+                      className={`group overflow-hidden ${
+                        settings.layout === "list" ? "bg-white flex items-center justify-between gap-4 p-4 md:p-5 rounded-[24px] border border-surface-container-highest/30 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-shadow duration-300" :
+                        settings.layout === "grid" ? "bg-white rounded-[24px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all flex flex-col border border-surface-container-highest/20" :
+                        settings.layout === "simple-list" ? "flex items-center justify-between py-3 md:py-4 bg-transparent border-none rounded-none gap-3" :
+                        "bg-white p-5 md:p-6 rounded-[28px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-shadow duration-300 border border-surface-container-highest/30 flex items-start justify-between gap-5 md:gap-6"
+                      }`}
+                      onClick={() => {
+                        // Allow clicking anywhere on simple-list to add if desired, or let it just be decorative
+                        if (settings.layout === "simple-list" && getQuantity(item.id) === 0) addItem(item);
+                      }}
+                    >
+                      <div className={`flex-1 ${settings.layout === "grid" ? "p-4 order-2" : "order-1 flex flex-col h-full"} ${settings.layout === "simple-list" ? "min-w-0" : ""}`}>
+                        <div className={`flex items-center gap-2 ${settings.layout === "grid" ? "mb-1.5" : "mb-2"} ${settings.layout === "simple-list" ? "mb-0 truncate" : ""}`}>
+                          {settings.showBadges && (
+                            <span
+                              className={`material-symbols-outlined ${settings.layout === "grid" ? "text-[14px]" : "text-[18px]"} ${settings.layout === "simple-list" ? "text-[14px] shrink-0" : ""} fill ${
+                                item.veg ? "text-green-600" : "text-error"
+                              }`}
+                            >
+                              fiber_manual_record
+                            </span>
+                          )}
+                          <h3 className={`text-on-surface tracking-tight ${settings.layout === "grid" ? "font-bold text-[15px] md:text-[17px] line-clamp-1" : settings.layout === "simple-list" ? "font-medium text-sm md:text-base truncate" : "font-bold text-lg md:text-xl line-clamp-2"}`}>
+                            {item.name}
+                          </h3>
+                        </div>
+                        {settings.showDescription && settings.layout !== "grid" && settings.layout !== "simple-list" && (
+                          <p className={`text-on-surface-variant/80 line-clamp-2 leading-relaxed ${settings.layout === "list" ? "text-xs md:text-sm mb-2" : "text-sm md:text-[15px] mb-3 md:mb-4"}`}>
+                            {item.description}
+                          </p>
+                        )}
+                        {settings.layout !== "simple-list" && (
+                          <div className={`flex items-center justify-between mt-auto ${settings.layout === "grid" ? "pt-2" : ""}`}>
+                          <span className={`text-primary font-bold ${settings.layout === "grid" || settings.layout === "list" ? "text-[15px] md:text-[17px]" : "text-lg md:text-xl"}`}>Rs {item.price}</span>
+                          
+                          {/* Layout specific quick-add button for grid/list (optional styling tweak) */}
+                          {(settings.layout === "grid" || settings.layout === "list") && (
+                            <div className="bg-surface-container-low border border-surface-container-highest/50 rounded-xl px-1 py-1 w-24 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                              {getQuantity(item.id) > 0 ? (
+                                <>
+                                  <button onClick={(e) => { e.stopPropagation(); removeItem(item.id); }} className="w-7 h-7 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">-</button>
+                                  <span className="font-bold text-sm text-primary">{getQuantity(item.id)}</span>
+                                  <button onClick={(e) => { e.stopPropagation(); addItem(item); }} className="w-7 h-7 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">+</button>
+                                </>
+                              ) : (
+                                <button onClick={(e) => { e.stopPropagation(); addItem(item); }} className="w-full py-1.5 text-primary font-bold text-xs text-center uppercase tracking-wider active:scale-95 cursor-pointer transition-transform">ADD</button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        )}
+                      </div>
+
+                      {settings.layout === "simple-list" && (
+                        <div className="flex items-center gap-3 shrink-0 ml-2 order-2">
+                          <span className="font-bold text-primary text-[14px] md:text-[15px]">₹{item.price}</span>
+                          {getQuantity(item.id) > 0 ? (
+                            <div className="bg-surface-container-low border border-surface-container-highest/50 rounded-lg px-1 py-1 w-20 flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
+                              <button onClick={() => removeItem(item.id)} className="w-6 h-6 flex items-center justify-center text-primary bg-primary-container rounded-md font-bold">-</button>
+                              <span className="font-bold text-xs text-primary">{getQuantity(item.id)}</span>
+                              <button onClick={() => addItem(item)} className="w-6 h-6 flex items-center justify-center text-primary bg-primary-container rounded-md font-bold">+</button>
+                            </div>
+                          ) : (
+                            <button onClick={(e) => { e.stopPropagation(); addItem(item); }} className="bg-primary/10 text-primary px-4 md:px-5 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider border border-primary/20 active:scale-95 transition-transform">ADD</button>
+                          )}
+                        </div>
+                      )}
+
+                      {settings.showImage && settings.layout !== "simple-list" && (
+                        <div className={`flex flex-col items-center gap-3 ${
+                          settings.layout === "grid" ? "order-1 w-full" : "order-2"
+                        }`}>
+                          <div className={`overflow-hidden flex-shrink-0 shadow-[inset_0_2px_8px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-transform duration-700 bg-surface-container-low ${
+                            settings.layout === "list" ? "w-24 h-24 md:w-28 md:h-28 rounded-2xl md:rounded-[20px]" :
+                            settings.layout === "grid" ? "w-full h-36 md:h-44" :
+                            settings.layout === "simple-list" ? "w-20 h-20 md:w-24 md:h-24 rounded-[16px]" :
+                            "w-28 h-28 md:w-36 md:h-36 rounded-2xl md:rounded-[24px]"
+                          }`}>
+                            {item.image ? (
+                              <img alt={item.name} className="w-full h-full object-cover" src={item.image} />
+                            ) : (
+                              <MaterialIcon name="restaurant" className="text-on-surface-variant/30 text-4xl h-full flex items-center justify-center" />
+                            )}
+                          </div>
+                          
+                          {/* Add to Cart Control for Bento Layout */}
+                          {settings.layout === "bento" && (
+                            <div className="bg-surface-container-low border border-surface-container-highest/50 rounded-xl md:rounded-2xl px-1.5 py-1.5 w-full flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                              {getQuantity(item.id) > 0 ? (
+                                <>
+                                  <button onClick={() => removeItem(item.id)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">-</button>
+                                  <span className="font-bold text-sm md:text-[15px] text-primary">{getQuantity(item.id)}</span>
+                                  <button onClick={() => addItem(item)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">+</button>
+                                </>
+                              ) : (
+                                <button onClick={() => addItem(item)} className="w-full py-1.5 text-primary font-bold text-[13px] md:text-sm text-center uppercase tracking-wider active:scale-95 cursor-pointer transition-transform">ADD</button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Edge case: When showImage is false, Bento layout still needs its ADD button below the content instead of underneath a non-existent image */}
+                      {!settings.showImage && settings.layout === "bento" && (
+                        <div className="flex flex-col justify-end w-32 shrink-0 order-3">
+                          <div className="bg-surface-container-low border border-surface-container-highest/50 rounded-xl md:rounded-2xl px-1.5 py-1.5 w-full flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                            {getQuantity(item.id) > 0 ? (
+                              <>
+                                <button onClick={() => removeItem(item.id)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">-</button>
+                                <span className="font-bold text-sm md:text-[15px] text-primary">{getQuantity(item.id)}</span>
+                                <button onClick={() => addItem(item)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">+</button>
+                              </>
+                            ) : (
+                              <button onClick={() => addItem(item)} className="w-full py-1.5 text-primary font-bold text-[13px] md:text-sm text-center uppercase tracking-wider active:scale-95 cursor-pointer transition-transform">ADD</button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+      </main>
+
+      {/* Floating Order Summary */}
+      {getTotalItems() > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-50 transform transition-transform duration-500 translate-y-0 animate-reveal">
+          <div className="bg-on-surface text-white p-4 rounded-3xl flex justify-between items-center shadow-2xl backdrop-blur-xl border border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center font-bold">{getTotalItems()}</div>
+              <div>
+                <p className="text-label-sm font-label-sm opacity-70 uppercase tracking-tighter">Items in cart</p>
+                <p className="font-headline-md-mobile text-[16px]">Rs {getTotalAmount()}</p>
+              </div>
+            </div>
+            <Link href={`/${restaurant.city}/${restaurant.slug}/cart`} className="bg-white text-on-surface px-6 py-2.5 rounded-2xl font-bold text-label-sm flex items-center gap-2 active:scale-95 transition-transform cursor-pointer">
+              View Cart
+              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

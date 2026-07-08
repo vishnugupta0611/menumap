@@ -1,0 +1,54 @@
+import Link from "next/link";
+import { MdDragIndicator, MdEdit, MdAddCircle } from "react-icons/md";
+
+export default function CategorySection({ title, itemCount, children, showHeader = true }) {
+  if (!showHeader) {
+    return <section className="mb-xl animate-fade-in">{children}</section>;
+  }
+
+  return (
+    <section className="mb-xl animate-fade-in">
+      <div className="flex justify-between items-end mb-sm">
+        <div>
+          <h2 className="font-headline-md text-on-surface">{title}</h2>
+          <p className="text-on-surface-variant text-label-sm uppercase tracking-tighter">
+            {itemCount} Active Items
+          </p>
+        </div>
+        <Link href="#" className="text-primary font-bold text-body-md hover:underline">
+          See All
+        </Link>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+export function CategorySectionWithEdit({ title, itemCount, children }) {
+  return (
+    <section className="group mb-10">
+      <div className="flex items-center justify-between mb-4 border-b border-outline-variant pb-2">
+        <div className="flex items-center gap-3">
+          <MdDragIndicator className="cursor-grab text-on-surface-variant" />
+          <h2 className="font-headline-md text-headline-md text-on-surface">{title}</h2>
+          <span className="bg-primary-container/10 text-primary px-3 py-0.5 rounded-full text-label-sm font-label-sm">
+            {itemCount} Items
+          </span>
+        </div>
+        <button className="text-on-surface-variant hover:text-primary transition-colors">
+          <MdEdit />
+        </button>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+export function AddNewItemCard({ label = "New Item" }) {
+  return (
+    <div className="min-w-[120px] snap-start flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/40 rounded-2xl hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer h-full min-h-[200px]">
+      <MdAddCircle className="text-outline text-4xl" />
+      <span className="font-label-sm text-outline mt-2">{label}</span>
+    </div>
+  );
+}
