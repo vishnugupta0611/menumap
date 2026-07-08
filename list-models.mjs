@@ -9,7 +9,8 @@ async function listModels() {
     // let's just fetch it via standard fetch using the key
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
     const data = await response.json();
-    console.log(data.models.map(m => m.name).join("\n"));
+    console.log("Raw response:", data);
+    console.log(data.models?.map(m => m.name).join("\n"));
   } catch (error) {
     console.error("Error fetching models", error);
   }

@@ -14,7 +14,7 @@ export default async function RestaurantPage({ params }) {
   const { city, restaurant: slug } = await params;
   const restaurant = await findRestaurant(city, slug);
   const menu = await findRestaurantMenu(city, slug);
-  const reviews = await listReviews();
+  const reviews = await listReviews(city, slug);
 
   return <RestaurantProfile restaurant={restaurant} menu={menu} reviews={reviews} />;
 }
