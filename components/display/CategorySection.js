@@ -44,9 +44,11 @@ export function CategorySectionWithEdit({ title, itemCount, children }) {
   );
 }
 
-export function AddNewItemCard({ label = "New Item" }) {
+import { cn } from "@/lib/utils";
+
+export function AddNewItemCard({ label = "New Item", className }) {
   return (
-    <div className="min-w-[120px] snap-start flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/40 rounded-2xl hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer h-full min-h-[200px]">
+    <div className={cn("snap-start flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/40 rounded-2xl hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer h-full min-h-[200px] w-full min-w-0", className)}>
       <MdAddCircle className="text-outline text-4xl" />
       <span className="font-label-sm text-outline mt-2">{label}</span>
     </div>

@@ -14,10 +14,11 @@ export default function ProfilePage() {
   const { city, restaurant: slug } = params;
   const { customerInfo } = useCartStore();
   const { user } = useAuth();
+  const isOwner = user?.role === "owner";
   
-  const displayEmail = user?.email || customerInfo?.email;
-  const displayName = user?.name || customerInfo?.name;
-  const displayPhoto = user?.photo;
+  const displayEmail = isOwner ? "" : user?.email || customerInfo?.email;
+  const displayName = isOwner ? "" : user?.name || customerInfo?.name;
+  const displayPhoto = isOwner ? "" : user?.photo;
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +51,21 @@ export default function ProfilePage() {
       setLoading(false);
     }
   }, [displayEmail]);
+
+  if (isOwner) {
+    return (
+      <div className="bg-background min-h-screen text-on-background flex flex-col items-center justify-center p-6 text-center">
+        <MaterialIcon name="admin_panel_settings" className="text-6xl text-primary mb-4" />
+        <h1 className="font-headline-md text-headline-md mb-2">Owner preview mode</h1>
+        <p className="text-on-surface-variant mb-6 max-w-md">
+          Restaurant account customer order history ke liye use nahi hota. Orders manage karne ke liye admin panel kholein.
+        </p>
+        <Link href="/admin/orders" className="bg-primary text-on-primary px-6 py-3 rounded-full font-bold">
+          Go to Orders
+        </Link>
+      </div>
+    );
+  }
 
   if (!displayEmail) {
     return (

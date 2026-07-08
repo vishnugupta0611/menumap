@@ -12,14 +12,20 @@ export default function GalleryPage() {
   const [adding, setAdding] = useState(false);
 
   // Form state
-  const [url, setUrl] = useState("");
   const [alt, setAlt] = useState("");
+  const [imageBase64, setImageBase64] = useState("");
+  const [galleryStyle, setGalleryStyle] = useState("simple");
+  const [savingStyle, setSavingStyle] = useState(false);
   
   const loadGallery = async () => {
     if (!user?.restaurantId) return;
     try {
-      const res = await api.get(`/api/restaurants/id/${user.restaurantId}/gallery`);
-      setGallery(res.data.data || []);
+      const [galleryRes, restRes] = await Promise.all([
+        api.get(`/api/restaurants/id/${user.restaurantId}/gallery`),
+        api.get(`/api/restaurants/id/${user.restaurantId}`)
+      ]);
+      setGallery(galleryRes.data.data || []);
+      setGalleryStyle(restRes.data.data?.menuUiSettings?.galleryLayout || "simple");
     } catch (err) {
       console.error(err);
     } finally {
@@ -27,21 +33,57 @@ export default function GalleryPage() {
     }
   };
 
+  const updateGalleryStyle = async (newStyle) => {
+    setGalleryStyle(newStyle);
+    setSavingStyle(true);
+    try {
+      // In MongoDB, to update nested object properties partially, we can pass it, but since menuUiSettings is an object, 
+      // we need to make sure we don't overwrite other settings. 
+      // Fortunately, the backend uses Model.findByIdAndUpdate, which requires dot notation for partial updates.
+      // Wait, Mongoose handles nested objects via merging if not strict? Actually, doing full fetch/merge is safer.
+      const restRes = await api.get(`/api/restaurants/id/${user.restaurantId}`);
+      const existingSettings = restRes.data.data?.menuUiSettings || {};
+      await api.patch(`/api/restaurants/id/${user.restaurantId}`, {
+        menuUiSettings: { ...existingSettings, galleryLayout: newStyle }
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update layout");
+    } finally {
+      setSavingStyle(false);
+    }
+  };
+
   useEffect(() => {
     loadGallery();
   }, [user?.restaurantId]);
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageBase64(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!url || !alt) return;
+    if (!imageBase64) return alert("Please upload an image file.");
     setAdding(true);
     try {
-      await api.post(`/api/restaurants/id/${user.restaurantId}/gallery`, { url, alt });
-      setUrl("");
+      const { uploadImageToCloudinary } = await import("@/app/actions/upload-actions");
+      const uploadRes = await uploadImageToCloudinary(imageBase64);
+      const finalUrl = uploadRes.url;
+      const finalAlt = alt.trim() ? alt : "Gallery Image";
+      
+      await api.post(`/api/restaurants/id/${user.restaurantId}/gallery`, { url: finalUrl, alt: finalAlt });
       setAlt("");
+      setImageBase64("");
       loadGallery();
     } catch (err) {
-      alert("Failed to add image. Ensure it's a valid URL.");
+      alert("Failed to add image. Ensure it's a valid file.");
     } finally {
       setAdding(false);
     }
@@ -79,18 +121,46 @@ export default function GalleryPage() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-2">Image URL</label>
-            <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-body-md" type="url" required value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
+            <label className="block text-xs font-bold text-on-surface-variant mb-2">Upload Image File *</label>
+            <input 
+              type="file" 
+              accept="image/*" 
+              required
+              onChange={handleImageSelect}
+              className="w-full text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-container file:text-primary hover:file:bg-primary-container/80 cursor-pointer mb-2"
+            />
+            {imageBase64 && (
+              <div className="w-full h-24 rounded-lg overflow-hidden border border-outline-variant mb-4">
+                <img src={imageBase64} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
           </div>
           <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-2">Description / Alt Text</label>
-            <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-body-md" type="text" required value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="e.g. Front Entrance" />
+            <label className="block text-xs font-bold text-on-surface-variant mb-2">Description / Alt Text (Optional)</label>
+            <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-body-md" type="text" value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="e.g. Front Entrance" />
           </div>
         </div>
         <button type="submit" disabled={adding} className="px-6 h-12 rounded-xl bg-primary text-white font-bold transition-all hover:brightness-110 disabled:opacity-50">
           {adding ? "Adding..." : "Add to Gallery"}
         </button>
       </form>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-10 mb-4 gap-4">
+        <h2 className="font-bold text-lg text-on-surface">Your Photos</h2>
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-bold text-on-surface-variant shrink-0">Gallery Layout:</label>
+          <select 
+            className="h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-body-md outline-none focus:border-primary disabled:opacity-50"
+            value={galleryStyle}
+            onChange={(e) => updateGalleryStyle(e.target.value)}
+            disabled={savingStyle}
+          >
+            <option value="aesthetic">Aesthetic (Accordion - Max 5)</option>
+            <option value="decent">Decent (Grid Titles - Max 4)</option>
+            <option value="simple">Simple (Polaroids - Max 3)</option>
+          </select>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {gallery.map(img => (

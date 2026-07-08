@@ -245,3 +245,12 @@ body {
 .font-theme-inter *:not(.material-symbols-outlined) { font-family: 'Inter', sans-serif !important; }
 .font-theme-roboto *:not(.material-symbols-outlined) { font-family: 'Roboto', sans-serif !important; }
 .font-theme-outfit *:not(.material-symbols-outlined) { font-family: 'Outfit', sans-serif !important; }
+
+/* Toggle Checkbox Animations */
+.toggle-checkbox:checked {
+  right: 0;
+  border-color: var(--color-primary);
+}
+.toggle-checkbox:checked + .toggle-label {
+  background-color: var(--color-primary-container);
+}

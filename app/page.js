@@ -20,6 +20,7 @@ export default function HomePage() {
   const [recommendedDishes, setRecommendedDishes] = useState([]);
   const [loadError, setLoadError] = useState("");
   const [userLocation, setUserLocation] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const formatDistance = (distKm) => {
     if (distKm === undefined) return "Locating...";
@@ -32,6 +33,7 @@ export default function HomePage() {
   useEffect(() => {
     async function loadData(lat, lng) {
       try {
+        setLoading(true);
         const query = (lat && lng) ? `?lat=${lat}&lng=${lng}` : "";
         const restaurantsList = await listNearbyRestaurants(query ? { lat, lng } : {});
         setNearbyRestaurants(restaurantsList);
@@ -41,6 +43,8 @@ export default function HomePage() {
         setRecommendedDishes(dishes.slice(0, 4));
       } catch {
         setLoadError("Food discovery is temporarily unavailable. Please try again in a moment.");
+      } finally {
+        setLoading(false);
       }
     }
     
@@ -78,6 +82,37 @@ export default function HomePage() {
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
+  };
+
+  const openMapExplore = () => {
+    const goToNearby = (location) => {
+      const params = new URLSearchParams({ filter: "Nearby" });
+      if (searchQuery.trim()) params.set("q", searchQuery.trim());
+      if (location?.lat && location?.lng) {
+        params.set("lat", String(location.lat));
+        params.set("lng", String(location.lng));
+      }
+      router.push(`/search?${params.toString()}`);
+    };
+
+    if (userLocation) {
+      goToNearby(userLocation);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      goToNearby();
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        goToNearby({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {
+        goToNearby();
+      }
+    );
   };
 
   const categories = [
@@ -121,7 +156,7 @@ export default function HomePage() {
                   <img
                     className="w-full h-full object-cover"
                     alt={user.name}
-                    src="https://media1.tenor.com/m/b52O7R4-l1IAAAAC/milk-and-mocha-bear.gif"
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random`}
                   />
                 )}
               </Link>
@@ -198,7 +233,11 @@ export default function HomePage() {
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {trendingDishes.map((dish, index) => (
+            {loading ? (
+              Array(2).fill(0).map((_, i) => (
+                <div key={i} className={`relative rounded-3xl bg-surface-variant animate-pulse ${i === 0 ? "sm:col-span-2 h-64" : "h-48"}`}></div>
+              ))
+            ) : trendingDishes.map((dish, index) => (
               <div
                 key={dish._id || index}
                 className={`relative rounded-3xl overflow-hidden shadow-lg group cursor-pointer ${
@@ -229,12 +268,23 @@ export default function HomePage() {
         <section className="mb-12">
           <div className="flex justify-between items-end mb-6">
             <h3 className="font-headline-md text-headline-md text-on-surface">Nearby Restaurants</h3>
-            <button className="text-primary font-label-sm text-label-sm uppercase tracking-wider cursor-pointer border-none bg-transparent">
+            <button
+              onClick={openMapExplore}
+              className="text-primary font-label-sm text-label-sm uppercase tracking-wider cursor-pointer border-none bg-transparent"
+            >
               Map View
             </button>
           </div>
           <div className="flex -mx-margin-mobile overflow-x-auto hide-scrollbar gap-6 px-margin-mobile">
-            {nearbyRestaurants.map((restaurant) => (
+            {loading ? (
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-72">
+                  <div className="h-44 w-full rounded-2xl bg-surface-variant animate-pulse mb-3"></div>
+                  <div className="h-5 w-3/4 bg-surface-variant animate-pulse rounded mb-2"></div>
+                  <div className="h-4 w-1/2 bg-surface-variant animate-pulse rounded"></div>
+                </div>
+              ))
+            ) : nearbyRestaurants.map((restaurant) => (
               <Link
                 key={restaurant._id}
                 href={`/${restaurant.city}/${restaurant.slug}`}
@@ -267,7 +317,20 @@ export default function HomePage() {
         <section className="mb-12">
           <h3 className="font-headline-md text-headline-md text-on-surface mb-6">Recommended</h3>
           <div className="space-y-6">
-            {recommendedDishes.map((dish) => (
+            {loading ? (
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="flex gap-4 p-4 rounded-3xl bg-white shadow-sm border border-surface-variant/30">
+                  <div className="w-24 h-24 rounded-2xl bg-surface-variant animate-pulse flex-shrink-0"></div>
+                  <div className="flex flex-col justify-between py-1 flex-1">
+                    <div>
+                      <div className="h-5 w-3/4 bg-surface-variant animate-pulse rounded mb-2"></div>
+                      <div className="h-3 w-1/2 bg-surface-variant animate-pulse rounded"></div>
+                    </div>
+                    <div className="h-4 w-1/4 bg-surface-variant animate-pulse rounded mt-2"></div>
+                  </div>
+                </div>
+              ))
+            ) : recommendedDishes.map((dish) => (
               <div
                 key={dish._id}
                 className="flex gap-4 p-4 rounded-3xl bg-white shadow-[0px_10px_30px_rgba(0,0,0,0.02)] border border-surface-variant/30 hover:border-primary/20 transition-all"
@@ -296,7 +359,10 @@ export default function HomePage() {
       </main>
 
       {/* Floating Map Button */}
-      <button className="fixed bottom-8 right-6 z-40 bg-primary text-white flex items-center gap-2 px-6 py-3 rounded-full shadow-lg hover:shadow-primary/30 transition-all hover:scale-105 active:scale-95 group cursor-pointer border-none">
+      <button
+        onClick={openMapExplore}
+        className="fixed bottom-8 right-6 z-40 bg-primary text-white flex items-center gap-2 px-6 py-3 rounded-full shadow-lg hover:shadow-primary/30 transition-all hover:scale-105 active:scale-95 group cursor-pointer border-none"
+      >
         <MaterialIcon name="map" className="fill text-white" />
         <span className="font-label-sm text-label-sm">Explore Map</span>
       </button>

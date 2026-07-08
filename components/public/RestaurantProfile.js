@@ -3,11 +3,54 @@
 import { useState } from "react";
 import Link from "next/link";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
+import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
 
-export default function RestaurantProfile({ restaurant, menu, reviews = [] }) {
+export default function RestaurantProfile({ restaurant, menu, reviews = [], gallery = [] }) {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const famousItems = menu.filter((item) => item.popular);
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+
+  const submitReview = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert("Please login to submit a review.");
+      return;
+    }
+    if (rating < 1 || !reviewText.trim()) return;
+
+    setSubmittingReview(true);
+    try {
+      await api.post(`/api/restaurants/${restaurant.city}/${restaurant.slug}/reviews`, {
+        name: user.name || "Guest",
+        rating,
+        text: reviewText,
+      });
+      setReviewSuccess(true);
+      setReviewText("");
+      setRating(5);
+      setTimeout(() => setReviewSuccess(false), 3000);
+      window.location.reload();
+    } catch (err) {
+      alert("Failed to submit review.");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+  const menuPath = `/${restaurant.city}/${restaurant.slug}/menu`;
+  const validFacilities = (restaurant.facilities || []).filter((facility) => {
+    return typeof facility === "string" && facility.trim().length > 0;
+  });
+  const featuredItems = [...menu]
+    .filter((item) => item && item.name && item.price !== undefined)
+    .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
+    .slice(0, 5);
   const heroLayout = restaurant.menuUiSettings?.heroImageLayout || "rounded";
+  const galleryStyle = restaurant.menuUiSettings?.galleryLayout || "simple";
 
   const formatTime = (t) => {
     if (!t) return null;
@@ -27,6 +70,25 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [] }) {
     if (name.includes("drink") || name.includes("bar") || name.includes("alcohol")) return "local_bar";
     return "check_circle";
   };
+
+  const getSocialLinks = () => {
+    const links = [];
+    const addLink = (key, label, icon, tone = "text-primary") => {
+      const href = key === "website" ? restaurant.website : restaurant.socialLinks?.[key];
+      if (typeof href === "string" && href.trim()) {
+        links.push({ href: href.trim(), label, icon, tone });
+      }
+    };
+
+    addLink("website", "Website", "language");
+    addLink("instagram", "Instagram", "photo_camera", "text-pink-600");
+    addLink("facebook", "Facebook", "thumb_up", "text-blue-600");
+    addLink("x", "X", "alternate_email", "text-on-surface");
+
+    return links;
+  };
+
+  const socialLinks = getSocialLinks();
 
   return (
     <>
@@ -98,31 +160,37 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [] }) {
         </section>
       )}
 
-      {/* Search Bar (Standard) */}
+      {/* Search Bar & Actions */}
       {heroLayout !== "full-width" && (
-        <div className="px-margin-mobile mb-10 max-w-4xl mx-auto">
-        <div className="relative group">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px] group-focus-within:text-primary transition-colors">
-            search
-          </span>
-          <input
-            className="w-full pl-11 pr-4 py-3.5 bg-white border border-surface-container focus:outline-none focus:border-primary transition-colors font-body-md text-[15px] rounded-xl placeholder:text-on-surface-variant/50"
-            placeholder="Search the menu"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        <div className="px-margin-mobile mb-12 max-w-4xl mx-auto">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative group flex-1">
+              <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[22px] group-focus-within:text-primary transition-colors">
+                search
+              </span>
+              <input
+                className="w-full pl-12 pr-4 h-14 bg-surface-container-lowest border border-outline-variant/50 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-body-lg text-[16px] rounded-2xl shadow-sm placeholder:text-on-surface-variant/50"
+                placeholder="Search the menu..."
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Link
+              href={menuPath}
+              className="h-14 px-8 bg-primary text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-md shrink-0"
+            >
+              <MaterialIcon name="restaurant_menu" className="text-[20px]" />
+              Open Menu
+            </Link>
+          </div>
         </div>
       )}
 
       {/* Story / About Us */}
       {restaurant.story && (
-        <section className="px-margin-mobile mb-12 max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-6 w-1 bg-primary rounded-full" />
-            <h2 className="font-headline-md text-headline-md text-on-surface">Our story</h2>
-          </div>
+        <section className="px-margin-mobile mb-16 max-w-4xl mx-auto">
+          <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold mb-6">Our story</h2>
           <div className="bg-surface-container-lowest p-6 md:p-7 rounded-2xl border border-surface-container">
             <p className="text-on-surface-variant font-body-md leading-relaxed">
               {restaurant.story}
@@ -131,15 +199,24 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [] }) {
         </section>
       )}
 
-      {/* Most Famous Section */}
-      {famousItems.length > 0 && (
-        <section className="px-margin-mobile mb-12 max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-6 w-1 bg-primary rounded-full" />
-            <h2 className="font-headline-md text-headline-md text-on-surface">Most ordered</h2>
+      {/* Menu Preview Section */}
+      {featuredItems.length > 0 && (
+        <section className="px-margin-mobile mb-16 max-w-4xl mx-auto">
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="min-w-0">
+              <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface">Popular picks</h2>
+              <p className="text-sm text-on-surface-variant mt-1">A quick look at what this place serves</p>
+            </div>
+            <Link
+              href={menuPath}
+              className="hidden sm:flex items-center gap-1 rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary hover:bg-primary/5 transition-colors shrink-0"
+            >
+              Show more
+              <MaterialIcon name="arrow_forward" className="text-[16px]" />
+            </Link>
           </div>
-          <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2 px-1">
-            {famousItems
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:overflow-x-auto hide-scrollbar sm:pb-4 sm:px-1 sm:-mx-1">
+            {featuredItems
               .filter(
                 (item) =>
                   !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -147,30 +224,50 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [] }) {
               .map((dish) => (
                 <Link
                   key={dish.id || dish._id}
-                  href={`/${restaurant.city}/${restaurant.slug}/${dish.id || dish._id}`}
-                  className="flex-none w-48 md:w-56 bg-white rounded-2xl border border-surface-container hover:border-primary/40 transition-colors overflow-hidden block"
+                  href={menuPath}
+                  className="group relative rounded-[24px] overflow-hidden block sm:flex-none sm:w-44 md:w-52 aspect-[4/5] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                 >
-                  <div className="h-32 w-full bg-surface-container overflow-hidden">
-                    {dish.image ? (
-                      <img
-                        alt={dish.name}
-                        className="w-full h-full object-cover"
-                        src={dish.image}
+                  {/* Background Image */}
+                  {dish.image ? (
+                    <img
+                      alt={dish.name}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      src={dish.image}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-surface-variant">
+                      <MaterialIcon
+                        name="restaurant"
+                        className="text-on-surface-variant opacity-30 text-5xl"
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-surface-variant">
-                        <MaterialIcon
-                          name="restaurant"
-                          className="text-on-surface-variant opacity-40 text-3xl"
-                        />
-                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Gradient Overlay for Text Visibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                  {/* Veg/Non-veg Badge at Top Right */}
+                  {dish.veg !== undefined && (
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-1 rounded-md shadow-sm z-10">
+                      <span className={`w-3 h-3 shrink-0 rounded-sm border-[1.5px] p-[1px] flex items-center justify-center ${dish.veg ? "border-green-600" : "border-red-600"}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${dish.veg ? "bg-green-600" : "bg-red-600"}`} />
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Content at Bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 transform transition-transform duration-300 z-10">
+                    {dish.category && (
+                      <p className="text-[10px] sm:text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1 drop-shadow-md">
+                        {dish.category}
+                      </p>
                     )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-bold text-on-surface text-sm mb-1 truncate">
+                    <h3 className="font-bold text-white text-sm sm:text-base leading-tight mb-2 line-clamp-2 drop-shadow-md">
                       {dish.name}
                     </h3>
-                    <p className="text-primary font-bold text-sm">₹{dish.price}</p>
+                    <p className="text-white font-bold text-xs sm:text-sm bg-primary/90 backdrop-blur-md inline-block px-2.5 py-1 rounded-lg shadow-sm">
+                      ₹{dish.price}
+                    </p>
                   </div>
                 </Link>
               ))}
@@ -179,32 +276,33 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [] }) {
       )}
 
       {/* Contact & Info Cards */}
-      <section className="px-margin-mobile mb-12 max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="h-6 w-1 bg-primary rounded-full" />
-          <h2 className="font-headline-md text-headline-md text-on-surface">Info & contact</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-6 rounded-2xl border border-surface-container">
-            <div className="flex items-start gap-3.5 mb-4">
-              <MaterialIcon name="location_on" className="text-primary text-[20px] mt-0.5 shrink-0" />
+      <section className="px-margin-mobile mb-16 max-w-4xl mx-auto">
+        <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface mb-6">Info & contact</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col justify-center bg-surface-container-low p-8 rounded-[32px] border border-outline-variant/30">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <MaterialIcon name="location_on" className="text-primary text-2xl" />
+              </div>
               <div>
-                <p className="font-bold text-on-surface text-sm mb-1">Address</p>
-                <p className="text-on-surface-variant text-sm leading-relaxed">
+                <p className="font-bold text-on-surface mb-1 text-base">Address</p>
+                <p className="text-on-surface-variant text-sm leading-relaxed max-w-[250px]">
                   {restaurant.address || `${restaurant.name}, ${restaurant.city}`}
                 </p>
               </div>
             </div>
             {(restaurant.phone || restaurant.whatsapp) && (
-              <div className="flex items-start gap-3.5 pt-4 border-t border-surface-container">
-                <MaterialIcon name="call" className="text-primary text-[20px] mt-0.5 shrink-0" />
+              <div className="flex items-start gap-4 pt-6 border-t border-outline-variant/20">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <MaterialIcon name="call" className="text-primary text-2xl" />
+                </div>
                 <div>
-                  <p className="font-bold text-on-surface text-sm mb-1">Contact</p>
+                  <p className="font-bold text-on-surface mb-1 text-base">Contact</p>
                   {restaurant.phone && (
-                    <p className="text-on-surface-variant text-sm">{restaurant.phone}</p>
+                    <p className="text-on-surface-variant font-medium">{restaurant.phone}</p>
                   )}
                   {restaurant.whatsapp && (
-                    <p className="text-on-surface-variant text-sm mt-0.5">
+                    <p className="text-on-surface-variant font-medium mt-1">
                       WhatsApp: {restaurant.whatsapp}
                     </p>
                   )}
@@ -213,70 +311,46 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [] }) {
             )}
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-surface-container">
-            <div className="flex items-start gap-3.5 mb-4">
-              <MaterialIcon name="schedule" className="text-primary text-[20px] mt-0.5 shrink-0" />
+          <div className="flex flex-col justify-center bg-surface-container-low p-8 rounded-[32px] border border-outline-variant/30">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <MaterialIcon name="schedule" className="text-primary text-2xl" />
+              </div>
               <div>
-                <p className="font-bold text-on-surface text-sm mb-1">Hours</p>
-                <p className="text-on-surface-variant text-sm">
+                <p className="font-bold text-on-surface mb-1 text-base">Hours</p>
+                <p className="text-on-surface-variant font-medium">
                   {restaurant.timings?.open
                     ? `${formatTime(restaurant.timings.open)} - ${formatTime(restaurant.timings.close)}`
                     : "11:00 AM - 11:00 PM"}
                 </p>
                 {restaurant.holidays && restaurant.holidays.length > 0 && (
-                  <p className="text-error text-xs font-semibold mt-1">
+                  <p className="text-error text-xs font-bold mt-2 uppercase tracking-wider">
                     Closed: {restaurant.holidays.join(", ")}
                   </p>
                 )}
               </div>
             </div>
 
-            {(restaurant.website || restaurant.socialLinks) && (
-              <div className="flex items-start gap-3.5 pt-4 border-t border-surface-container">
-                <MaterialIcon name="public" className="text-primary text-[20px] mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-bold text-on-surface text-sm mb-2">Connect</p>
-                  <div className="flex gap-4">
-                    {restaurant.website && (
+            {socialLinks.length > 0 && (
+              <div className="flex items-start gap-4 pt-6 border-t border-outline-variant/20">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <MaterialIcon name="public" className="text-primary text-2xl" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-on-surface mb-3 text-base">Connect</p>
+                  <div className="flex flex-wrap gap-2">
+                    {socialLinks.map((link) => (
                       <a
-                        href={restaurant.website}
+                        key={link.label}
+                        href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline text-sm font-semibold"
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-outline-variant bg-white hover:border-primary hover:bg-primary/5 transition-all shadow-sm hover:shadow-md hover:-translate-y-1"
+                        title={link.label}
                       >
-                        Website
+                        <MaterialIcon name={link.icon} className={`${link.tone} text-[20px]`} />
                       </a>
-                    )}
-                    {restaurant.socialLinks?.instagram && (
-                      <a
-                        href={restaurant.socialLinks.instagram}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-on-surface-variant hover:text-on-surface hover:underline text-sm font-semibold"
-                      >
-                        Instagram
-                      </a>
-                    )}
-                    {restaurant.socialLinks?.facebook && (
-                      <a
-                        href={restaurant.socialLinks.facebook}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-on-surface-variant hover:text-on-surface hover:underline text-sm font-semibold"
-                      >
-                        Facebook
-                      </a>
-                    )}
-                    {restaurant.socialLinks?.x && (
-                      <a
-                        href={restaurant.socialLinks.x}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-on-surface-variant hover:text-on-surface hover:underline text-sm font-semibold"
-                      >
-                        X
-                      </a>
-                    )}
+                    ))}
                   </div>
                 </div>
               </div>
@@ -286,14 +360,11 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [] }) {
       </section>
 
       {/* Facilities Section */}
-      {restaurant.facilities && restaurant.facilities.length > 0 && (
-        <section className="px-margin-mobile mb-12 max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-6 w-1 bg-primary rounded-full" />
-            <h2 className="font-headline-md text-headline-md text-on-surface">Facilities</h2>
-          </div>
+      {validFacilities.length > 0 && (
+        <section className="px-margin-mobile mb-16 max-w-4xl mx-auto">
+          <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface mb-6">Facilities</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {restaurant.facilities.map((facility, idx) => (
+            {validFacilities.map((facility, idx) => (
               <div
                 key={idx}
                 className="bg-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 border border-surface-container"
@@ -308,84 +379,208 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [] }) {
         </section>
       )}
 
-      {/* Move to Menu Button */}
-      <section className="px-margin-mobile mb-16 max-w-4xl mx-auto">
-        <Link
-          href={`/${restaurant.city}/${restaurant.slug}/menu`}
-          className="w-full bg-primary text-on-primary font-bold py-6 px-8 rounded-2xl flex items-center justify-between gap-4 hover:bg-primary/90 transition-colors"
-        >
-          <div>
-            <span className="block text-xl font-display-md mb-1">Explore the menu</span>
-            <span className="block font-body-md text-on-primary/80 text-sm">
-              {menu.length} items available
-            </span>
-          </div>
-          <MaterialIcon name="arrow_forward" className="text-2xl shrink-0" />
-        </Link>
-      </section>
+      {/* Move to Menu Button (Removed as it is now at the top) */}
 
       {/* Gallery Section */}
-      {restaurant.gallery && restaurant.gallery.length > 0 && (
-        <section className="px-margin-mobile mb-16 max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <div className="h-6 w-1 bg-primary rounded-full" />
-              <h2 className="font-headline-md text-headline-md text-on-surface">Gallery</h2>
+      {gallery && gallery.length > 0 && (
+        <section className="px-margin-mobile mb-20 max-w-5xl mx-auto overflow-hidden">
+          <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface mb-8 text-center sm:text-left max-w-4xl mx-auto">Gallery</h2>
+          
+          {/* Style 1: Aesthetic (Dynamic Accordion, max 5) */}
+          {galleryStyle === "aesthetic" && (
+            <div className="flex items-center gap-2 sm:gap-3 h-[300px] sm:h-[450px] w-full max-w-5xl mx-auto mt-4 px-2">
+              {gallery.slice(0, 5).map((img, idx) => (
+                <div
+                  key={img._id || idx}
+                  className="relative group transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] flex-1 hover:flex-[4] rounded-[24px] sm:rounded-[32px] overflow-hidden h-full cursor-pointer shadow-sm hover:shadow-xl"
+                >
+                  <img
+                    className="h-full w-full object-cover object-center"
+                    src={img.url}
+                    alt={img.alt || `Gallery Image ${idx + 1}`}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                    <p className="text-white font-bold text-sm sm:text-lg whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-md">{img.alt}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-          <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory">
-            {restaurant.gallery.map((img, idx) => (
-              <div key={idx} className="shrink-0 w-64 h-64 sm:w-72 sm:h-72 snap-center rounded-[24px] overflow-hidden border border-surface-container shadow-sm">
-                <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
-              </div>
-            ))}
-          </div>
+          )}
+
+          {/* Style 2: Decent (Grid with Title, max 4) */}
+          {galleryStyle === "decent" && (
+            <div className="grid grid-cols-2 md:grid-cols-4 mt-4 gap-4 max-w-5xl mx-auto">
+              {gallery.slice(0, 4).map((img, idx) => (
+                <div
+                  key={img._id || idx}
+                  className="relative group rounded-[24px] sm:rounded-[32px] overflow-hidden w-full aspect-square md:aspect-[3/4] cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300"
+                >
+                  <img
+                    src={img.url}
+                    alt={img.alt || `Gallery Image ${idx + 1}`}
+                    className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                  <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                    <div className="bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/30 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                      <h3 className="text-xs sm:text-sm font-bold line-clamp-2 text-center drop-shadow-sm">{img.alt}</h3>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Style 3: Simple (Overlapping Polaroids, max 3) */}
+          {galleryStyle === "simple" && (
+            <div className="flex items-center justify-center mt-8 sm:mt-12 mb-8 relative max-w-2xl mx-auto min-h-[220px] sm:min-h-[300px]">
+              {gallery.slice(0, 3).map((img, idx) => {
+                const isLeft = idx === 0;
+                const isCenter = idx === 1;
+                const isRight = idx === 2;
+                
+                if (gallery.length === 1) {
+                  return (
+                    <div key={img._id || idx} className="relative bg-white p-2 sm:p-3 rounded-xl shadow-xl z-20 hover:scale-105 transition-transform duration-300 cursor-pointer">
+                      <img src={img.url} alt={img.alt} className="w-48 h-56 sm:w-64 sm:h-80 object-cover rounded-lg" />
+                    </div>
+                  );
+                }
+                
+                if (gallery.length === 2) {
+                   const transforms = isLeft ? "-rotate-3 -mr-6 sm:-mr-8 z-10" : "rotate-3 -ml-6 sm:-ml-8 z-20";
+                   return (
+                    <div key={img._id || idx} className={`relative bg-white p-2 sm:p-3 rounded-xl shadow-xl transition-all duration-500 hover:z-30 hover:scale-105 hover:rotate-0 cursor-pointer ${transforms}`}>
+                      <img src={img.url} alt={img.alt} className="w-40 h-48 sm:w-56 sm:h-72 object-cover rounded-lg" />
+                    </div>
+                  );
+                }
+
+                let transforms = "";
+                if (isLeft) transforms = "-rotate-6 -mr-12 sm:-mr-16 mt-4 sm:mt-8 z-10";
+                if (isCenter) transforms = "z-20 scale-105 shadow-2xl";
+                if (isRight) transforms = "rotate-6 -ml-12 sm:-ml-16 mt-4 sm:mt-8 z-10";
+
+                return (
+                  <div
+                    key={img._id || idx}
+                    className={`relative bg-white p-2 sm:p-3 rounded-xl shadow-lg hover:z-30 hover:scale-110 hover:rotate-0 transition-all duration-300 cursor-pointer ${transforms}`}
+                  >
+                    <img
+                      src={img.url}
+                      alt={img.alt}
+                      className="w-32 h-40 sm:w-56 sm:h-72 object-cover rounded-lg"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       )}
 
       {/* Reviews Section */}
-      {reviews && reviews.length > 0 && (
-        <section className="px-margin-mobile mb-16 max-w-4xl mx-auto" id="reviews">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <div className="h-6 w-1 bg-primary rounded-full" />
-              <h2 className="font-headline-md text-headline-md text-on-surface">Reviews</h2>
+      <section className="px-margin-mobile mb-24 max-w-4xl mx-auto" id="reviews">
+        <div className="mb-8">
+          <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface">Reviews</h2>
+        </div>
+
+        {/* Add Review Form */}
+        <div className="bg-white p-6 md:p-10 rounded-[40px] border border-outline-variant/30 shadow-md mb-12">
+          <h3 className="font-bold text-xl text-on-surface mb-8 text-center">Rate your experience</h3>
+          {user ? (
+            <form onSubmit={submitReview}>
+              <div className="flex justify-center mb-8 relative">
+                <div className="flex items-center justify-center gap-2 sm:gap-6">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const archOffsets = ["translate-y-2", "translate-y-0.5", "translate-y-0", "translate-y-0.5", "translate-y-2"];
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        className={`transition-all hover:scale-125 focus:outline-none ${archOffsets[star - 1]}`}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRating(star)}
+                      >
+                        <MaterialIcon 
+                          name="star" 
+                          fill={(hoverRating || rating) >= star} 
+                          className={`text-4xl sm:text-5xl transition-colors drop-shadow-sm ${
+                            (hoverRating || rating) >= star ? "text-primary" : "text-on-surface-variant/20"
+                          }`} 
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="mb-6">
+                <textarea
+                  className="w-full h-36 p-6 rounded-3xl border border-outline-variant bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none text-body-lg shadow-inner"
+                  placeholder="Share details of your own experience at this place..."
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  required
+                ></textarea>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold text-primary">{reviewSuccess ? "Review submitted! Reloading..." : ""}</span>
+                <button
+                  type="submit"
+                  disabled={submittingReview || !reviewText.trim()}
+                  className="px-8 h-14 rounded-full bg-primary text-white font-bold transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center gap-2 text-base"
+                >
+                  <MaterialIcon name="send" className="text-[20px]" />
+                  {submittingReview ? "Submitting..." : "Post Review"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="text-center py-10 bg-surface-container-lowest rounded-[32px] border border-dashed border-outline-variant">
+              <MaterialIcon name="account_circle" className="text-5xl text-on-surface-variant/40 mb-3" />
+              <p className="font-bold text-on-surface-variant text-lg mb-6">You must be logged in to leave a review.</p>
+              <Link href="/login" className="inline-flex items-center justify-center h-12 gap-2 px-8 bg-primary text-white font-bold rounded-full hover:brightness-110 transition-all shadow-sm">
+                Log In or Sign Up
+              </Link>
             </div>
-            <Link
-              href={`/${restaurant.city}/${restaurant.slug}/reviews`}
-              className="text-primary font-semibold text-sm flex items-center gap-1 hover:underline"
-            >
-              See all
-              <MaterialIcon name="arrow_forward" className="text-[16px]" />
-            </Link>
-          </div>
-          <div className="space-y-3">
+          )}
+        </div>
+
+        {/* Existing Reviews List */}
+        {reviews.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {reviews.map((review) => (
               <div
                 key={review.id || review._id}
-                className="bg-white p-6 rounded-2xl border border-surface-container"
+                className="flex flex-col group relative"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                    {review.name.charAt(0).toUpperCase()}
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0 border border-primary/20 shadow-sm">
+                    {(review.name || "G").charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4 className="font-bold text-on-surface text-sm">{review.name}</h4>
-                    <div className="flex text-primary">
-                      {Array.from({ length: review.rating }).map((_, index) => (
-                        <MaterialIcon key={index} name="star" fill className="text-[14px]" />
+                    <h4 className="font-bold text-on-surface text-base">{review.name}</h4>
+                    <div className="flex text-primary/80 mt-0.5">
+                      {Array.from({ length: review.rating || 5 }).map((_, index) => (
+                        <MaterialIcon key={index} name="star" fill className="text-[16px]" />
                       ))}
                     </div>
                   </div>
                 </div>
-                <p className="text-on-surface-variant font-body-md text-sm leading-relaxed">
-                  {review.text}
+                <p className="text-on-surface-variant font-medium text-base leading-relaxed pl-1">
+                  "{review.text}"
                 </p>
+                <div className="mt-4 border-b border-outline-variant/20 w-1/3"></div>
               </div>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <div className="text-center py-16">
+            <p className="font-bold text-on-surface-variant text-lg">No reviews yet.</p>
+          </div>
+        )}
+      </section>
     </>
   );
 }

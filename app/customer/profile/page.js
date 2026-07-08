@@ -25,6 +25,10 @@ export default function CustomerProfilePage() {
       router.push("/login");
       return;
     }
+    if (user.role === "owner") {
+      router.push("/admin/dashboard");
+      return;
+    }
     setName(user.name || "");
     setLocation(user.location || "");
     setPhoto(user.photo || "");
@@ -109,7 +113,7 @@ export default function CustomerProfilePage() {
     router.push("/");
   };
 
-  if (!user) return null;
+  if (!user || user.role === "owner") return null;
 
   return (
     <div className="min-h-screen bg-surface-container-lowest pb-12 pt-6">

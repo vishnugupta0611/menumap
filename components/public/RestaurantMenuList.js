@@ -4,13 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { useCartStore } from "@/stores/cart-store";
+import { useAuth } from "@/contexts/AuthContext";
 
-export default function RestaurantMenuList({ restaurant, menu }) {
+export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [foodFilter, setFoodFilter] = useState("all"); // "all" | "veg" | "non-veg"
   const [activeCategory, setActiveCategory] = useState("");
 
+  const activeOffer = offers && offers.length > 0 ? offers[0] : null;
+
   const { cart, addItem, removeItem, getTotalAmount, getTotalItems } = useCartStore();
+  const { user } = useAuth();
+  const isOwner = user?.role === "owner";
 
   const categories = [...new Set(menu.map((item) => item.category))];
   const settings = restaurant.menuUiSettings || {
@@ -43,13 +48,44 @@ export default function RestaurantMenuList({ restaurant, menu }) {
     return cartItem ? cartItem.quantity : 0;
   };
 
+  const handleAddItem = (item) => {
+    if (isOwner) return;
+    addItem(item);
+  };
+
+  const handleRemoveItem = (itemId) => {
+    if (isOwner) return;
+    removeItem(itemId);
+  };
+
   return (
-    <div className="custom-scrollbar menu-gradient-bg pb-28">
+    <div className="custom-scrollbar menu-gradient-bg pb-28 relative">
+      {/* Offer Ribbon */}
+      {activeOffer && (
+        <div className="fixed md:absolute top-24 md:top-6 right-0 z-50 overflow-hidden w-32 h-32 pointer-events-none">
+          <div className="bg-primary text-white font-bold text-[11px] text-center uppercase tracking-widest py-1.5 w-40 absolute top-7 -right-9 rotate-45 shadow-lg border-y border-white/20 whitespace-nowrap z-50">
+            {activeOffer.title || "Special Offer!"}
+          </div>
+        </div>
+      )}
+
       <main className="pt-4 md:pt-8 px-5 md:px-8 max-w-3xl mx-auto">
         {settings.showBanner && restaurant.heroImage && (
           <section className="mb-8 md:mb-10 rounded-[32px] overflow-hidden h-56 md:h-72 shadow-[0_8px_30px_rgba(0,0,0,0.06)] relative group">
              <img src={restaurant.heroImage} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+          </section>
+        )}
+
+        {isOwner && (
+          <section className="mb-6 rounded-3xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
+            <MaterialIcon name="admin_panel_settings" className="text-primary text-[22px] mt-0.5 shrink-0" />
+            <div>
+              <p className="font-bold text-on-surface text-sm">Restaurant preview mode</p>
+              <p className="text-sm text-on-surface-variant">
+                Aap owner account se menu dekh rahe ho. Customer orders place karne ke liye customer account use karein.
+              </p>
+            </div>
           </section>
         )}
 
@@ -156,7 +192,7 @@ export default function RestaurantMenuList({ restaurant, menu }) {
                       }`}
                       onClick={() => {
                         // Allow clicking anywhere on simple-list to add if desired, or let it just be decorative
-                        if (settings.layout === "simple-list" && getQuantity(item.id) === 0) addItem(item);
+                        if (settings.layout === "simple-list" && getQuantity(item.id) === 0) handleAddItem(item);
                       }}
                     >
                       <div className={`flex-1 ${settings.layout === "grid" ? "p-4 order-2" : "order-1 flex flex-col h-full"} ${settings.layout === "simple-list" ? "min-w-0" : ""}`}>
@@ -188,12 +224,12 @@ export default function RestaurantMenuList({ restaurant, menu }) {
                             <div className="bg-surface-container-low border border-surface-container-highest/50 rounded-xl px-1 py-1 w-24 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                               {getQuantity(item.id) > 0 ? (
                                 <>
-                                  <button onClick={(e) => { e.stopPropagation(); removeItem(item.id); }} className="w-7 h-7 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">-</button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }} disabled={isOwner} className="w-7 h-7 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform disabled:opacity-40 disabled:cursor-not-allowed">-</button>
                                   <span className="font-bold text-sm text-primary">{getQuantity(item.id)}</span>
-                                  <button onClick={(e) => { e.stopPropagation(); addItem(item); }} className="w-7 h-7 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">+</button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleAddItem(item); }} disabled={isOwner} className="w-7 h-7 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform disabled:opacity-40 disabled:cursor-not-allowed">+</button>
                                 </>
                               ) : (
-                                <button onClick={(e) => { e.stopPropagation(); addItem(item); }} className="w-full py-1.5 text-primary font-bold text-xs text-center uppercase tracking-wider active:scale-95 cursor-pointer transition-transform">ADD</button>
+                                <button onClick={(e) => { e.stopPropagation(); handleAddItem(item); }} disabled={isOwner} className="w-full py-1.5 text-primary font-bold text-xs text-center uppercase tracking-wider active:scale-95 cursor-pointer transition-transform disabled:opacity-40 disabled:cursor-not-allowed">{isOwner ? "VIEW" : "ADD"}</button>
                               )}
                             </div>
                           )}
@@ -206,12 +242,12 @@ export default function RestaurantMenuList({ restaurant, menu }) {
                           <span className="font-bold text-primary text-[14px] md:text-[15px]">₹{item.price}</span>
                           {getQuantity(item.id) > 0 ? (
                             <div className="bg-surface-container-low border border-surface-container-highest/50 rounded-lg px-1 py-1 w-20 flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
-                              <button onClick={() => removeItem(item.id)} className="w-6 h-6 flex items-center justify-center text-primary bg-primary-container rounded-md font-bold">-</button>
+                              <button onClick={() => handleRemoveItem(item.id)} disabled={isOwner} className="w-6 h-6 flex items-center justify-center text-primary bg-primary-container rounded-md font-bold disabled:opacity-40">-</button>
                               <span className="font-bold text-xs text-primary">{getQuantity(item.id)}</span>
-                              <button onClick={() => addItem(item)} className="w-6 h-6 flex items-center justify-center text-primary bg-primary-container rounded-md font-bold">+</button>
+                              <button onClick={() => handleAddItem(item)} disabled={isOwner} className="w-6 h-6 flex items-center justify-center text-primary bg-primary-container rounded-md font-bold disabled:opacity-40">+</button>
                             </div>
                           ) : (
-                            <button onClick={(e) => { e.stopPropagation(); addItem(item); }} className="bg-primary/10 text-primary px-4 md:px-5 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider border border-primary/20 active:scale-95 transition-transform">ADD</button>
+                            <button onClick={(e) => { e.stopPropagation(); handleAddItem(item); }} disabled={isOwner} className="bg-primary/10 text-primary px-4 md:px-5 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider border border-primary/20 active:scale-95 transition-transform disabled:opacity-40 disabled:cursor-not-allowed">{isOwner ? "VIEW" : "ADD"}</button>
                           )}
                         </div>
                       )}
@@ -238,12 +274,12 @@ export default function RestaurantMenuList({ restaurant, menu }) {
                             <div className="bg-surface-container-low border border-surface-container-highest/50 rounded-xl md:rounded-2xl px-1.5 py-1.5 w-full flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                               {getQuantity(item.id) > 0 ? (
                                 <>
-                                  <button onClick={() => removeItem(item.id)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">-</button>
+                                  <button onClick={() => handleRemoveItem(item.id)} disabled={isOwner} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform disabled:opacity-40 disabled:cursor-not-allowed">-</button>
                                   <span className="font-bold text-sm md:text-[15px] text-primary">{getQuantity(item.id)}</span>
-                                  <button onClick={() => addItem(item)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">+</button>
+                                  <button onClick={() => handleAddItem(item)} disabled={isOwner} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform disabled:opacity-40 disabled:cursor-not-allowed">+</button>
                                 </>
                               ) : (
-                                <button onClick={() => addItem(item)} className="w-full py-1.5 text-primary font-bold text-[13px] md:text-sm text-center uppercase tracking-wider active:scale-95 cursor-pointer transition-transform">ADD</button>
+                                <button onClick={() => handleAddItem(item)} disabled={isOwner} className="w-full py-1.5 text-primary font-bold text-[13px] md:text-sm text-center uppercase tracking-wider active:scale-95 cursor-pointer transition-transform disabled:opacity-40 disabled:cursor-not-allowed">{isOwner ? "VIEW" : "ADD"}</button>
                               )}
                             </div>
                           )}
@@ -256,12 +292,12 @@ export default function RestaurantMenuList({ restaurant, menu }) {
                           <div className="bg-surface-container-low border border-surface-container-highest/50 rounded-xl md:rounded-2xl px-1.5 py-1.5 w-full flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                             {getQuantity(item.id) > 0 ? (
                               <>
-                                <button onClick={() => removeItem(item.id)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">-</button>
+                                <button onClick={() => handleRemoveItem(item.id)} disabled={isOwner} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform disabled:opacity-40 disabled:cursor-not-allowed">-</button>
                                 <span className="font-bold text-sm md:text-[15px] text-primary">{getQuantity(item.id)}</span>
-                                <button onClick={() => addItem(item)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform">+</button>
+                                <button onClick={() => handleAddItem(item)} disabled={isOwner} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-primary bg-primary-container rounded-lg font-bold active:scale-95 cursor-pointer transition-transform disabled:opacity-40 disabled:cursor-not-allowed">+</button>
                               </>
                             ) : (
-                              <button onClick={() => addItem(item)} className="w-full py-1.5 text-primary font-bold text-[13px] md:text-sm text-center uppercase tracking-wider active:scale-95 cursor-pointer transition-transform">ADD</button>
+                              <button onClick={() => handleAddItem(item)} disabled={isOwner} className="w-full py-1.5 text-primary font-bold text-[13px] md:text-sm text-center uppercase tracking-wider active:scale-95 cursor-pointer transition-transform disabled:opacity-40 disabled:cursor-not-allowed">{isOwner ? "VIEW" : "ADD"}</button>
                             )}
                           </div>
                         </div>
@@ -275,7 +311,7 @@ export default function RestaurantMenuList({ restaurant, menu }) {
       </main>
 
       {/* Floating Order Summary */}
-      {getTotalItems() > 0 && (
+      {!isOwner && getTotalItems() > 0 && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-50 transform transition-transform duration-500 translate-y-0 animate-reveal">
           <div className="bg-on-surface text-white p-4 rounded-3xl flex justify-between items-center shadow-2xl backdrop-blur-xl border border-white/10">
             <div className="flex items-center gap-3">

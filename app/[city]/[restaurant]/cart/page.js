@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
@@ -13,7 +14,8 @@ export default function CartPage() {
   const params = useParams();
   const { city, restaurant: slug } = params;
   const { cart, addItem, removeItem, getTotalAmount, customerInfo, setCustomerInfo, clearCart } = useCartStore();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const isOwner = user?.role === "owner";
   
   const [formData, setFormData] = useState({
     name: customerInfo?.name || "",
@@ -24,8 +26,18 @@ export default function CartPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (!authLoading && isOwner) {
+      clearCart();
+    }
+  }, [authLoading, isOwner, clearCart]);
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    if (isOwner) {
+      setError("Restaurant owner account se customer order place nahi ho sakta. Please customer account se login karein.");
+      return;
+    }
     if (cart.length === 0) return;
     
     const finalName = user?.name || formData.name;
@@ -73,6 +85,37 @@ export default function CartPage() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (isOwner) {
+    return (
+      <div className="pb-32">
+        <main className="max-w-2xl mx-auto animate-fadeInUp px-margin-mobile pt-8">
+          <Link href={`/${city}/${slug}/menu`} className="inline-flex items-center gap-2 text-primary hover:underline font-bold mb-4">
+            <MaterialIcon name="arrow_back" />
+            Back to Menu
+          </Link>
+          <div className="rounded-3xl border border-primary/20 bg-primary/5 p-8 text-center">
+            <MaterialIcon name="admin_panel_settings" className="text-primary text-5xl mb-4" />
+            <h1 className="text-2xl font-bold text-on-surface mb-2">Owner preview mode</h1>
+            <p className="text-on-surface-variant mb-6">
+              Restaurant account se apne ya kisi restaurant ko customer order nahi bheja ja sakta.
+            </p>
+            <Link href="/admin/dashboard" className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 font-bold text-on-primary">
+              Go to Admin Panel
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="pb-32">
       <main className="max-w-2xl mx-auto space-y-8 animate-fadeInUp px-margin-mobile pt-8">
@@ -104,7 +147,7 @@ export default function CartPage() {
                     <div className="bg-surface-container-low border border-outline-variant/30 rounded-xl px-2 py-1 flex items-center gap-3 shadow-inner">
                       <button onClick={() => removeItem(item.menuItemId)} className="w-8 h-8 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg active:scale-95">-</button>
                       <span className="font-bold text-sm w-4 text-center">{item.quantity}</span>
-                      <button onClick={() => addItem({ id: item.menuItemId })} className="w-8 h-8 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg active:scale-95">+</button>
+                      <button onClick={() => addItem({ id: item.menuItemId, name: item.name, price: item.price, image: item.image })} className="w-8 h-8 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg active:scale-95">+</button>
                     </div>
                   </div>
                 ))}

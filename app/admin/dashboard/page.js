@@ -84,11 +84,10 @@ export default function DashboardPage() {
           {restaurantName} Dashboard
         </h1>
       </div>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <MetricCard label="Orders Today" value={stats.ordersToday.toString()} icon="receipt_long" />
         <MetricCard label="Revenue Today" value={`Rs ${stats.revenueToday}`} icon="payments" tone="green" />
         <MetricCard label="Menu Items" value={stats.menuItemsCount.toString()} icon="restaurant_menu" />
-        <MetricCard label="QR Scans" value={stats.qrScans.toString()} icon="qr_code_scanner" tone="green" />
       </div>
       <AdminPanel title="Live Order Flow" eyebrow="Realtime ready" icon="notifications_active" action={<Link href="/admin/orders" className="rounded-full bg-primary px-5 py-2 font-bold text-on-primary">View All Orders</Link>}>
         <div className="grid gap-3 md:grid-cols-4">

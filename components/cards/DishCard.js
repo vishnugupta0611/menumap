@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 export default function DishCard({ dish, variant = "default", className }) {
   if (variant === "horizontal") {
     return (
-      <div className={cn("min-w-[180px] md:min-w-[220px] snap-start dish-card-hover bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 overflow-hidden cursor-pointer", className)}>
+      <div className={cn("w-full min-w-0 snap-start dish-card-hover bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 overflow-hidden cursor-pointer", className)}>
         <div className="h-32 w-full relative">
           <img
             src={dish.image}

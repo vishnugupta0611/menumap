@@ -10,12 +10,15 @@ function SearchResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
+  const initialFilter = searchParams.get("filter") || "All";
+  const initialLat = searchParams.get("lat");
+  const initialLng = searchParams.get("lng");
 
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeFilter, setActiveFilter] = useState(initialFilter);
   const [filteredData, setFilteredData] = useState([]);
-  const [userLat, setUserLat] = useState(null);
-  const [userLng, setUserLng] = useState(null);
+  const [userLat, setUserLat] = useState(initialLat ? Number(initialLat) : null);
+  const [userLng, setUserLng] = useState(initialLng ? Number(initialLng) : null);
   const [userCity, setUserCity] = useState("");
   const [locating, setLocating] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -108,7 +111,14 @@ function SearchResultsContent() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    router.replace(`/search?q=${encodeURIComponent(searchQuery)}`);
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
+    if (activeFilter !== "All") params.set("filter", activeFilter);
+    if (userLat !== null && userLng !== null) {
+      params.set("lat", String(userLat));
+      params.set("lng", String(userLng));
+    }
+    router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
   const filterOptions = ["All", "Under Rs 200", "Nearby", "Open Now", "Rating", "Veg"];

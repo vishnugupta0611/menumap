@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import { adminRoutes } from "@/constants/routes";
 import { cn } from "@/lib/utils";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SideNavigation({ isOpen, onClose }) {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   return (
     <>
@@ -59,8 +61,8 @@ export default function SideNavigation({ isOpen, onClose }) {
             <MaterialIcon name="person" />
           </div>
           <div>
-            <p className="font-label-sm text-on-surface font-bold">Restaurant Owner</p>
-            <p className="text-[10px] uppercase tracking-widest text-on-surface-variant">Food Villa</p>
+            <p className="font-label-sm text-on-surface font-bold truncate max-w-[160px]">{user?.name || "Restaurant Owner"}</p>
+            <p className="text-[10px] uppercase tracking-widest text-on-surface-variant truncate max-w-[160px]">{user?.email || "No Email"}</p>
           </div>
         </div>
       </aside>

@@ -38,7 +38,7 @@ export default function AdminLayout({ children }) {
         <TopAppBar title="MenuMap OS" onMenuClick={() => setIsOpen(true)} isSidebarOpen={isOpen} />
         
         {/* The actual page content wrapper */}
-        <main className="flex-1 w-full pt-28 pb-12 px-6 md:px-12 lg:px-16 mx-auto max-w-[1400px]">
+        <main className="flex-1 w-full pt-24 sm:pt-28 pb-10 sm:pb-12 px-4 sm:px-6 md:px-10 lg:px-16 mx-auto max-w-[1400px]">
           {children}
         </main>
       </div>

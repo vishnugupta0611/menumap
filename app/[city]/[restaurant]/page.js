@@ -1,5 +1,5 @@
 import RestaurantProfile from "@/components/public/RestaurantProfile";
-import { findRestaurant, findRestaurantMenu, listReviews } from "@/services/restaurant-service";
+import { findRestaurant, findRestaurantMenu, listReviews, listGallery } from "@/services/restaurant-service";
 
 export async function generateMetadata({ params }) {
   const { city, restaurant: slug } = await params;
@@ -15,6 +15,7 @@ export default async function RestaurantPage({ params }) {
   const restaurant = await findRestaurant(city, slug);
   const menu = await findRestaurantMenu(city, slug);
   const reviews = await listReviews(city, slug);
+  const gallery = await listGallery(city, slug);
 
-  return <RestaurantProfile restaurant={restaurant} menu={menu} reviews={reviews} />;
+  return <RestaurantProfile restaurant={restaurant} menu={menu} reviews={reviews} gallery={gallery} />;
 }

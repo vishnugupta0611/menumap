@@ -16,6 +16,7 @@ export default function MenuUIPage() {
     showDescription: true,
     showBadges: true,
     showImage: true,
+    galleryLayout: "simple",
   });
 
   const [saveStatus, setSaveStatus] = useState("All changes synced");
@@ -43,6 +44,7 @@ export default function MenuUIPage() {
               showBadges: rest.menuUiSettings?.showBadges ?? true,
               showImage: rest.menuUiSettings?.showImage ?? true,
               showTabs: rest.menuUiSettings?.showTabs ?? true,
+              galleryLayout: rest.menuUiSettings?.galleryLayout || "simple",
             });
           }
         }
@@ -147,6 +149,18 @@ export default function MenuUIPage() {
               <option value="list">Standard List</option>
               <option value="grid">Photo Grid</option>
               <option value="simple-list">Simple List (Clean)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-on-surface-variant mb-2 mt-4">Gallery Style</label>
+            <select
+              className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md appearance-none"
+              value={settings.galleryLayout}
+              onChange={(e) => setSettings({ ...settings, galleryLayout: e.target.value })}
+            >
+              <option value="aesthetic">Aesthetic (Dynamic Accordion)</option>
+              <option value="decent">Decent (Grid with Title)</option>
+              <option value="simple">Simple (Overlapping Polaroids)</option>
             </select>
           </div>
         </div>

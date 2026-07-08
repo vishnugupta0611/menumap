@@ -39,3 +39,11 @@ export async function findDishResults(query = "", filters = {}) {
 export async function listReviews(city = "kanpur", slug = "food-villa") {
   return apiGet(`/restaurants/${city}/${slug}/reviews`, { revalidate: 60 });
 }
+
+export async function listGallery(city, slug) {
+  return apiGet(`/restaurants/${city}/${slug}/gallery`, { cache: "no-store" });
+}
+
+export async function listOffers(city, slug) {
+  return apiGet(`/restaurants/${city}/${slug}/offers`, { cache: "no-store" });
+}
