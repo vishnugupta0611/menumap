@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
+import { useSignUp, useSignIn } from "@clerk/nextjs";
 
 export default function OwnerRegisterPage() {
   const router = useRouter();
   const { registerOwner } = useAuth();
+  
+  // Clerk Hooks
+  const { isLoaded: isSignUpLoaded, signUp, setActive } = useSignUp();
+  const { signIn } = useSignIn();
   
   // Restaurant Signup Multi-step state
   const [signupStep, setSignupStep] = useState(1);
@@ -17,14 +22,11 @@ export default function OwnerRegisterPage() {
   
   // Step 1: Owner Details
   const [ownerName, setOwnerName] = useState("");
-  const [ownerEmail, setOwnerEmail] = useState("");
-  const [ownerPassword, setOwnerPassword] = useState("");
 
   // Step 2: Restaurant Profile
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantCity, setRestaurantCity] = useState("kanpur");
   const [restaurantCuisines, setRestaurantCuisines] = useState("");
-  const [restaurantStory, setRestaurantStory] = useState("");
   const [isVegOnly, setIsVegOnly] = useState(false);
 
   // Step 3: Location Coordinates
@@ -33,7 +35,115 @@ export default function OwnerRegisterPage() {
   const [fetchingLocation, setFetchingLocation] = useState(false);
   const [locationSuccess, setLocationSuccess] = useState("");
 
-  // Geolocation API fetcher
+  // Step 4: Clerk Auth Details
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [pendingVerification, setPendingVerification] = useState(false);
+  
+  // Step 5: OTP Code
+  const [code, setCode] = useState("");
+
+  // Save current form state to sessionStorage before Google OAuth
+  const saveStateToSession = () => {
+    sessionStorage.setItem("onboarding_ownerName", ownerName);
+    sessionStorage.setItem("onboarding_restaurantName", restaurantName);
+    sessionStorage.setItem("onboarding_restaurantCity", restaurantCity);
+    sessionStorage.setItem("onboarding_restaurantCuisines", restaurantCuisines);
+    sessionStorage.setItem("onboarding_lat", lat);
+    sessionStorage.setItem("onboarding_lng", lng);
+  };
+
+  // Handle Google OAuth
+  const handleGoogleSSO = async () => {
+    if (!isSignUpLoaded) return;
+    saveStateToSession();
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/register/owner/sso-callback",
+        redirectUrlComplete: "/register/owner/sso-callback",
+      });
+    } catch (err) {
+      console.error(err);
+      setSignupError("Google SSO failed to initialize.");
+    }
+  };
+
+  // Handle Email/Password creation (Step 4 -> 5)
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    if (!isSignUpLoaded) return;
+    setSignupLoading(true);
+    setSignupError("");
+    
+    try {
+      await signUp.create({
+        emailAddress,
+        password,
+      });
+
+      // Send the OTP
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      
+      setPendingVerification(true);
+      setSignupStep(5); // Move to OTP step
+    } catch (err) {
+      console.error(JSON.stringify(err, null, 2));
+      setSignupError(err.errors?.[0]?.message || "Failed to create account. Email might be in use.");
+    } finally {
+      setSignupLoading(false);
+    }
+  };
+
+  // Handle OTP Verification (Step 5 -> Finish)
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    if (!isSignUpLoaded) return;
+    setSignupLoading(true);
+    setSignupError("");
+
+    try {
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code,
+      });
+
+      if (completeSignUp.status !== "complete") {
+        console.log(JSON.stringify(completeSignUp, null, 2));
+        setSignupError("Unable to verify OTP. Please try again.");
+        return;
+      }
+
+      // 1. Clerk Verification Success! Grab the Clerk ID and Email
+      const clerkId = completeSignUp.createdUserId;
+      const verifiedEmail = completeSignUp.emailAddress;
+
+      // 2. We don't set Clerk session active because we use custom JWT, but we can to be safe
+      if (setActive) {
+        await setActive({ session: completeSignUp.createdSessionId });
+      }
+
+      // 3. Register user in our MongoDB via Express API
+      await registerOwner({
+        name: ownerName,
+        email: verifiedEmail || emailAddress,
+        password: password, // Still sending to DB just in case, though optional
+        clerkId: clerkId,
+        restaurantName,
+        city: restaurantCity,
+        cuisine: restaurantCuisines,
+      });
+
+      // 4. Redirect to dashboard
+      router.push("/admin/dashboard");
+
+    } catch (err) {
+      console.error(JSON.stringify(err, null, 2));
+      setSignupError(err.errors?.[0]?.message || "Invalid OTP Code.");
+    } finally {
+      setSignupLoading(false);
+    }
+  };
+
   const handleFetchLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser");
@@ -56,31 +166,6 @@ export default function OwnerRegisterPage() {
         setLng("80.3319");
       }
     );
-  };
-
-  // Handle Owner Registration
-  const handleOwnerRegister = async (e) => {
-    e.preventDefault();
-    setSignupLoading(true);
-    setSignupError("");
-
-    try {
-      await registerOwner({
-        name: ownerName,
-        email: ownerEmail,
-        password: ownerPassword,
-        restaurantName,
-        city: restaurantCity,
-        cuisine: restaurantCuisines,
-      });
-
-      router.push("/admin/dashboard");
-    } catch (err) {
-      console.error(err);
-      setSignupError(err.message || "Failed to register.");
-    } finally {
-      setSignupLoading(false);
-    }
   };
 
   return (
@@ -113,9 +198,9 @@ export default function OwnerRegisterPage() {
                 
                 {/* Step Indicator Bullets */}
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-primary">Step {signupStep} of 3</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-primary">Step {signupStep} of 5</span>
                   <div className="flex gap-1.5">
-                    {[1, 2, 3].map((s) => (
+                    {[1, 2, 3, 4, 5].map((s) => (
                       <span key={s} className={`w-4 h-1.5 rounded-full transition-all ${signupStep >= s ? "bg-primary w-6" : "bg-surface-container-high"}`} />
                     ))}
                   </div>
@@ -136,16 +221,8 @@ export default function OwnerRegisterPage() {
                         <label className="block text-xs font-bold text-on-surface-variant mb-2">Owner Name</label>
                         <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary" type="text" placeholder="Marcus Aurelius" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} />
                       </div>
-                      <div>
-                        <label className="block text-xs font-bold text-on-surface-variant mb-2">Owner Email</label>
-                        <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary" type="email" placeholder="marcus@villa.com" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-on-surface-variant mb-2">Password</label>
-                        <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary" type="password" placeholder="SecurePass123!" value={ownerPassword} onChange={(e) => setOwnerPassword(e.target.value)} />
-                      </div>
                     </div>
-                    <button onClick={() => { if (!ownerName || !ownerEmail || !ownerPassword) { alert("Please fill all details"); return; } setSignupStep(2); }} className="w-full py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none mt-4">
+                    <button onClick={() => { if (!ownerName) { alert("Please enter your name"); return; } setSignupStep(2); }} className="w-full py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none mt-4">
                       Next: Restaurant Profile
                     </button>
                   </div>
@@ -180,7 +257,7 @@ export default function OwnerRegisterPage() {
                     </div>
                     <div className="flex gap-4 mt-4">
                       <button onClick={() => setSignupStep(1)} className="flex-1 py-4 border border-outline-variant text-on-surface rounded-xl font-bold cursor-pointer hover:bg-surface-container-low transition-all bg-transparent">Back</button>
-                      <button onClick={() => { if (!restaurantName || !restaurantCuisines) { alert("Please fill restaurant name & cuisines"); return; } setSignupStep(3); }} className="flex-2 py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none">Next: Location Setup</button>
+                      <button onClick={() => { if (!restaurantName || !restaurantCuisines) { alert("Please fill restaurant name & cuisines"); return; } setSignupStep(3); }} className="flex-2 py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none">Next: Location</button>
                     </div>
                   </div>
                 )}
@@ -204,10 +281,74 @@ export default function OwnerRegisterPage() {
 
                     <div className="flex gap-4 mt-4">
                       <button onClick={() => setSignupStep(2)} className="flex-1 py-4 border border-outline-variant text-on-surface rounded-xl font-bold cursor-pointer hover:bg-surface-container-low transition-all bg-transparent">Back</button>
-                      <button onClick={handleOwnerRegister} disabled={signupLoading} className="flex-2 py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none">
-                        {signupLoading ? "Creating OS..." : "Create Restaurant OS"}
+                      <button onClick={() => setSignupStep(4)} className="flex-2 py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none">
+                        Next: Secure Account
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {/* Step 4: Clerk Auth (Email/Pass or Google SSO) */}
+                {signupStep === 4 && (
+                  <div className="space-y-4 animate-reveal">
+                    <h3 className="font-headline-md text-headline-md text-on-surface font-semibold">Secure your Account</h3>
+                    <p className="text-sm text-on-surface-variant">Choose how you want to sign in to your MenuMap dashboard.</p>
+                    
+                    <button onClick={handleGoogleSSO} type="button" className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-outline-variant rounded-xl font-bold hover:bg-surface-container-lowest transition-all bg-white text-on-surface">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                      </svg>
+                      Continue with Google
+                    </button>
+
+                    <div className="flex items-center gap-4 my-4">
+                      <div className="h-px bg-outline-variant flex-1"></div>
+                      <span className="text-xs text-on-surface-variant font-bold">OR</span>
+                      <div className="h-px bg-outline-variant flex-1"></div>
+                    </div>
+
+                    <form onSubmit={handleEmailSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-on-surface-variant mb-2">Email Address</label>
+                        <input required className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary" type="email" placeholder="marcus@villa.com" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-on-surface-variant mb-2">Password</label>
+                        <input required className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary" type="password" placeholder="SecurePass123!" value={password} onChange={(e) => setPassword(e.target.value)} />
+                      </div>
+                      
+                      <div className="flex gap-4 mt-4">
+                        <button type="button" onClick={() => setSignupStep(3)} className="flex-1 py-4 border border-outline-variant text-on-surface rounded-xl font-bold cursor-pointer hover:bg-surface-container-low transition-all bg-transparent">Back</button>
+                        <button type="submit" disabled={signupLoading || !isSignUpLoaded} className="flex-2 py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none">
+                          {signupLoading ? "Sending OTP..." : "Continue with Email"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* Step 5: OTP Verification */}
+                {signupStep === 5 && (
+                  <div className="space-y-4 animate-reveal">
+                    <h3 className="font-headline-md text-headline-md text-on-surface font-semibold">Verify your Email</h3>
+                    <p className="text-sm text-on-surface-variant">We've sent a 6-digit verification code to <strong>{emailAddress}</strong>.</p>
+                    
+                    <form onSubmit={handleVerifyOTP} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-on-surface-variant mb-2">Verification Code</label>
+                        <input required className="w-full h-14 px-4 text-center tracking-[0.5em] font-display-md text-display-md rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary" type="text" maxLength={6} placeholder="------" value={code} onChange={(e) => setCode(e.target.value)} />
+                      </div>
+                      
+                      <div className="flex gap-4 mt-4">
+                        <button type="button" onClick={() => setSignupStep(4)} className="flex-1 py-4 border border-outline-variant text-on-surface rounded-xl font-bold cursor-pointer hover:bg-surface-container-low transition-all bg-transparent">Change Email</button>
+                        <button type="submit" disabled={signupLoading || !isSignUpLoaded} className="flex-2 py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none">
+                          {signupLoading ? "Verifying..." : "Verify & Complete Setup"}
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 )}
 

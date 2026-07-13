@@ -44,6 +44,20 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function loginWithVerifiedEmail({ email, name, clerkId, role }) {
+    try {
+      setError(null);
+      const { data } = await api.post('/api/auth/login-verified', { email, name, clerkId, role });
+      setUser(data.user);
+      setRestaurant(data.restaurant || null);
+      return data;
+    } catch (error) {
+      const message = error.response?.data?.error || 'Verified Login failed';
+      setError(message);
+      throw new Error(message);
+    }
+  }
+
   async function registerOwner(userData) {
     try {
       setError(null);
@@ -106,6 +120,7 @@ export function AuthProvider({ children }) {
         loading,
         error,
         login,
+        loginWithVerifiedEmail,
         registerOwner,
         registerCustomer,
         logout,
