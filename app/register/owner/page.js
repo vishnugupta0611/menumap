@@ -80,6 +80,8 @@ export default function OwnerRegisterPage() {
       await signUp.create({
         emailAddress,
         password,
+        firstName: ownerName.split(" ")[0] || "Owner",
+        lastName: ownerName.split(" ").slice(1).join(" ") || "Name",
       });
 
       // Send the OTP
@@ -109,7 +111,7 @@ export default function OwnerRegisterPage() {
 
       if (completeSignUp.status !== "complete") {
         console.log(JSON.stringify(completeSignUp, null, 2));
-        setSignupError("Unable to verify OTP. Please try again.");
+        setSignupError("Incomplete setup. Missing fields: " + (completeSignUp.missingFields?.join(", ") || completeSignUp.status));
         return;
       }
 

@@ -64,6 +64,8 @@ export default function CustomerRegisterPage() {
       await signUp.create({
         emailAddress,
         password,
+        firstName: name.split(" ")[0] || "User",
+        lastName: name.split(" ").slice(1).join(" ") || "Name",
       });
 
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
@@ -90,7 +92,7 @@ export default function CustomerRegisterPage() {
 
       if (completeSignUp.status !== "complete") {
         console.log(JSON.stringify(completeSignUp, null, 2));
-        setError("Unable to verify OTP. Please try again.");
+        setError("Incomplete setup. Missing fields: " + (completeSignUp.missingFields?.join(", ") || completeSignUp.status));
         return;
       }
 
