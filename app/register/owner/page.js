@@ -310,6 +310,8 @@ export default function OwnerRegisterPage() {
                       <div className="h-px bg-outline-variant flex-1"></div>
                     </div>
 
+                    <div id="clerk-captcha"></div>
+
                     <form onSubmit={handleEmailSubmit} className="space-y-4">
                       <div>
                         <label className="block text-xs font-bold text-on-surface-variant mb-2">Email Address</label>

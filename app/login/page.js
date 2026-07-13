@@ -24,6 +24,7 @@ export default function LoginPage() {
 
   const handleGoogleSSO = async () => {
     if (!isLoaded) return;
+    sessionStorage.setItem("login_role", activePortal);
     try {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
@@ -217,6 +218,8 @@ export default function LoginPage() {
                     <span className="text-xs text-on-surface-variant font-bold">OR</span>
                     <div className="h-px bg-outline-variant flex-1"></div>
                   </div>
+
+                  <div id="clerk-captcha"></div>
                   
                   <form onSubmit={handleEmailSubmit} className="space-y-4">
                     <div className="relative">

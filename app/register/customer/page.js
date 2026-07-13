@@ -205,6 +205,8 @@ export default function CustomerRegisterPage() {
                       <div className="h-px bg-outline-variant flex-1"></div>
                     </div>
 
+                    <div id="clerk-captcha"></div>
+
                     <form onSubmit={handleEmailSubmit} className="space-y-4">
                       <div className="relative">
                         <label className="block text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-wide">Email Address</label>

@@ -12,35 +12,36 @@ export default function LoginSSOCallbackPage() {
   const { signOut } = useClerk();
   
   const [status, setStatus] = useState("Verifying login...");
+  const [processed, setProcessed] = useState(false);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || processed) return;
     
     if (!user) {
       console.log("No user found in Clerk context after SSO.");
       setStatus("No account found. Please register first.");
+      setProcessed(true);
       setTimeout(() => router.push("/login"), 3000);
       return;
     }
 
     const processLogin = async () => {
+      setProcessed(true);
       try {
         setStatus("Accessing Dashboard...");
         
         const primaryEmail = user.primaryEmailAddress?.emailAddress;
         const clerkId = user.id;
+        const role = sessionStorage.getItem("login_role") || "customer";
 
-        // Try to login as owner first, if it fails, try customer. 
-        // In a real app we might know their role beforehand, but we can default to owner and let backend figure it out, 
-        // or just let backend check what role they actually are.
-        // Our backend /login-verified will return the role.
+        // Login using Express API (sets the cookie)
         const data = await loginWithVerifiedEmail({
           email: primaryEmail,
           clerkId: clerkId,
-          role: "owner" // We pass owner as a default expectation, if they are customer, backend just logs them in and returns role: customer
+          role: role
         });
 
-        // Sign out of Clerk on frontend to strictly use our custom JWT
+        // Sign out of Clerk on frontend to respect our custom JWT
         await signOut();
 
         setStatus("Success! Redirecting...");
