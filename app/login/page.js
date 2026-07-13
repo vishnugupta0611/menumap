@@ -27,7 +27,7 @@ export default function LoginPage() {
     try {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
-        redirectUrl: "/login/sso-callback",
+        redirectUrl: "/sso-callback",
         redirectUrlComplete: "/login/sso-callback",
       });
     } catch (err) {

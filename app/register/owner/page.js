@@ -60,7 +60,7 @@ export default function OwnerRegisterPage() {
     try {
       await signUp.authenticateWithRedirect({
         strategy: "oauth_google",
-        redirectUrl: "/register/owner/sso-callback",
+        redirectUrl: "/sso-callback",
         redirectUrlComplete: "/register/owner/sso-callback",
       });
     } catch (err) {

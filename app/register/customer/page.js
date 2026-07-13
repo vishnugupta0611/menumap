@@ -39,7 +39,7 @@ export default function CustomerRegisterPage() {
     try {
       await signUp.authenticateWithRedirect({
         strategy: "oauth_google",
-        redirectUrl: "/register/customer/sso-callback",
+        redirectUrl: "/sso-callback",
         redirectUrlComplete: "/register/customer/sso-callback",
       });
     } catch (err) {
