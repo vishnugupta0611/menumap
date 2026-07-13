@@ -17,7 +17,9 @@ export default function LoginSSOCallbackPage() {
     if (!isLoaded) return;
     
     if (!user) {
-      router.push("/login");
+      console.log("No user found in Clerk context after SSO.");
+      setStatus("No account found. Please register first.");
+      setTimeout(() => router.push("/login"), 3000);
       return;
     }
 
