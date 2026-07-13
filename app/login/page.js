@@ -72,7 +72,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error(JSON.stringify(err, null, 2));
-      setError(err.errors?.[0]?.message || "Failed to initiate login. Are you registered?");
+      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || "Failed to initiate login. Are you registered?");
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error(JSON.stringify(err, null, 2));
-      setError(err.errors?.[0]?.message || "Invalid OTP Code.");
+      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || "Invalid OTP Code.");
     } finally {
       setLoading(false);
     }

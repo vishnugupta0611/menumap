@@ -89,7 +89,7 @@ export default function OwnerRegisterPage() {
       setSignupStep(5); // Move to OTP step
     } catch (err) {
       console.error(JSON.stringify(err, null, 2));
-      setSignupError(err.errors?.[0]?.message || "Failed to create account. Email might be in use.");
+      setSignupError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || "Failed to create account. Email might be in use.");
     } finally {
       setSignupLoading(false);
     }
@@ -138,7 +138,7 @@ export default function OwnerRegisterPage() {
 
     } catch (err) {
       console.error(JSON.stringify(err, null, 2));
-      setSignupError(err.errors?.[0]?.message || "Invalid OTP Code.");
+      setSignupError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || "Invalid OTP Code.");
     } finally {
       setSignupLoading(false);
     }
