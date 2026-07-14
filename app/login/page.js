@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,11 +23,13 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const { session } = useClerk();
+  const hasSignedOutRef = useRef(false);
 
   // Force sign out of Clerk when arriving at the login page
   // to ensure a clean slate and avoid "You're already signed in" errors.
   useEffect(() => {
-    if (isLoaded && session) {
+    if (isLoaded && session && !hasSignedOutRef.current) {
+      hasSignedOutRef.current = true;
       signOut();
     }
   }, [isLoaded, session, signOut]);
