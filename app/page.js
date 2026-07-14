@@ -429,7 +429,7 @@ export default function HomePage() {
             <h3 className="font-bold text-on-surface mb-4">Legal</h3>
             <ul className="space-y-3">
               <li><Link href="/terms" className="text-on-surface-variant hover:text-primary transition-colors text-sm">Terms & Conditions</Link></li>
-              <li><a href="#" className="text-on-surface-variant hover:text-primary transition-colors text-sm">Privacy Policy</a></li>
+              <li><Link href="/privacy" className="text-on-surface-variant hover:text-primary transition-colors text-sm">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>

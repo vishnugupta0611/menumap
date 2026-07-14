@@ -1,6 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
-import MaterialIcon from "@/components/stitch/MaterialIcon";
+import SimpleHeader from "@/components/SimpleHeader";
 
 export const metadata = {
   title: 'About Us - MenuMap',
@@ -9,86 +8,102 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="bg-background text-on-background min-h-screen font-body-md relative pt-24 pb-16 overflow-hidden">
+    <div className="bg-white text-on-surface min-h-screen font-body-md relative pt-32 pb-16 overflow-x-hidden">
+      <SimpleHeader />
       
-      {/* Aesthetic Header Background */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-primary/5 rounded-b-[64px] -z-10 overflow-hidden">
-        <div className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl -translate-y-1/2 -z-10 animate-pulse"></div>
-        <div className="absolute top-1/2 right-1/4 w-[400px] h-[400px] bg-secondary/10 rounded-full blur-3xl -translate-y-1/2 -z-10 animate-pulse delay-1000"></div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop">
-        <Link href="/" className="inline-flex items-center gap-2 text-primary font-bold mb-8 hover:underline">
-          <MaterialIcon name="arrow_back" className="text-[20px]" />
-          Back to Home
-        </Link>
         
         {/* Hero Section */}
-        <div className="text-center max-w-4xl mx-auto mb-20 animate-fadeInUp">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary mb-6 shadow-sm">
-            <MaterialIcon name="restaurant_menu" className="text-[40px]" />
-          </div>
-          <h1 className="font-display-lg-mobile md:font-display-lg text-on-surface font-bold mb-6 leading-tight">
+        <div className="text-center max-w-4xl mx-auto mb-24 animate-fadeInUp">
+          <h1 className="text-4xl md:text-6xl text-on-surface font-bold mb-6 leading-tight tracking-tight">
             Connecting food lovers with <span className="text-primary">local flavors.</span>
           </h1>
-          <p className="text-on-surface-variant text-lg md:text-xl leading-relaxed">
+          <p className="text-on-surface-variant text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
             MenuMap is a digital platform designed to bridge the gap between independent restaurants and hungry customers. We believe great food deserves to be found easily.
           </p>
         </div>
 
-        {/* Our Story Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
-          <div className="glass-card bg-surface p-8 md:p-12 rounded-[32px] border border-outline-variant/30 shadow-lg flex flex-col justify-center">
-            <h2 className="font-headline-lg text-primary mb-6">Our Story</h2>
-            <p className="text-on-surface-variant leading-relaxed mb-4">
-              It started with a simple problem: discovering hidden culinary gems in the neighborhood was too hard, and local restaurants struggled to build beautiful digital menus without paying exorbitant fees.
+        {/* Our Mission Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center mb-32">
+          <div>
+            <h2 className="text-3xl font-bold text-on-surface mb-6">Our Mission</h2>
+            <p className="text-on-surface-variant leading-relaxed text-lg mb-6">
+              It started with a simple problem: discovering hidden culinary gems in the neighborhood was too hard, and local restaurants struggled to build beautiful digital menus without paying exorbitant fees to big delivery platforms.
             </p>
-            <p className="text-on-surface-variant leading-relaxed">
-              We built MenuMap to empower restaurant owners with stunning, instant digital storefronts, while giving customers an intuitive map-based discovery engine to find their next favorite meal.
+            <p className="text-on-surface-variant leading-relaxed text-lg">
+              We built MenuMap to empower restaurant owners with stunning, instant digital storefronts, while giving customers an intuitive map-based discovery engine to find their next favorite meal effortlessly.
             </p>
           </div>
-          <div className="h-full min-h-[300px] rounded-[32px] overflow-hidden shadow-lg">
+          <div className="h-[400px] rounded-3xl overflow-hidden shadow-2xl">
             <img 
               src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800" 
               alt="Restaurant kitchen" 
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+              className="w-full h-full object-cover"
             />
           </div>
         </div>
 
-        {/* Core Values */}
-        <div className="text-center mb-12">
-          <h2 className="font-headline-lg text-on-surface mb-4">Our Core Values</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-          {[
-            { icon: "rocket_launch", title: "Speed & Simplicity", desc: "No complex onboarding. Restaurants can launch their digital menu in under 2 minutes." },
-            { icon: "favorite", title: "Community First", desc: "We prioritize local, independent eateries and help them thrive in a digital-first world." },
-            { icon: "shield", title: "Transparency", desc: "Zero hidden fees, transparent pricing, and direct connections between diners and chefs." }
-          ].map((val, i) => (
-            <div key={i} className="glass-card bg-surface p-8 rounded-3xl border border-outline-variant/30 shadow-sm hover:shadow-md transition-shadow text-center">
-              <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 text-primary flex items-center justify-center mb-6">
-                <MaterialIcon name={val.icon} className="text-[28px]" />
-              </div>
-              <h3 className="font-headline-sm text-on-surface mb-3">{val.title}</h3>
-              <p className="text-on-surface-variant text-sm leading-relaxed">{val.desc}</p>
-            </div>
-          ))}
+        {/* What We Provide */}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-on-surface mb-4">What We Provide</h2>
+          <p className="text-on-surface-variant text-lg max-w-2xl mx-auto">
+            MenuMap is a dual-sided ecosystem designed to bring immense value to both the people who make the food and the people who eat it.
+          </p>
         </div>
 
-        {/* Call to action */}
-        <div className="glass-card bg-primary text-on-primary p-12 rounded-[32px] text-center shadow-xl">
-          <h2 className="font-headline-lg font-bold mb-4">Ready to join the map?</h2>
-          <p className="opacity-90 mb-8 max-w-2xl mx-auto">
-            Whether you're looking for your next meal or looking to showcase your culinary creations, there's a place for you here.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/register/owner" className="bg-white text-primary font-bold py-3 px-8 rounded-full hover:bg-surface transition-colors shadow-md">
-              Add Your Restaurant
-            </Link>
-            <Link href="/search" className="bg-primary-dark border border-white/30 text-white font-bold py-3 px-8 rounded-full hover:bg-white/10 transition-colors">
-              Explore Menus
-            </Link>
+        {/* For Diners */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center mb-24">
+          <div className="order-2 md:order-1 h-[400px] rounded-3xl overflow-hidden shadow-xl bg-surface-container-low">
+            <img 
+              src="https://images.unsplash.com/photo-1526367790999-0150786686a2?w=800" 
+              alt="People dining" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="order-1 md:order-2">
+            <h3 className="text-2xl font-bold text-primary mb-6 uppercase tracking-wider text-sm">For Diners</h3>
+            <div className="space-y-8">
+              <div>
+                <h4 className="text-xl font-bold text-on-surface mb-2">Map-Based Discovery</h4>
+                <p className="text-on-surface-variant">Instantly see all highly-rated restaurants plotted on a beautiful interactive map around your exact GPS location.</p>
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-on-surface mb-2">Rich Digital Menus</h4>
+                <p className="text-on-surface-variant">No more blurry PDF menus. View crystal-clear food photography, exact pricing, and dietary tags before you decide where to eat.</p>
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-on-surface mb-2">Seamless Ordering</h4>
+                <p className="text-on-surface-variant">Add items to your cart and place orders directly through the platform with just a few taps.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* For Restaurants */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center mb-32">
+          <div>
+            <h3 className="text-2xl font-bold text-primary mb-6 uppercase tracking-wider text-sm">For Restaurants</h3>
+            <div className="space-y-8">
+              <div>
+                <h4 className="text-xl font-bold text-on-surface mb-2">Instant Digital Storefronts</h4>
+                <p className="text-on-surface-variant">Create a beautiful, SEO-optimized landing page for your restaurant in less than 2 minutes. No coding required.</p>
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-on-surface mb-2">Automated QR Menus</h4>
+                <p className="text-on-surface-variant">MenuMap automatically generates print-ready QR codes for your tables. When diners scan them, they see your live digital menu.</p>
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-on-surface mb-2">Zero-Commission Structure</h4>
+                <p className="text-on-surface-variant">Stop paying 30% cuts. MenuMap provides the software infrastructure so you keep 100% of your profits.</p>
+              </div>
+            </div>
+          </div>
+          <div className="h-[400px] rounded-3xl overflow-hidden shadow-xl bg-surface-container-low">
+            <img 
+              src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800" 
+              alt="Restaurant owner" 
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
 
