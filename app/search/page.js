@@ -69,11 +69,6 @@ function SearchResultsContent() {
           city: activeFilter === "Nearby" && userCity ? userCity : undefined,
         };
         let results = await findDishResults(searchQuery, filters);
-        
-        if (results && activeFilter === "Rating") {
-          results = [...results].sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5));
-        }
-
         setFilteredData(results || []);
         setLoadError("");
       } catch (err) {
@@ -131,7 +126,7 @@ function SearchResultsContent() {
     router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
-  const filterOptions = ["All", "Under Rs 200", "Nearby", "Open Now", "Rating", "Veg"];
+  const filterOptions = ["All", "Under Rs 200", "Nearby", "Open Now", "Veg"];
 
   return (
     <div className="bg-background text-on-background min-h-screen pb-16">
@@ -199,7 +194,6 @@ function SearchResultsContent() {
               }`}
             >
               {filter === "Nearby" && locating ? "Locating..." : filter}
-              {filter === "Rating" && <MaterialIcon name="star" className="text-[14px]" />}
             </button>
           ))}
         </div>
