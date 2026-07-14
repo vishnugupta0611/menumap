@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { uploadImageAction } from "@/app/actions/upload";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
@@ -116,7 +117,28 @@ export default function CustomerProfilePage() {
   if (!user || user.role === "owner") return null;
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest pb-12 pt-6">
+    <div className="min-h-screen bg-surface-container-lowest pb-12 font-body-md antialiased">
+      {/* Top App Bar */}
+      <header className="sticky top-0 left-0 w-full z-40 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl border-b border-outline-variant/30 mb-6">
+        <div className="flex justify-between items-center w-full px-4 md:px-8 py-4 max-w-7xl mx-auto">
+          <Link href="/" className="flex items-center gap-3 no-underline cursor-pointer">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-primary/10 text-primary">
+              <MaterialIcon name="arrow_back" className="text-[24px]" />
+            </div>
+            <h1 className="font-display-lg-mobile text-display-lg-mobile text-primary font-bold">Back to Explore</h1>
+          </Link>
+          
+          <div className="flex items-center gap-2">
+            <button className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent">
+              <MaterialIcon name="notifications" />
+            </button>
+            <button className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent">
+              <MaterialIcon name="settings" />
+            </button>
+          </div>
+        </div>
+      </header>
+
       <div className="max-w-4xl mx-auto px-4 md:px-8 space-y-8">
         
         {/* Header */}
