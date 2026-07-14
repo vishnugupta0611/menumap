@@ -22,16 +22,18 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const { session } = useClerk();
+
   // Force sign out of Clerk when arriving at the login page
   // to ensure a clean slate and avoid "You're already signed in" errors.
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && session) {
       signOut();
     }
-  }, [isLoaded, signOut]);
+  }, [isLoaded, session, signOut]);
 
   const handleGoogleSSO = async () => {
-    if (!isLoaded) return;
+    if (!isLoaded || !signIn) return;
     sessionStorage.setItem("login_role", activePortal);
     try {
       await signIn.authenticateWithRedirect({
@@ -47,7 +49,7 @@ export default function LoginPage() {
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    if (!isLoaded) return;
+    if (!isLoaded || !signIn) return;
     setLoading(true);
     setError("");
 
