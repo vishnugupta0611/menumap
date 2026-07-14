@@ -122,13 +122,12 @@ export default function HomePage() {
 
   const openMapExplore = () => {
     const goToNearby = (location) => {
-      const params = new URLSearchParams({ filter: "Nearby" });
-      if (searchQuery.trim()) params.set("q", searchQuery.trim());
+      const params = new URLSearchParams();
       if (location?.lat && location?.lng) {
         params.set("lat", String(location.lat));
         params.set("lng", String(location.lng));
       }
-      router.push(`/search?${params.toString()}`);
+      router.push(`/map?${params.toString()}`);
     };
 
     if (userLocation) {
