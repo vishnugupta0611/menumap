@@ -235,7 +235,7 @@ export default function CustomerProfilePage() {
         </div>
 
         {/* Order History */}
-        <div className="bg-white p-6 rounded-3xl border border-surface-container shadow-sm">
+        <div id="orders" className="bg-white p-6 rounded-3xl border border-surface-container shadow-sm scroll-mt-24">
           <h2 className="text-lg font-bold text-on-surface mb-6 flex items-center gap-2">
             <MaterialIcon name="history" className="text-primary" />
             Order History

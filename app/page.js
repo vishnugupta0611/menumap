@@ -21,6 +21,7 @@ export default function HomePage() {
   const [loadError, setLoadError] = useState("");
   const [userLocation, setUserLocation] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [greeting, setGreeting] = useState("Good morning");
 
   const formatDistance = (distKm) => {
     if (distKm === undefined) return "Locating...";
@@ -59,6 +60,11 @@ export default function HomePage() {
     } else {
       loadData();
     }
+
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Good morning");
+    else if (hour < 18) setGreeting("Good afternoon");
+    else setGreeting("Good evening");
   }, []);
 
   // Handle header show/hide on scroll
@@ -140,9 +146,9 @@ export default function HomePage() {
           </div>
           
           <div className="flex items-center gap-2">
-            <button className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent">
+            <Link href="/customer/profile#orders" className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent no-underline">
               <MaterialIcon name="shopping_cart" />
-            </button>
+            </Link>
             
             {user ? (
               <Link href="/customer/profile" className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-sm flex items-center justify-center bg-primary text-on-primary font-bold">
@@ -173,7 +179,7 @@ export default function HomePage() {
       <main className="pt-24 px-margin-mobile max-w-4xl mx-auto">
         {/* Hero Greeting */}
         <section className="mb-8">
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-2">Good morning, Foodie!</h2>
+          <h2 className="font-headline-md text-headline-md text-on-surface mb-2">{greeting}, Foodie!</h2>
           <p className="font-body-md text-on-surface-variant opacity-80">Ready to discover your next favorite meal?</p>
         </section>
 
