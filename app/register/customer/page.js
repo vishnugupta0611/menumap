@@ -112,8 +112,8 @@ export default function CustomerRegisterPage() {
       router.push("/");
 
     } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
-      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || "Invalid OTP Code.");
+      console.error(err);
+      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || err.message || "Invalid OTP Code.");
     } finally {
       setLoading(false);
     }

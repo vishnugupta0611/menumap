@@ -139,8 +139,8 @@ export default function OwnerRegisterPage() {
       router.push("/admin/dashboard");
 
     } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
-      setSignupError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || "Invalid OTP Code.");
+      console.error(err);
+      setSignupError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || err.message || "Invalid OTP Code.");
     } finally {
       setSignupLoading(false);
     }
