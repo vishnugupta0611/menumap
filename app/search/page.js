@@ -25,11 +25,14 @@ function SearchResultsContent() {
   const [locating, setLocating] = useState(false);
   const [loadError, setLoadError] = useState("");
 
-  const formatDistance = (distKm) => {
+  const formatDistance = (distKm, city) => {
     if (distKm === undefined) return "Locating...";
-    if (distKm === null) return "No GPS Data";
+    if (distKm === null) return city || "Unknown Location";
     const m = Math.round(distKm * 1000);
-    return `${m} meters`;
+    if (m >= 1000) {
+      return `${(m / 1000).toFixed(1)} km`;
+    }
+    return `${m} m`;
   };
 
   useEffect(() => {
@@ -197,7 +200,7 @@ function SearchResultsContent() {
         </div>
       </section>
 
-      <main className="px-margin-mobile mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter max-w-7xl mx-auto">
+      <main className="px-margin-mobile mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
         {loadError && (
           <div className="col-span-full rounded-2xl border border-error-container bg-error-container/40 p-4 text-sm text-on-error-container">
             {loadError}
@@ -207,11 +210,11 @@ function SearchResultsContent() {
           filteredData.map((item) => (
             <article
               key={item._id || item.id}
-              className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-primary/5 border border-surface-container transition-all duration-300 flex flex-col h-full group cursor-pointer active:scale-[0.98]"
+              className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-primary/5 border border-surface-container transition-all duration-300 flex flex-col h-full group cursor-pointer active:scale-[0.98]"
               onClick={() => router.push(`/${item.restaurant?.city || "kanpur"}/${item.restaurant?.slug || "food-villa"}`)}
             >
               {/* Image Section */}
-              <div className="relative h-48 w-full overflow-hidden bg-surface-container-low">
+              <div className="relative h-36 w-full overflow-hidden bg-surface-container-low">
                 <img className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={item.name} src={item.image} />
                 
                 {/* Rating Badge */}
@@ -222,43 +225,43 @@ function SearchResultsContent() {
               </div>
 
               {/* Content Section */}
-              <div className="p-5 flex flex-col flex-grow">
+              <div className="p-3.5 flex flex-col flex-grow">
                 {/* Header (Veg/NonVeg + Title) */}
-                <div className="flex justify-between items-start gap-3 mb-1.5">
-                  <div className="flex gap-2.5 items-start">
+                <div className="flex justify-between items-start gap-2 mb-1">
+                  <div className="flex gap-2 items-start">
                     <div className="mt-1 shrink-0 border border-outline-variant/60 p-[2px] bg-white rounded-sm shadow-sm">
-                      <div className={`rounded-full w-2 h-2 ${item.veg ? "bg-tertiary" : "bg-error"}`} />
+                      <div className={`rounded-full w-1.5 h-1.5 ${item.veg ? "bg-tertiary" : "bg-error"}`} />
                     </div>
-                    <h3 className="font-headline-sm text-on-surface font-bold leading-tight line-clamp-2">
+                    <h3 className="font-bold text-base text-on-surface leading-tight line-clamp-2">
                       {item.name}
                     </h3>
                   </div>
-                  <span className="font-headline-sm text-primary font-bold whitespace-nowrap">₹{item.price}</span>
+                  <span className="text-base text-primary font-bold whitespace-nowrap">₹{item.price}</span>
                 </div>
                 
                 {/* Restaurant Info */}
-                <div className="mt-1 mb-5 pl-7">
-                  <p className="text-sm text-on-surface-variant line-clamp-1 font-medium">
+                <div className="mt-0.5 mb-3 pl-6">
+                  <p className="text-xs text-on-surface-variant line-clamp-1 font-medium">
                     By {item.restaurant?.name || "Nearby restaurant"}
                   </p>
                   {item.restaurant?.address && (
-                    <p className="text-xs text-on-surface-variant opacity-80 line-clamp-1 mt-0.5">
+                    <p className="text-[11px] text-on-surface-variant opacity-80 line-clamp-1 mt-0.5">
                       {item.restaurant.address}
                     </p>
                   )}
                 </div>
 
                 {/* Footer / Meta Info */}
-                <div className="mt-auto pt-4 border-t border-surface-container flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-on-surface-variant bg-surface-container-low px-2.5 py-1.5 rounded-lg">
-                    <MaterialIcon name="location_on" className="text-[16px] text-primary" />
-                    <span className="text-xs font-bold tracking-wide uppercase">
-                      {formatDistance(item.restaurant?.distanceKm)}
+                <div className="mt-auto pt-3 border-t border-surface-container flex items-center justify-between">
+                  <div className="flex items-center gap-1 text-on-surface-variant bg-surface-container-low px-2 py-1 rounded-md">
+                    <MaterialIcon name="location_on" className="text-[14px] text-primary" />
+                    <span className="text-[11px] font-bold tracking-wide uppercase truncate max-w-[80px]">
+                      {formatDistance(item.restaurant?.distanceKm, item.restaurant?.city)}
                     </span>
                   </div>
                   
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${item.restaurant?.openNow ? "bg-tertiary/10 text-tertiary" : "bg-error/10 text-error"}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${item.restaurant?.openNow ? "bg-tertiary" : "bg-error"}`}></div>
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold ${item.restaurant?.openNow ? "bg-tertiary/10 text-tertiary" : "bg-error/10 text-error"}`}>
+                    <div className={`w-1 h-1 rounded-full ${item.restaurant?.openNow ? "bg-tertiary" : "bg-error"}`}></div>
                     {item.restaurant?.openNow ? "OPEN" : "CLOSED"}
                   </div>
                 </div>
