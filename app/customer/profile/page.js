@@ -157,14 +157,14 @@ export default function CustomerProfilePage() {
         
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-surface-container shadow-sm">
-          <div className="flex items-center gap-4">
-            <label className="relative w-20 h-20 rounded-full bg-primary/10 text-on-primary flex items-center justify-center font-bold text-3xl overflow-hidden shrink-0 cursor-pointer group shadow-sm border-2 border-surface-variant">
+          <div className="flex items-center gap-5">
+            <label className="relative w-24 h-24 rounded-full bg-primary text-on-primary flex items-center justify-center font-extrabold text-4xl overflow-hidden shrink-0 cursor-pointer group shadow-md border-4 border-white transition-transform hover:scale-105 active:scale-95">
               {photo ? (
                 <img src={photo} alt={name} className="w-full h-full object-cover" />
               ) : (
                 name ? name.charAt(0).toUpperCase() : "U"
               )}
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <MaterialIcon name="edit" className="text-white text-[24px]" />
               </div>
               <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
