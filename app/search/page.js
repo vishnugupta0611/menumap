@@ -209,59 +209,62 @@ function SearchResultsContent() {
           filteredData.map((item) => (
             <article
               key={item._id || item.id}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-primary/5 border border-surface-container transition-all duration-300 flex flex-col h-full group cursor-pointer active:scale-[0.98]"
+              className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md border border-surface-container transition-all duration-300 flex flex-col h-full group cursor-pointer active:scale-[0.98]"
               onClick={() => router.push(`/${item.restaurant?.city || "kanpur"}/${item.restaurant?.slug || "food-villa"}`)}
             >
               {/* Image Section */}
-              <div className="relative h-36 w-full overflow-hidden bg-surface-container-low">
+              <div className="relative h-40 w-full overflow-hidden bg-surface-container-low">
                 <img className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={item.name} src={item.image} />
                 
-                {/* Rating Badge */}
-                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm border border-white/20">
-                  <MaterialIcon name="star" className="text-[14px] text-primary fill" />
-                  <span className="text-xs font-bold text-on-surface">{item.rating || "4.5"}</span>
-                </div>
+                {item.rating && (
+                  <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-md px-2 py-1 rounded-md flex items-center gap-1 shadow-sm border border-white/20">
+                    <span className="text-[12px]">⭐</span>
+                    <span className="text-[12px] font-bold text-on-surface">{item.rating}</span>
+                  </div>
+                )}
+
+                <button className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center shadow-sm border border-white/20 text-outline hover:text-primary transition-colors z-10" onClick={(e) => { e.stopPropagation(); /* Handle fav click */ }}>
+                  <span className="text-[16px] leading-none mb-0.5">♡</span>
+                </button>
+
+                {item.isBestseller && (
+                  <div className="absolute bottom-2 left-2 bg-gradient-to-r from-primary to-primary-container text-on-primary px-2 py-0.5 rounded shadow-md text-[10px] font-bold uppercase tracking-wider">
+                    Bestseller
+                  </div>
+                )}
               </div>
 
               {/* Content Section */}
               <div className="p-3.5 flex flex-col flex-grow">
-                {/* Header (Veg/NonVeg + Title) */}
+                {/* Title Row */}
                 <div className="flex justify-between items-start gap-2 mb-1">
-                  <div className="flex gap-2 items-start">
-                    <div className="mt-1 shrink-0 border border-outline-variant/60 p-[2px] bg-white rounded-sm shadow-sm">
-                      <div className={`rounded-full w-1.5 h-1.5 ${item.veg ? "bg-tertiary" : "bg-error"}`} />
-                    </div>
-                    <h3 className="font-bold text-base text-on-surface leading-tight line-clamp-2">
-                      {item.name}
-                    </h3>
-                  </div>
-                  <span className="text-base text-primary font-bold whitespace-nowrap">₹{item.price}</span>
+                  <h3 className="font-bold text-[16px] text-on-surface leading-tight line-clamp-1">
+                    {item.name}
+                  </h3>
+                  <span className="text-[16px] text-primary font-bold whitespace-nowrap">₹{item.price}</span>
                 </div>
                 
-                {/* Restaurant Info */}
-                <div className="mt-0.5 mb-3 pl-6">
-                  <p className="text-xs text-on-surface-variant line-clamp-1 font-medium">
-                    By {item.restaurant?.name || "Nearby restaurant"}
-                  </p>
-                  {item.restaurant?.address && (
-                    <p className="text-[11px] text-on-surface-variant opacity-80 line-clamp-1 mt-0.5">
-                      {item.restaurant.address}
-                    </p>
-                  )}
-                </div>
+                {/* Restaurant */}
+                <p className="text-[13px] text-on-surface-variant font-medium line-clamp-1 mb-0.5">
+                  {item.restaurant?.name || "Nearby restaurant"}
+                </p>
 
-                {/* Footer / Meta Info */}
-                <div className="mt-auto pt-3 border-t border-surface-container flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-on-surface-variant bg-surface-container-low px-2 py-1 rounded-md">
-                    <MaterialIcon name="location_on" className="text-[14px] text-primary" />
-                    <span className="text-[11px] font-bold tracking-wide uppercase truncate max-w-[80px]">
-                      {formatDistance(item.restaurant?.distanceKm, item.restaurant?.city)}
-                    </span>
+                {/* Category */}
+                <p className="text-[12px] text-on-surface-variant opacity-80 mb-3 font-medium">
+                  {item.category ? `${item.category} • ` : ""}{item.veg ? "Veg" : "Non-Veg"}
+                </p>
+
+                {/* Divider */}
+                <div className="mt-auto border-t border-surface-container pt-3"></div>
+
+                {/* Bottom Info */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1 text-[12px] text-on-surface-variant font-medium">
+                    📍 {formatDistance(item.restaurant?.distanceKm, item.restaurant?.city)}
                   </div>
                   
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold ${item.restaurant?.openNow ? "bg-tertiary/10 text-tertiary" : "bg-error/10 text-error"}`}>
-                    <div className={`w-1 h-1 rounded-full ${item.restaurant?.openNow ? "bg-tertiary" : "bg-error"}`}></div>
-                    {item.restaurant?.openNow ? "OPEN" : "CLOSED"}
+                  <div className={`flex items-center gap-1 text-[12px] font-bold ${item.restaurant?.openNow ? "text-tertiary" : "text-error"}`}>
+                    {item.restaurant?.openNow ? "🟢 Open" : "🔴 Closed"}
                   </div>
                 </div>
               </div>
