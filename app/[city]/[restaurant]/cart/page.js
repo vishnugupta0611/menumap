@@ -38,32 +38,25 @@ export default function CartPage() {
       setError("Restaurant owner account se customer order place nahi ho sakta. Please customer account se login karein.");
       return;
     }
-    if (cart.length === 0) return;
     
-    const finalName = user?.name || formData.name;
-    const finalEmail = user?.email || formData.email;
-
-    if (!finalName || !finalEmail) {
-      setError("Please provide at least your name and email.");
+    if (!user) {
+      router.push("/login");
       return;
     }
 
+    if (cart.length === 0) return;
+    
     setLoading(true);
     setError("");
 
     try {
-      // Save info
-      setCustomerInfo({ name: finalName, email: finalEmail, phone: formData.phone });
-
-      // First we need the restaurantId, since params only has city/slug.
-      // But we can hit an endpoint that takes city/slug, or we can fetch restaurant details first.
       const resData = await api.get(`/api/restaurants/${city}/${slug}`);
       const restaurantId = resData.data.data._id;
 
       const orderPayload = {
         restaurantId,
-        customerName: finalName,
-        customerEmail: finalEmail,
+        customerName: user.name,
+        customerEmail: user.email,
         customerPhone: formData.phone,
         tableNumber: formData.tableNumber,
         items: cart.map(item => ({
@@ -172,30 +165,14 @@ export default function CartPage() {
                     </div>
                   </div>
                 ) : (
-                  <>
-                    <div>
-                      <label className="block text-sm font-bold text-on-surface-variant mb-1">Full Name *</label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                        placeholder="John Doe"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-on-surface-variant mb-1">Email Address *</label>
-                      <input
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                        placeholder="john@example.com"
-                      />
-                    </div>
-                  </>
+                  <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/30 text-center">
+                    <MaterialIcon name="account_circle" className="text-outline text-3xl mb-2" />
+                    <p className="font-bold text-on-surface text-sm mb-1">Login Required</p>
+                    <p className="text-xs text-on-surface-variant mb-4">Please login to securely place your order.</p>
+                    <Link href="/login" className="inline-flex bg-primary text-on-primary px-6 py-2 rounded-full font-bold text-sm">
+                      Login to Continue
+                    </Link>
+                  </div>
                 )}
                 
                 <div>
@@ -231,15 +208,26 @@ export default function CartPage() {
               <span className="text-xs text-on-surface-variant uppercase tracking-wider font-bold">Total to Pay</span>
               <span className="font-display-sm text-on-surface">Rs {getTotalAmount()}</span>
             </div>
-            <button
-              type="submit"
-              form="checkout-form"
-              disabled={loading}
-              className="flex-[2] bg-primary text-on-primary py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 active:scale-[0.98] transition-transform disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
-            >
-              {loading ? "Processing..." : "Place Order"}
-              {!loading && <MaterialIcon name="check_circle" />}
-            </button>
+            {user ? (
+              <button
+                type="submit"
+                form="checkout-form"
+                disabled={loading}
+                className="flex-[2] bg-primary text-on-primary py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 active:scale-[0.98] transition-transform disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+              >
+                {loading ? "Processing..." : "Place Order"}
+                {!loading && <MaterialIcon name="check_circle" />}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => router.push("/login")}
+                className="flex-[2] bg-primary text-on-primary py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+              >
+                Login to Order
+                <MaterialIcon name="login" />
+              </button>
+            )}
           </div>
         </div>
       )}

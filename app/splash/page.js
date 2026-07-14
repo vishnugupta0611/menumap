@@ -14,7 +14,7 @@ export default function SplashPage() {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          setTimeout(() => router.push("/login"), 500);
+          setTimeout(() => router.push("/"), 500);
           return 100;
         }
         return prev + Math.random() * 15;
