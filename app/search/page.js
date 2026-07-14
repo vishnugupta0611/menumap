@@ -223,8 +223,11 @@ function SearchResultsContent() {
                   </div>
                 )}
 
-                <button className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center shadow-sm border border-white/20 text-outline hover:text-primary transition-colors z-10" onClick={(e) => { e.stopPropagation(); /* Handle fav click */ }}>
-                  <span className="text-[16px] leading-none mb-0.5">♡</span>
+                <button className="absolute bottom-2 right-2 px-4 py-1.5 bg-white/95 backdrop-blur-md flex items-center justify-center shadow-md border border-outline-variant/30 text-primary font-extrabold text-[12px] rounded-lg hover:bg-surface-variant transition-colors z-10" onClick={(e) => { 
+                  e.stopPropagation(); 
+                  router.push(`/${item.restaurant?.city || "kanpur"}/${item.restaurant?.slug || "food-villa"}/menu`); 
+                }}>
+                  ADD
                 </button>
 
                 {item.isBestseller && (
