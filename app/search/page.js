@@ -223,11 +223,12 @@ function SearchResultsContent() {
                   </div>
                 )}
 
-                <button className="absolute bottom-2 right-2 px-4 py-1.5 bg-white/95 backdrop-blur-md flex items-center justify-center shadow-md border border-outline-variant/30 text-primary font-extrabold text-[12px] rounded-lg hover:bg-surface-variant transition-colors z-10" onClick={(e) => { 
+                <button className="absolute top-2 right-2 px-3 py-1.5 bg-primary text-on-primary flex items-center gap-1 shadow-lg shadow-primary/30 border border-primary/20 font-bold text-[11px] uppercase tracking-wider rounded-full hover:bg-primary-container hover:text-on-primary-container hover:scale-105 active:scale-95 transition-all duration-300 z-10 group/add" onClick={(e) => { 
                   e.stopPropagation(); 
                   router.push(`/${item.restaurant?.city || "kanpur"}/${item.restaurant?.slug || "food-villa"}/menu`); 
                 }}>
-                  ADD
+                  <span>ADD</span>
+                  <MaterialIcon name="add" className="text-[14px] transition-transform duration-300 group-hover/add:rotate-90" />
                 </button>
 
                 {item.isBestseller && (
