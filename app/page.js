@@ -56,6 +56,18 @@ export default function HomePage() {
           }
         }
         
+        if (dishes.length < 3) {
+          const ultimateFallbackRes = await findDishResults("", { limit: 10 });
+          const ultimateFallbackDishes = ultimateFallbackRes.data || [];
+          const seen = new Set(dishes.map(d => String(d._id || d.id)));
+          for (const d of ultimateFallbackDishes) {
+            if (!seen.has(String(d._id || d.id))) {
+              dishes.push(d);
+              seen.add(String(d._id || d.id));
+            }
+          }
+        }
+        
         setTrendingDishes(dishes.slice(0, 3));
 
         const recRes = await findDishResults("", { lat, lng, limit: 4 });
