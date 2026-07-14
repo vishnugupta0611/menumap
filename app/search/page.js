@@ -68,7 +68,12 @@ function SearchResultsContent() {
           lng: userLng !== null ? userLng : undefined,
           city: activeFilter === "Nearby" && userCity ? userCity : undefined,
         };
-        const results = await findDishResults(searchQuery, filters);
+        let results = await findDishResults(searchQuery, filters);
+        
+        if (results && activeFilter === "Rating") {
+          results = [...results].sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5));
+        }
+
         setFilteredData(results || []);
         setLoadError("");
       } catch (err) {
@@ -194,7 +199,7 @@ function SearchResultsContent() {
               }`}
             >
               {filter === "Nearby" && locating ? "Locating..." : filter}
-              {filter === "Rating" && <MaterialIcon name="keyboard_arrow_down" className="text-[16px]" />}
+              {filter === "Rating" && <MaterialIcon name="star" className="text-[14px]" />}
             </button>
           ))}
         </div>
