@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
@@ -24,6 +24,24 @@ function SearchResultsContent() {
   const [userCity, setUserCity] = useState("");
   const [locating, setLocating] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observer = useRef();
+
+  const lastDishElementRef = useCallback(node => {
+    if (loadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loadingMore, hasMore]);
+
+  const TRENDING_KEYWORDS = "Idli Chowmein Dosa Sambhar Pasta Chhole Bhature Pizza Burger Momos";
+  const isTrendingMode = searchQuery.trim() === "" || searchParams.get("trending") === "true";
 
   const formatDistance = (distKm, city) => {
     if (distKm === undefined) return "Locating...";
@@ -59,6 +77,7 @@ function SearchResultsContent() {
   useEffect(() => {
     async function loadResults() {
       try {
+        if (page > 1) setLoadingMore(true);
         const filters = {
           maxPrice: activeFilter === "Under Rs 200" ? 200 : undefined,
           veg: activeFilter === "Veg" ? true : undefined,
@@ -67,18 +86,37 @@ function SearchResultsContent() {
           lat: userLat !== null ? userLat : undefined,
           lng: userLng !== null ? userLng : undefined,
           city: activeFilter === "Nearby" && userCity ? userCity : undefined,
+          page,
+          limit: 6
         };
-        let results = await findDishResults(searchQuery, filters);
-        setFilteredData(results || []);
+        
+        const actualQuery = isTrendingMode ? TRENDING_KEYWORDS : searchQuery;
+        let resultsRes = await findDishResults(actualQuery, filters);
+        
+        const newDishes = resultsRes.data || [];
+        setHasMore(resultsRes.hasMore || false);
+        
+        if (page === 1) {
+          setFilteredData(newDishes);
+        } else {
+          setFilteredData(prev => {
+            const seen = new Set(prev.map(d => String(d._id || d.id)));
+            const deduplicated = newDishes.filter(d => !seen.has(String(d._id || d.id)));
+            return [...prev, ...deduplicated];
+          });
+        }
+        
         setLoadError("");
       } catch (err) {
-        setFilteredData([]);
+        if (page === 1) setFilteredData([]);
         setLoadError("Search is temporarily unavailable.");
+      } finally {
+        setLoadingMore(false);
       }
     }
 
     loadResults();
-  }, [searchQuery, activeFilter, userLat, userLng]);
+  }, [searchQuery, activeFilter, userLat, userLng, page, searchParams, isTrendingMode]);
 
   const handleFilterClick = (filter) => {
     if (filter === "Nearby" && userLat === null) {
@@ -97,6 +135,7 @@ function SearchResultsContent() {
             const data = await res.json();
             const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || "";
             setUserCity(city);
+            setPage(1);
             setActiveFilter(filter);
           } catch {
             setLoadError("Failed to apply location");
@@ -110,6 +149,7 @@ function SearchResultsContent() {
         }
       );
     } else {
+      setPage(1);
       setActiveFilter(filter);
     }
   };
@@ -178,7 +218,10 @@ function SearchResultsContent() {
             className="font-body-md text-on-surface font-semibold bg-transparent border-none outline-none focus:ring-0 w-full p-0"
             placeholder="Search dishes..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
           />
         </form>
 
@@ -199,15 +242,28 @@ function SearchResultsContent() {
         </div>
       </section>
 
-      <main className="px-margin-mobile mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
+      <main className="px-margin-mobile mt-6 max-w-7xl mx-auto">
+        {isTrendingMode && (
+          <div className="mb-4">
+            <h2 className="font-headline-sm text-headline-sm text-on-surface mb-1 flex items-center gap-2">
+              <MaterialIcon name="trending_up" className="text-primary" /> Trending Now
+            </h2>
+            <p className="font-body-sm text-on-surface-variant opacity-80">Popular dishes that people are loving</p>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {loadError && (
           <div className="col-span-full rounded-2xl border border-error-container bg-error-container/40 p-4 text-sm text-on-error-container">
             {loadError}
           </div>
         )}
         {filteredData.length > 0 ? (
-          filteredData.map((item) => (
+          filteredData.map((item, index) => {
+            const isLast = index === filteredData.length - 1;
+            return (
             <article
+              ref={isLast ? lastDishElementRef : null}
               key={item._id || item.id}
               className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md border border-surface-container transition-all duration-300 flex flex-col h-full group cursor-pointer active:scale-[0.98]"
               onClick={() => router.push(`/${item.restaurant?.city || "kanpur"}/${item.restaurant?.slug || "food-villa"}`)}
@@ -273,12 +329,20 @@ function SearchResultsContent() {
                 </div>
               </div>
             </article>
-          ))
+            );
+          })
         ) : (
           <div className="col-span-full py-16 text-center text-on-surface-variant font-body-lg">
             {activeFilter === "Nearby" && userLat === null 
               ? "Please allow location access to see nearby dishes." 
               : "No dishes found matching your query."}
+          </div>
+        )}
+        </div>
+        
+        {loadingMore && (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         )}
       </main>

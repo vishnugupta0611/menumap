@@ -33,7 +33,10 @@ export async function findDishResults(query = "", filters = {}) {
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
   });
-  return apiGet(`/search/dishes?${params.toString()}`, { cache: "no-store" });
+  
+  const res = await fetch(`${API_BASE_URL}/search/dishes?${params.toString()}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Search request failed");
+  return await res.json();
 }
 
 export async function listReviews(city = "kanpur", slug = "food-villa") {

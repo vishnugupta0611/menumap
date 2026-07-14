@@ -39,9 +39,27 @@ export default function HomePage() {
         const restaurantsList = await listNearbyRestaurants(query ? { lat, lng } : {});
         setNearbyRestaurants(restaurantsList);
 
-        const dishes = await findDishResults("", query ? { lat, lng } : {});
+        const TRENDING_KEYWORDS = "Idli Chowmein Dosa Sambhar Pasta Chhole Bhature Pizza Burger Momos";
+        
+        let dishesRes = await findDishResults(TRENDING_KEYWORDS, { lat, lng, limit: 10 });
+        let dishes = dishesRes.data || [];
+        
+        if (dishes.length < 3) {
+          const fallbackRes = await findDishResults(TRENDING_KEYWORDS, { limit: 10 });
+          const fallbackDishes = fallbackRes.data || [];
+          const seen = new Set(dishes.map(d => String(d._id || d.id)));
+          for (const d of fallbackDishes) {
+            if (!seen.has(String(d._id || d.id))) {
+              dishes.push(d);
+              seen.add(String(d._id || d.id));
+            }
+          }
+        }
+        
         setTrendingDishes(dishes.slice(0, 3));
-        setRecommendedDishes(dishes.slice(0, 4));
+
+        const recRes = await findDishResults("", { lat, lng, limit: 4 });
+        setRecommendedDishes(recRes.data || []);
       } catch {
         setLoadError("Food discovery is temporarily unavailable. Please try again in a moment.");
       } finally {
@@ -233,10 +251,13 @@ export default function HomePage() {
             </div>
           )}
           <div className="flex justify-between items-end mb-6">
-            <h3 className="font-headline-md text-headline-md text-on-surface">Trending Dishes</h3>
-            <button className="text-primary font-label-sm text-label-sm uppercase tracking-wider cursor-pointer border-none bg-transparent">
-              See All
-            </button>
+            <div>
+              <h2 className="font-headline-sm text-headline-sm text-on-surface mb-1">Trending Near You</h2>
+              <p className="font-body-sm text-on-surface-variant opacity-80">Most loved dishes in your area</p>
+            </div>
+            <Link href="/search?trending=true" className="font-label-md text-primary font-bold hover:underline">
+              See all
+            </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {loading ? (
