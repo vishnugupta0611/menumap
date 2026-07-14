@@ -7,6 +7,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { uploadImageAction } from "@/app/actions/upload";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 export default function CustomerProfilePage() {
   const { user, updateProfile, logout } = useAuth();
@@ -141,10 +142,11 @@ export default function CustomerProfilePage() {
                   src={user.photo}
                 />
               ) : (
-                <img
-                  className="w-full h-full object-cover"
-                  alt={user.name}
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random`}
+                <DotLottieReact
+                  src="https://lottie.host/e2cc2a09-ff9e-4a4b-97e3-0d3fdbf3b0e3/1V7VzF5gW8.json"
+                  autoplay
+                  loop
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               )}
             </div>
@@ -157,11 +159,16 @@ export default function CustomerProfilePage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-surface-container shadow-sm">
           <div className="flex items-center gap-4">
-            <label className="relative w-20 h-20 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-3xl overflow-hidden shrink-0 cursor-pointer group shadow-sm border-2 border-surface-variant">
+            <label className="relative w-20 h-20 rounded-full bg-primary/10 text-on-primary flex items-center justify-center font-bold text-3xl overflow-hidden shrink-0 cursor-pointer group shadow-sm border-2 border-surface-variant">
               {photo ? (
                 <img src={photo} alt={name} className="w-full h-full object-cover" />
               ) : (
-                name.charAt(0).toUpperCase()
+                <DotLottieReact
+                  src="https://lottie.host/e2cc2a09-ff9e-4a4b-97e3-0d3fdbf3b0e3/1V7VzF5gW8.json"
+                  autoplay
+                  loop
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
               )}
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <MaterialIcon name="edit" className="text-white text-[24px]" />
