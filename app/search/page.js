@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { findDishResults, listNearbyRestaurants } from "@/services/restaurant-service";
+import { useAuth } from "@/contexts/AuthContext";
 
 function SearchResultsContent() {
+  const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
@@ -127,21 +129,41 @@ function SearchResultsContent() {
     <div className="bg-background text-on-background min-h-screen pb-16">
       <header className="bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl top-0 z-40 sticky border-b border-surface-container">
         <div className="flex justify-between items-center w-full px-margin-mobile py-4 max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 flex items-center justify-center">
-              <img
-                className="w-full h-full object-cover"
-                alt="Concierge headshot"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBK8i5O5uh9OzzoZFbUOgVzF01pEFgmzUrF_PEveJs9cP-PvLr8AwfsW9Mi6Nu0wwIRN4LCXGpmvcWspu0neGdFl6btPOXY_vv-5wTx1OQkz8fwZFheHNIR5lYOnRKWEB25r_eBhkWjJ9QaQ1qnE1loo3xeRZIJmo5uxhjm1UHQfzgGJZtFwyALxE-CUSrCZrYlk5rxifjSGyZCDDeAqvhC4aBXKUuC1RsL4Aq0mQLU-XX6QaCfEIls"
-              />
-            </Link>
-            <Link href="/" className="font-display-lg-mobile text-display-lg-mobile text-primary font-bold">
-              MenuMap
-            </Link>
-          </div>
-          <Link href="/login" className="px-4 py-2 rounded-full bg-primary text-on-primary font-label-sm text-label-sm">
-            Restaurant Portal
+          <Link href="/" className="flex items-center gap-3 no-underline">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-primary/10 text-primary">
+              <MaterialIcon name="restaurant_menu" className="text-[24px]" />
+            </div>
+            <h1 className="font-display-lg-mobile text-display-lg-mobile text-primary font-bold">MenuMap</h1>
           </Link>
+          
+          <div className="flex items-center gap-2">
+            <button className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent">
+              <MaterialIcon name="shopping_cart" />
+            </button>
+            
+            {user ? (
+              <Link href="/customer/profile" className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-sm flex items-center justify-center bg-primary text-on-primary font-bold">
+                {user.photo ? (
+                  <img
+                    className="w-full h-full object-cover"
+                    alt={user.name}
+                    src={user.photo}
+                  />
+                ) : (
+                  <img
+                    className="w-full h-full object-cover"
+                    alt={user.name}
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random`}
+                  />
+                )}
+              </Link>
+            ) : (
+              <Link href="/login" className="px-4 h-10 rounded-full border border-outline-variant shadow-sm flex items-center justify-center gap-2 text-on-surface hover:bg-surface-variant transition-colors font-bold">
+                <MaterialIcon name="login" className="text-[18px]" />
+                <span className="text-sm">Login</span>
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 
@@ -185,46 +207,61 @@ function SearchResultsContent() {
           filteredData.map((item) => (
             <article
               key={item._id || item.id}
-              className="bg-white rounded-[24px] overflow-hidden shadow-[0px_10px_30px_rgba(0,0,0,0.04)] border border-surface-container transition-all hover:translate-y-[-4px] active:scale-[0.98] duration-300 flex flex-col h-full"
+              className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-primary/5 border border-surface-container transition-all duration-300 flex flex-col h-full group cursor-pointer active:scale-[0.98]"
+              onClick={() => router.push(`/${item.restaurant?.city || "kanpur"}/${item.restaurant?.slug || "food-villa"}`)}
             >
-              <div className="relative h-56 w-full">
-                <img className="w-full h-full object-cover" alt={item.name} src={item.image} />
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
-                  <MaterialIcon name="star" className="text-[16px] text-primary fill" />
-                  <span className="text-label-sm font-bold text-on-surface">{item.rating || 4.5}</span>
-                </div>
-                <div className="absolute bottom-4 left-4">
-                  <div className="border-[1.5px] border-tertiary p-[2px] bg-white rounded-sm">
-                    <div className={`rounded-full w-2.5 h-2.5 ${item.veg ? "bg-tertiary" : "bg-error"}`} />
-                  </div>
+              {/* Image Section */}
+              <div className="relative h-48 w-full overflow-hidden bg-surface-container-low">
+                <img className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={item.name} src={item.image} />
+                
+                {/* Rating Badge */}
+                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm border border-white/20">
+                  <MaterialIcon name="star" className="text-[14px] text-primary fill" />
+                  <span className="text-xs font-bold text-on-surface">{item.rating || "4.5"}</span>
                 </div>
               </div>
+
+              {/* Content Section */}
               <div className="p-5 flex flex-col flex-grow">
-                <div className="flex justify-between items-start mb-1 gap-3">
-                  <div>
-                    <h3 className="font-headline-md text-headline-md text-on-surface font-bold truncate max-w-[220px]">{item.name}</h3>
-                    <p className="text-on-surface-variant font-body-md text-sm">{item.restaurant?.name || "Nearby restaurant"}</p>
+                {/* Header (Veg/NonVeg + Title) */}
+                <div className="flex justify-between items-start gap-3 mb-1.5">
+                  <div className="flex gap-2.5 items-start">
+                    <div className="mt-1 shrink-0 border border-outline-variant/60 p-[2px] bg-white rounded-sm shadow-sm">
+                      <div className={`rounded-full w-2 h-2 ${item.veg ? "bg-tertiary" : "bg-error"}`} />
+                    </div>
+                    <h3 className="font-headline-sm text-on-surface font-bold leading-tight line-clamp-2">
+                      {item.name}
+                    </h3>
                   </div>
-                  <span className="font-headline-md text-primary font-bold">Rs {item.price}</span>
+                  <span className="font-headline-sm text-primary font-bold whitespace-nowrap">₹{item.price}</span>
                 </div>
-                <div className="flex items-center gap-4 mt-3 mb-5">
-                  <div className="flex items-center gap-1 text-on-secondary-fixed-variant">
-                    <MaterialIcon name="near_me" className="text-[18px]" />
-                    <span className="text-label-sm font-bold">
+                
+                {/* Restaurant Info */}
+                <div className="mt-1 mb-5 pl-7">
+                  <p className="text-sm text-on-surface-variant line-clamp-1 font-medium">
+                    By {item.restaurant?.name || "Nearby restaurant"}
+                  </p>
+                  {item.restaurant?.address && (
+                    <p className="text-xs text-on-surface-variant opacity-80 line-clamp-1 mt-0.5">
+                      {item.restaurant.address}
+                    </p>
+                  )}
+                </div>
+
+                {/* Footer / Meta Info */}
+                <div className="mt-auto pt-4 border-t border-surface-container flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-on-surface-variant bg-surface-container-low px-2.5 py-1.5 rounded-lg">
+                    <MaterialIcon name="location_on" className="text-[16px] text-primary" />
+                    <span className="text-xs font-bold tracking-wide uppercase">
                       {formatDistance(item.restaurant?.distanceKm)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-on-secondary-fixed-variant">
-                    <MaterialIcon name="schedule" className="text-[18px]" />
-                    <span className="text-label-sm">{item.restaurant?.openNow ? "Open now" : "Closed"}</span>
+                  
+                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${item.restaurant?.openNow ? "bg-tertiary/10 text-tertiary" : "bg-error/10 text-error"}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${item.restaurant?.openNow ? "bg-tertiary" : "bg-error"}`}></div>
+                    {item.restaurant?.openNow ? "OPEN" : "CLOSED"}
                   </div>
                 </div>
-                <Link
-                  href={`/${item.restaurant?.city || "kanpur"}/${item.restaurant?.slug || "food-villa"}`}
-                  className="mt-auto w-full py-3 bg-primary text-on-primary rounded-xl font-bold font-label-sm text-sm transition-transform active:scale-95 shadow-md shadow-primary/10 text-center block"
-                >
-                  View Restaurant
-                </Link>
               </div>
             </article>
           ))
