@@ -118,28 +118,41 @@ export default function CustomerProfilePage() {
 
   return (
     <div className="min-h-screen bg-surface-container-lowest pb-12 font-body-md antialiased">
-      {/* Top App Bar */}
-      <header className="sticky top-0 left-0 w-full z-40 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl border-b border-outline-variant/30 mb-6">
+      {/* Top App Bar (Same as Landing Page) */}
+      <header className="fixed top-0 left-0 w-full z-40 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl">
         <div className="flex justify-between items-center w-full px-4 md:px-8 py-4 max-w-7xl mx-auto">
-          <Link href="/" className="flex items-center gap-3 no-underline cursor-pointer">
+          <Link href="/" className="flex items-center gap-3 no-underline">
             <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-primary/10 text-primary">
-              <MaterialIcon name="arrow_back" className="text-[24px]" />
+              <MaterialIcon name="restaurant_menu" className="text-[24px]" />
             </div>
-            <h1 className="font-display-lg-mobile text-display-lg-mobile text-primary font-bold">Back to Explore</h1>
+            <h1 className="font-display-lg-mobile text-display-lg-mobile text-primary font-bold">MenuMap</h1>
           </Link>
           
           <div className="flex items-center gap-2">
             <button className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent">
-              <MaterialIcon name="notifications" />
+              <MaterialIcon name="shopping_cart" />
             </button>
-            <button className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent">
-              <MaterialIcon name="settings" />
-            </button>
+            
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-sm flex items-center justify-center bg-primary text-on-primary font-bold">
+              {user.photo ? (
+                <img
+                  className="w-full h-full object-cover"
+                  alt={user.name}
+                  src={user.photo}
+                />
+              ) : (
+                <img
+                  className="w-full h-full object-cover"
+                  alt={user.name}
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random`}
+                />
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 md:px-8 space-y-8">
+      <div className="pt-24 max-w-4xl mx-auto px-4 md:px-8 space-y-8">
         
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-surface-container shadow-sm">
