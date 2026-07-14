@@ -10,7 +10,7 @@ import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 export default function CustomerProfilePage() {
-  const { user, updateProfile, logout } = useAuth();
+  const { user, loading, updateProfile, logout } = useAuth();
   const router = useRouter();
 
   const [name, setName] = useState("");
@@ -23,6 +23,7 @@ export default function CustomerProfilePage() {
   const [saveStatus, setSaveStatus] = useState("");
 
   useEffect(() => {
+    if (loading) return; // Wait for auth to finish loading
     if (!user) {
       router.push("/login");
       return;
@@ -143,7 +144,7 @@ export default function CustomerProfilePage() {
                 />
               ) : (
                 <DotLottieReact
-                  src="https://lottie.host/e2cc2a09-ff9e-4a4b-97e3-0d3fdbf3b0e3/1V7VzF5gW8.json"
+                  src="/animations/avatar.json"
                   autoplay
                   loop
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
@@ -164,7 +165,7 @@ export default function CustomerProfilePage() {
                 <img src={photo} alt={name} className="w-full h-full object-cover" />
               ) : (
                 <DotLottieReact
-                  src="https://lottie.host/e2cc2a09-ff9e-4a4b-97e3-0d3fdbf3b0e3/1V7VzF5gW8.json"
+                  src="/animations/avatar.json"
                   autoplay
                   loop
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
-import { useSignUp, useSignIn } from "@clerk/nextjs";
+import { useSignUp, useSignIn, useClerk } from "@clerk/nextjs";
 
 export default function OwnerRegisterPage() {
   const router = useRouter();
@@ -14,6 +14,15 @@ export default function OwnerRegisterPage() {
   // Clerk Hooks
   const { isLoaded: isSignUpLoaded, signUp, setActive } = useSignUp();
   const { signIn } = useSignIn();
+  const { signOut } = useClerk();
+  
+  // Force sign out of Clerk when arriving at the register page
+  // to ensure a clean slate and avoid "You're already signed in" errors.
+  useEffect(() => {
+    if (isSignUpLoaded) {
+      signOut();
+    }
+  }, [isSignUpLoaded, signOut]);
   
   // Restaurant Signup Multi-step state
   const [signupStep, setSignupStep] = useState(1);

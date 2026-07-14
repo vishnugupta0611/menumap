@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSignUp, useSignIn } from "@clerk/nextjs";
+import { useSignUp, useClerk } from "@clerk/nextjs";
 
 export default function CustomerRegisterPage() {
   const router = useRouter();
@@ -12,11 +12,20 @@ export default function CustomerRegisterPage() {
   
   // Clerk Hooks
   const { isLoaded: isSignUpLoaded, signUp, setActive } = useSignUp();
+  const { signOut } = useClerk();
   
   // Registration State
   const [signupStep, setSignupStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Force sign out of Clerk when arriving at the register page
+  // to ensure a clean slate and avoid "You're already signed in" errors.
+  useEffect(() => {
+    if (isSignUpLoaded) {
+      signOut();
+    }
+  }, [isSignUpLoaded, signOut]);
   
   // Step 1: User Details
   const [name, setName] = useState("");

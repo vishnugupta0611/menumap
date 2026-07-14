@@ -155,7 +155,7 @@ export default function HomePage() {
                   />
                 ) : (
                   <DotLottieReact
-                    src="https://lottie.host/e2cc2a09-ff9e-4a4b-97e3-0d3fdbf3b0e3/1V7VzF5gW8.json"
+                    src="/animations/avatar.json"
                     autoplay
                     loop
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}

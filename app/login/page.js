@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,14 @@ export default function LoginPage() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Force sign out of Clerk when arriving at the login page
+  // to ensure a clean slate and avoid "You're already signed in" errors.
+  useEffect(() => {
+    if (isLoaded) {
+      signOut();
+    }
+  }, [isLoaded, signOut]);
 
   const handleGoogleSSO = async () => {
     if (!isLoaded) return;
