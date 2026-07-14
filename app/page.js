@@ -404,6 +404,44 @@ export default function HomePage() {
         <MaterialIcon name="map" className="fill text-white" />
         <span className="font-label-sm text-label-sm">Explore Map</span>
       </button>
+
+      {/* Footer */}
+      <footer className="bg-surface-container-low text-on-surface py-12 px-margin-mobile md:px-margin-desktop mt-20 border-t border-outline-variant/20">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="md:col-span-2">
+            <h2 className="font-display-sm text-primary font-bold mb-4 flex items-center gap-2">
+              <MaterialIcon name="restaurant_menu" />
+              MenuMap
+            </h2>
+            <p className="text-on-surface-variant max-w-sm mb-6">
+              Connecting food lovers with local flavors. Build digital menus, discover nearby restaurants, and order seamlessly.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-bold text-on-surface mb-4">Company</h3>
+            <ul className="space-y-3">
+              <li><Link href="/about" className="text-on-surface-variant hover:text-primary transition-colors text-sm">About Us</Link></li>
+              <li><Link href="/contact" className="text-on-surface-variant hover:text-primary transition-colors text-sm">Contact</Link></li>
+              <li><Link href="/register/owner" className="text-on-surface-variant hover:text-primary transition-colors text-sm">For Restaurants</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-bold text-on-surface mb-4">Legal</h3>
+            <ul className="space-y-3">
+              <li><Link href="/terms" className="text-on-surface-variant hover:text-primary transition-colors text-sm">Terms & Conditions</Link></li>
+              <li><a href="#" className="text-on-surface-variant hover:text-primary transition-colors text-sm">Privacy Policy</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-outline-variant/30 text-center md:text-left text-sm text-on-surface-variant flex flex-col md:flex-row justify-between items-center gap-4">
+          <p>© {new Date().getFullYear()} MenuMap. All rights reserved.</p>
+          <div className="flex gap-4">
+            <a href="#" className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center hover:text-primary transition-colors">
+              <MaterialIcon name="language" className="text-[20px]" />
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
