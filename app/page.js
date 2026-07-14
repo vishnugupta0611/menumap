@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { listNearbyRestaurants, findDishResults } from "@/services/restaurant-service";
 import { useAuth } from "@/contexts/AuthContext";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 export default function HomePage() {
   const router = useRouter();
@@ -154,11 +153,10 @@ export default function HomePage() {
                     src={user.photo}
                   />
                 ) : (
-                  <DotLottieReact
-                    src="/animations/avatar.json"
-                    autoplay
-                    loop
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  <img
+                    className="w-full h-full object-cover"
+                    alt={user.name}
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random`}
                   />
                 )}
               </Link>

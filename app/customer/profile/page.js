@@ -7,7 +7,6 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { uploadImageAction } from "@/app/actions/upload";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 export default function CustomerProfilePage() {
   const { user, loading, updateProfile, logout } = useAuth();
@@ -143,11 +142,10 @@ export default function CustomerProfilePage() {
                   src={user.photo}
                 />
               ) : (
-                <DotLottieReact
-                  src="/animations/avatar.json"
-                  autoplay
-                  loop
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                <img
+                  className="w-full h-full object-cover"
+                  alt={user.name}
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random`}
                 />
               )}
             </div>
@@ -164,12 +162,7 @@ export default function CustomerProfilePage() {
               {photo ? (
                 <img src={photo} alt={name} className="w-full h-full object-cover" />
               ) : (
-                <DotLottieReact
-                  src="/animations/avatar.json"
-                  autoplay
-                  loop
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
+                name ? name.charAt(0).toUpperCase() : "U"
               )}
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <MaterialIcon name="edit" className="text-white text-[24px]" />
