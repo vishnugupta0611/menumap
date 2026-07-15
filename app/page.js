@@ -38,11 +38,13 @@ export default function HomePage() {
         const query = (lat && lng) ? `?lat=${lat}&lng=${lng}` : "";
         const TRENDING_KEYWORDS = "Idli Chowmein Dosa Sambhar Pasta Chhole Bhature Pizza Burger Momos";
         
-        // Fetch primary data in parallel to reduce load time significantly
-        const [restaurantsList, dishesRes, recRes] = await Promise.all([
+        // Fetch primary data and all fallbacks in ONE parallel burst to eliminate ALL sequential waiting!
+        const [restaurantsList, dishesRes, recRes, fallbackRes, ultimateFallbackRes] = await Promise.all([
           listNearbyRestaurants(query ? { lat, lng } : {}),
           findDishResults(TRENDING_KEYWORDS, { lat, lng, limit: 10 }),
-          findDishResults("", { lat, lng, limit: 4 })
+          findDishResults("", { lat, lng, limit: 4 }),
+          findDishResults(TRENDING_KEYWORDS, { limit: 10 }),
+          findDishResults("", { limit: 10 })
         ]);
         
         setNearbyRestaurants(restaurantsList);
@@ -51,7 +53,6 @@ export default function HomePage() {
         let dishes = dishesRes.data || [];
         
         if (dishes.length < 3) {
-          const fallbackRes = await findDishResults(TRENDING_KEYWORDS, { limit: 10 });
           const fallbackDishes = fallbackRes.data || [];
           const seen = new Set(dishes.map(d => String(d._id || d.id)));
           for (const d of fallbackDishes) {
@@ -63,7 +64,6 @@ export default function HomePage() {
         }
         
         if (dishes.length < 3) {
-          const ultimateFallbackRes = await findDishResults("", { limit: 10 });
           const ultimateFallbackDishes = ultimateFallbackRes.data || [];
           const seen = new Set(dishes.map(d => String(d._id || d.id)));
           for (const d of ultimateFallbackDishes) {
