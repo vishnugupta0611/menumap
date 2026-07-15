@@ -70,6 +70,7 @@ export default function SSOCallbackPage() {
           "onboarding_restaurantCuisines",
           "onboarding_lat",
           "onboarding_lng",
+          "oauth_flow",
         ].forEach((key) => {
           sessionStorage.removeItem(key);
           localStorage.removeItem(key);

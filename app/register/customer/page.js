@@ -50,6 +50,8 @@ export default function CustomerRegisterPage() {
   const saveStateToSession = () => {
     sessionStorage.setItem("onboarding_customerName", name);
     localStorage.setItem("onboarding_customerName", name);
+    sessionStorage.setItem("oauth_flow", "customer-register");
+    localStorage.setItem("oauth_flow", "customer-register");
   };
 
   const handleGoogleSSO = async () => {

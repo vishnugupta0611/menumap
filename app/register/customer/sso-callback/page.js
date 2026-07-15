@@ -54,6 +54,8 @@ export default function CustomerSSOCallbackPage() {
         // Clear session storage
         sessionStorage.removeItem("onboarding_customerName");
         localStorage.removeItem("onboarding_customerName");
+        sessionStorage.removeItem("oauth_flow");
+        localStorage.removeItem("oauth_flow");
 
         setStatus("Success! Redirecting to Discovery...");
         router.replace("/");

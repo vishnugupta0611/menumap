@@ -46,6 +46,9 @@ export default function LoginSSOCallbackPage() {
           role: role
         });
 
+        sessionStorage.removeItem("oauth_flow");
+        localStorage.removeItem("oauth_flow");
+
         setStatus("Success! Redirecting...");
         if (data.user.role === "owner") {
           router.replace("/admin/dashboard");

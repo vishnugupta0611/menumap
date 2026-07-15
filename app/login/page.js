@@ -48,6 +48,8 @@ export default function LoginPage() {
     if (!isLoaded || !signIn) return;
     setIsGoogleLoading(true);
     sessionStorage.setItem("login_role", activePortal);
+    sessionStorage.setItem("oauth_flow", "login");
+    localStorage.setItem("oauth_flow", "login");
     try {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",

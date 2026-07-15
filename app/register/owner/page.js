@@ -76,6 +76,8 @@ export default function OwnerRegisterPage() {
       sessionStorage.setItem(key, value);
       localStorage.setItem(key, value);
     });
+    sessionStorage.setItem("oauth_flow", "owner-register");
+    localStorage.setItem("oauth_flow", "owner-register");
   };
 
   // Handle Google OAuth
