@@ -109,7 +109,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
               onClick={() => setFoodFilter("all")}
               className={`flex-1 py-2.5 px-4 rounded-[20px] text-[13px] font-bold tracking-wide transition-all duration-300 cursor-pointer ${
                 foodFilter === "all"
-                  ? "bg-surface text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                  ? "bg-primary text-on-primary shadow-md"
                   : "text-on-surface-variant hover:bg-surface-variant/50"
               }`}
             >
@@ -119,7 +119,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
               onClick={() => setFoodFilter("veg")}
               className={`flex-1 py-2.5 px-4 rounded-[20px] text-[13px] font-bold tracking-wide transition-all duration-300 cursor-pointer ${
                 foodFilter === "veg"
-                  ? "bg-surface text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                  ? "bg-primary text-on-primary shadow-md"
                   : "text-on-surface-variant hover:bg-surface-variant/50"
               }`}
             >
@@ -129,7 +129,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
               onClick={() => setFoodFilter("non-veg")}
               className={`flex-1 py-2.5 px-4 rounded-[20px] text-[13px] font-bold tracking-wide transition-all duration-300 cursor-pointer ${
                 foodFilter === "non-veg"
-                  ? "bg-surface text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                  ? "bg-primary text-on-primary shadow-md"
                   : "text-on-surface-variant hover:bg-surface-variant/50"
               }`}
             >
@@ -144,7 +144,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
           <button
             onClick={() => setActiveCategory("")}
             className={`px-6 py-2.5 rounded-full text-[13px] whitespace-nowrap transition-all duration-300 cursor-pointer ${
-              activeCategory === "" ? "bg-primary/10 text-primary font-bold" : "bg-surface-container-high text-on-surface-variant font-medium"
+              activeCategory === "" ? "bg-primary text-on-primary font-bold shadow-md" : "bg-surface-container-high text-on-surface-variant font-medium"
             }`}
           >
             All Items
@@ -154,7 +154,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
               key={category}
               onClick={() => setActiveCategory(category)}
               className={`px-6 py-2.5 rounded-full text-[13px] whitespace-nowrap transition-all duration-300 cursor-pointer ${
-                activeCategory === category ? "bg-primary/10 text-primary font-bold" : "bg-surface-container-high text-on-surface-variant font-medium"
+                activeCategory === category ? "bg-primary text-on-primary font-bold shadow-md" : "bg-surface-container-high text-on-surface-variant font-medium"
               }`}
             >
               {category}
@@ -344,9 +344,9 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
       {/* Floating Order Summary */}
       {!isOwner && getTotalItems() > 0 && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-50 transform transition-transform duration-500 translate-y-0 animate-reveal">
-          <div className="bg-on-surface text-white p-3 md:p-4 rounded-[20px] md:rounded-3xl flex justify-between items-center shadow-2xl backdrop-blur-xl border border-white/10">
+          <div className="bg-on-surface text-surface p-3 md:p-4 rounded-[20px] md:rounded-3xl flex justify-between items-center shadow-2xl backdrop-blur-xl border border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 md:w-10 md:h-10 bg-primary rounded-lg md:rounded-xl flex items-center justify-center font-bold text-[13px] md:text-sm">{getTotalItems()}</div>
+              <div className="w-9 h-9 md:w-10 md:h-10 bg-primary text-on-primary rounded-lg md:rounded-xl flex items-center justify-center font-bold text-[13px] md:text-sm">{getTotalItems()}</div>
               <div>
                 <p className="text-[9px] md:text-xs font-bold opacity-70 uppercase tracking-wider">Items in cart</p>
                 <p className="text-[13px] md:text-[16px] font-black">Rs {getTotalAmount()}</p>
