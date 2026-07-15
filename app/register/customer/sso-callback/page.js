@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUser, useClerk } from "@clerk/nextjs";
@@ -10,11 +10,12 @@ export default function CustomerSSOCallbackPage() {
   const { registerCustomer } = useAuth();
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
+  const processedRef = useRef(false);
   
   const [status, setStatus] = useState("Authenticating with Google...");
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || processedRef.current) return;
     
     if (!user) {
       // Something went wrong or they cancelled
@@ -23,11 +24,12 @@ export default function CustomerSSOCallbackPage() {
     }
 
     const processRegistration = async () => {
+      processedRef.current = true;
       try {
         setStatus("Creating your account...");
         
         // Grab pending data from storage or fallback to Google name
-        const customerName = sessionStorage.getItem("onboarding_customerName");
+        const customerName = sessionStorage.getItem("onboarding_customerName") || localStorage.getItem("onboarding_customerName");
         const primaryEmail = user.primaryEmailAddress?.emailAddress;
         const clerkId = user.id;
 
@@ -36,6 +38,10 @@ export default function CustomerSSOCallbackPage() {
           setStatus("Please enter your name before continuing with Google.");
           setTimeout(() => router.push("/register/customer"), 2500);
           return;
+        }
+
+        if (!primaryEmail) {
+          throw new Error("Google did not return a verified email address.");
         }
 
         // Register in MongoDB with our Express API
@@ -47,16 +53,17 @@ export default function CustomerSSOCallbackPage() {
 
         // Clear session storage
         sessionStorage.removeItem("onboarding_customerName");
-
-        // Sign out of Clerk on frontend to respect the "hybrid" architecture 
-        // (We use our own custom JWT stored in localStorage now)
-        await signOut();
+        localStorage.removeItem("onboarding_customerName");
 
         setStatus("Success! Redirecting to Discovery...");
-        router.push("/");
+        router.replace("/");
       } catch (error) {
         console.error(error);
-        setStatus("Failed to create account. " + (error.message || ""));
+        await signOut();
+        const message = error.message || "Failed to create account.";
+        sessionStorage.setItem("auth_error", message);
+        setStatus(message);
+        setTimeout(() => router.replace("/register/customer"), 2500);
       }
     };
 

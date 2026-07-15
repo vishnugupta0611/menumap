@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 
 const AuthContext = createContext();
@@ -10,32 +10,40 @@ export function AuthProvider({ children }) {
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const authMutationVersion = useRef(0);
 
   useEffect(() => {
     checkAuth();
   }, []);
 
   async function checkAuth() {
+    const requestVersion = authMutationVersion.current;
     try {
       const { data } = await api.get('/api/auth/me');
+      if (requestVersion !== authMutationVersion.current) return;
       setUser(data.user);
       setRestaurant(data.restaurant || null);
       setError(null);
     } catch (error) {
+      if (requestVersion !== authMutationVersion.current) return;
       // Not authenticated - this is normal
       setUser(null);
       setRestaurant(null);
     } finally {
-      setLoading(false);
+      if (requestVersion === authMutationVersion.current) {
+        setLoading(false);
+      }
     }
   }
 
   async function login(email, password) {
     try {
+      authMutationVersion.current += 1;
       setError(null);
       const { data } = await api.post('/api/auth/login', { email, password });
       setUser(data.user);
       setRestaurant(data.restaurant || null);
+      setLoading(false);
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Login failed';
@@ -46,10 +54,12 @@ export function AuthProvider({ children }) {
 
   async function employeeLogin(username, password) {
     try {
+      authMutationVersion.current += 1;
       setError(null);
       const { data } = await api.post('/api/auth/employee-login', { username, password });
       setUser(data.user);
       setRestaurant(data.restaurant || null);
+      setLoading(false);
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Employee Login failed';
@@ -60,10 +70,12 @@ export function AuthProvider({ children }) {
 
   async function loginWithVerifiedEmail({ email, name, clerkId, role }) {
     try {
+      authMutationVersion.current += 1;
       setError(null);
       const { data } = await api.post('/api/auth/login-verified', { email, name, clerkId, role });
       setUser(data.user);
       setRestaurant(data.restaurant || null);
+      setLoading(false);
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Verified Login failed';
@@ -74,10 +86,12 @@ export function AuthProvider({ children }) {
 
   async function registerOwner(userData) {
     try {
+      authMutationVersion.current += 1;
       setError(null);
       const { data } = await api.post('/api/auth/register/owner', userData);
       setUser(data.user);
       setRestaurant(data.restaurant || null);
+      setLoading(false);
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Registration failed';
@@ -88,10 +102,12 @@ export function AuthProvider({ children }) {
 
   async function registerCustomer(userData) {
     try {
+      authMutationVersion.current += 1;
       setError(null);
       const { data } = await api.post('/api/auth/register/customer', userData);
       setUser(data.user);
       setRestaurant(null);
+      setLoading(false);
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Registration failed';
@@ -101,6 +117,7 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
+    authMutationVersion.current += 1;
     try {
       await api.post('/api/auth/logout');
       setUser(null);

@@ -27,6 +27,14 @@ export default function CustomerRegisterPage() {
       signOut();
     }
   }, [isSignUpLoaded, signOut]);
+
+  useEffect(() => {
+    const authError = sessionStorage.getItem("auth_error");
+    if (authError) {
+      setError(authError);
+      sessionStorage.removeItem("auth_error");
+    }
+  }, []);
   
   // Step 1: User Details
   const [name, setName] = useState("");
@@ -41,6 +49,7 @@ export default function CustomerRegisterPage() {
   // Save current form state to sessionStorage before Google OAuth
   const saveStateToSession = () => {
     sessionStorage.setItem("onboarding_customerName", name);
+    localStorage.setItem("onboarding_customerName", name);
   };
 
   const handleGoogleSSO = async () => {

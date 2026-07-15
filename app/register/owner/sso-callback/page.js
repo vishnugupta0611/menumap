@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUser, useClerk } from "@clerk/nextjs";
@@ -10,11 +10,12 @@ export default function SSOCallbackPage() {
   const { registerOwner } = useAuth();
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
+  const processedRef = useRef(false);
   
   const [status, setStatus] = useState("Authenticating with Google...");
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || processedRef.current) return;
     
     if (!user) {
       // Something went wrong or they cancelled
@@ -23,16 +24,18 @@ export default function SSOCallbackPage() {
     }
 
     const processRegistration = async () => {
+      processedRef.current = true;
       try {
         setStatus("Saving Restaurant OS...");
         
         // Grab pending data from storage
-        const ownerName = sessionStorage.getItem("onboarding_ownerName");
-        const restaurantName = sessionStorage.getItem("onboarding_restaurantName");
-        const restaurantCity = sessionStorage.getItem("onboarding_restaurantCity");
-        const restaurantCuisines = sessionStorage.getItem("onboarding_restaurantCuisines");
-        const lat = sessionStorage.getItem("onboarding_lat");
-        const lng = sessionStorage.getItem("onboarding_lng");
+        const getOnboardingValue = (key) => sessionStorage.getItem(key) || localStorage.getItem(key);
+        const ownerName = getOnboardingValue("onboarding_ownerName");
+        const restaurantName = getOnboardingValue("onboarding_restaurantName");
+        const restaurantCity = getOnboardingValue("onboarding_restaurantCity");
+        const restaurantCuisines = getOnboardingValue("onboarding_restaurantCuisines");
+        const lat = getOnboardingValue("onboarding_lat");
+        const lng = getOnboardingValue("onboarding_lng");
 
         if (!ownerName || !restaurantName || !restaurantCity || !restaurantCuisines || !lat || !lng) {
           await signOut();
@@ -43,6 +46,10 @@ export default function SSOCallbackPage() {
         
         const primaryEmail = user.primaryEmailAddress?.emailAddress;
         const clerkId = user.id;
+
+        if (!primaryEmail) {
+          throw new Error("Google did not return a verified email address.");
+        }
 
         // Register in MongoDB with our Express API
         await registerOwner({
@@ -56,18 +63,27 @@ export default function SSOCallbackPage() {
           lng,
         });
 
-        // Clear session storage
-        sessionStorage.clear();
-
-        // Sign out of Clerk on frontend to respect the "hybrid" architecture 
-        // (We use our own custom JWT stored in localStorage now)
-        await signOut();
+        [
+          "onboarding_ownerName",
+          "onboarding_restaurantName",
+          "onboarding_restaurantCity",
+          "onboarding_restaurantCuisines",
+          "onboarding_lat",
+          "onboarding_lng",
+        ].forEach((key) => {
+          sessionStorage.removeItem(key);
+          localStorage.removeItem(key);
+        });
 
         setStatus("Success! Redirecting to Dashboard...");
-        router.push("/admin/dashboard");
+        router.replace("/admin/dashboard");
       } catch (error) {
         console.error(error);
-        setStatus("Failed to create restaurant. " + (error.message || ""));
+        await signOut();
+        const message = error.message || "Failed to create restaurant.";
+        sessionStorage.setItem("auth_error", message);
+        setStatus(message);
+        setTimeout(() => router.replace("/register/owner"), 2500);
       }
     };
 

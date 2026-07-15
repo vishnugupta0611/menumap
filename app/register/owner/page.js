@@ -23,6 +23,14 @@ export default function OwnerRegisterPage() {
       signOut();
     }
   }, [isSignUpLoaded, signOut]);
+
+  useEffect(() => {
+    const authError = sessionStorage.getItem("auth_error");
+    if (authError) {
+      setSignupError(authError);
+      sessionStorage.removeItem("auth_error");
+    }
+  }, []);
   
   // Restaurant Signup Multi-step state
   const [signupStep, setSignupStep] = useState(1);
@@ -55,12 +63,19 @@ export default function OwnerRegisterPage() {
 
   // Save current form state to sessionStorage before Google OAuth
   const saveStateToSession = () => {
-    sessionStorage.setItem("onboarding_ownerName", ownerName);
-    sessionStorage.setItem("onboarding_restaurantName", restaurantName);
-    sessionStorage.setItem("onboarding_restaurantCity", restaurantCity);
-    sessionStorage.setItem("onboarding_restaurantCuisines", restaurantCuisines);
-    sessionStorage.setItem("onboarding_lat", lat);
-    sessionStorage.setItem("onboarding_lng", lng);
+    const onboardingData = {
+      onboarding_ownerName: ownerName,
+      onboarding_restaurantName: restaurantName,
+      onboarding_restaurantCity: restaurantCity,
+      onboarding_restaurantCuisines: restaurantCuisines,
+      onboarding_lat: lat,
+      onboarding_lng: lng,
+    };
+
+    Object.entries(onboardingData).forEach(([key, value]) => {
+      sessionStorage.setItem(key, value);
+      localStorage.setItem(key, value);
+    });
   };
 
   // Handle Google OAuth
