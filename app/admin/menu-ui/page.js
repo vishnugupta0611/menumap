@@ -288,14 +288,14 @@ const MenuPreview = ({ settings }) => {
         <div className="p-4 space-y-4 mt-2">
           {settings.showTabs && (
             <div className="flex items-center justify-between p-1 bg-surface-container-low rounded-full border border-surface-container-highest/30 shadow-inner">
-              <button className="flex-1 py-1.5 px-2 rounded-full text-[10px] font-bold tracking-wide bg-white text-on-surface shadow-sm border-none">All</button>
+              <button className="flex-1 py-1.5 px-2 rounded-full text-[10px] font-bold tracking-wide bg-primary text-on-primary shadow-md border-none">All</button>
               <button className="flex-1 py-1.5 px-2 rounded-full text-[10px] font-bold tracking-wide text-on-surface-variant bg-transparent border-none">Veg</button>
               <button className="flex-1 py-1.5 px-2 rounded-full text-[10px] font-bold tracking-wide text-on-surface-variant bg-transparent border-none">Non-Veg</button>
             </div>
           )}
 
           <div className="flex gap-2 overflow-x-hidden">
-            <span className="px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">All Items</span>
+            <span className="px-4 py-1.5 rounded-full bg-primary text-on-primary shadow-md text-[10px] font-bold">All Items</span>
             <span className="px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant text-[10px] font-medium">Starters</span>
             <span className="px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant text-[10px] font-medium">Mains</span>
           </div>
@@ -311,10 +311,10 @@ const MenuPreview = ({ settings }) => {
             }>
               {/* Mock Item 1 */}
               <div className={`group overflow-hidden ${
-                settings.layout === "list" ? "bg-white flex items-center justify-between gap-4 p-4 rounded-[20px] border border-surface-container-highest/30 shadow-[0_2px_12px_rgba(0,0,0,0.02)]" :
-                settings.layout === "grid" ? "bg-white rounded-[20px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col border border-surface-container-highest/20" :
+                settings.layout === "list" ? "bg-surface flex items-center justify-between gap-4 p-4 rounded-[20px] border border-surface-container-highest/30 shadow-[0_2px_12px_rgba(0,0,0,0.02)]" :
+                settings.layout === "grid" ? "bg-surface rounded-[20px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col border border-surface-container-highest/20" :
                 settings.layout === "simple-list" ? "flex items-center justify-between py-3 bg-transparent border-none rounded-none" :
-                "bg-white p-4 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-surface-container-highest/30 flex items-start justify-between gap-4"
+                "bg-surface p-4 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-surface-container-highest/30 flex items-start justify-between gap-4"
               }`}>
                 {/* Content (Order swapped for grid) */}
                 <div className={`flex-1 ${settings.layout === "grid" ? "p-3 order-2" : "order-1 flex flex-col h-full"} ${settings.layout === "simple-list" ? "min-w-0" : ""}`}>
@@ -369,10 +369,10 @@ const MenuPreview = ({ settings }) => {
               
               {/* Mock Item 2 */}
               <div className={`group overflow-hidden ${
-                settings.layout === "list" ? "bg-white flex items-center justify-between gap-4 p-4 rounded-[20px] border border-surface-container-highest/30 shadow-[0_2px_12px_rgba(0,0,0,0.02)]" :
-                settings.layout === "grid" ? "bg-white rounded-[20px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col border border-surface-container-highest/20" :
+                settings.layout === "list" ? "bg-surface flex items-center justify-between gap-4 p-4 rounded-[20px] border border-surface-container-highest/30 shadow-[0_2px_12px_rgba(0,0,0,0.02)]" :
+                settings.layout === "grid" ? "bg-surface rounded-[20px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col border border-surface-container-highest/20" :
                 settings.layout === "simple-list" ? "flex items-center justify-between py-3 bg-transparent border-none rounded-none" :
-                "bg-white p-4 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-surface-container-highest/30 flex items-start justify-between gap-4"
+                "bg-surface p-4 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-surface-container-highest/30 flex items-start justify-between gap-4"
               }`}>
                 {/* Content (Order swapped for grid) */}
                 <div className={`flex-1 ${settings.layout === "grid" ? "p-3 order-2" : "order-1 flex flex-col h-full"} ${settings.layout === "simple-list" ? "min-w-0" : ""}`}>
@@ -430,9 +430,9 @@ const MenuPreview = ({ settings }) => {
       </div>
       
       {/* Floating Mock Action */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-on-surface text-white px-5 py-2.5 rounded-full text-xs font-bold flex items-center gap-3 shadow-xl whitespace-nowrap w-[90%] justify-between">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-on-surface text-surface px-5 py-2.5 rounded-full text-xs font-bold flex items-center gap-3 shadow-xl whitespace-nowrap w-[90%] justify-between">
         <div className="flex items-center gap-2">
-          <span className="w-6 h-6 bg-primary rounded text-white flex items-center justify-center">2</span>
+          <span className="w-6 h-6 bg-primary rounded text-on-primary flex items-center justify-center">2</span>
           <span>Rs 500</span>
         </div>
         <span className="flex items-center gap-1">View Cart <MaterialIcon name="arrow_forward" className="text-[14px]" /></span>
