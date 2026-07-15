@@ -53,7 +53,13 @@ export default function SideNavigation({ isOpen, onClose }) {
               return false; // Default safe block
             })
             .map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/admin/dashboard" && pathname.startsWith(item.href));
+            const activeRoute = adminRoutes.reduce((acc, route) => {
+              if (pathname.startsWith(route.href) || pathname === route.href) {
+                if (!acc || route.href.length > acc.href.length) return route;
+              }
+              return acc;
+            }, null);
+            const isActive = activeRoute?.href === item.href;
 
             return (
               <Link

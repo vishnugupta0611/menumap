@@ -25,7 +25,12 @@ export default function AdminLayout({ children }) {
 
       if (user.role === "employee") {
         // Find the route they are trying to access
-        const currentRoute = adminRoutes.find(r => pathname === r.href || (r.href !== "/admin/dashboard" && pathname.startsWith(r.href)));
+        const currentRoute = adminRoutes.reduce((acc, route) => {
+          if (pathname.startsWith(route.href) || pathname === route.href) {
+            if (!acc || route.href.length > acc.href.length) return route;
+          }
+          return acc;
+        }, null);
         
         if (currentRoute) {
           if (currentRoute.ownerOnly || !user.permissions?.includes(currentRoute.label)) {
