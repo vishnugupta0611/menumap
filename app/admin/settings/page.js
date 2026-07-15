@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { uploadImageAction } from "@/app/actions/upload";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 const IMAGE_LIBRARY = [
   { id: 1, url: 'https://images.unsplash.com/photo-1589302168068-96516f1964f5?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'indian thali curry traditional desi food' },
@@ -22,7 +23,10 @@ const IMAGE_LIBRARY = [
 ];
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [restaurantId, setRestaurantId] = useState("");
   const [openNow, setOpenNow] = useState(true);
   const [priceForTwo, setPriceForTwo] = useState(500);
@@ -123,6 +127,22 @@ export default function SettingsPage() {
     } finally {
       if (isLogo) setIsUploadingLogo(false);
       else setIsUploadingHero(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm("WARNING: This action is permanent. This will delete your restaurant, all menu items, all employee accounts, and your owner account. Are you absolutely sure?");
+    if (!confirmDelete) return;
+
+    setIsDeleting(true);
+    setDeleteError("");
+    try {
+      await api.delete("/api/auth/me");
+      await logout();
+      router.push("/");
+    } catch (err) {
+      setDeleteError(err.response?.data?.error || "Failed to delete account");
+      setIsDeleting(false);
     }
   };
 
@@ -540,6 +560,26 @@ export default function SettingsPage() {
           </button>
         </section>
       </form>
+
+      {/* Danger Zone */}
+      <div className="bg-error/5 p-6 rounded-3xl border border-error/20 space-y-4 mt-8">
+        <h3 className="font-bold text-md text-error flex items-center gap-2">
+          <MaterialIcon name="warning" className="text-error" />
+          Danger Zone
+        </h3>
+        <p className="text-sm text-on-surface-variant max-w-xl">
+          Deleting your account will permanently wipe your restaurant, all menu items, and all associated employee accounts from MenuMap. This action cannot be undone.
+        </p>
+        {deleteError && <p className="text-sm text-error font-bold">{deleteError}</p>}
+        <button
+          type="button"
+          onClick={handleDeleteAccount}
+          disabled={isDeleting}
+          className="px-6 py-3 rounded-full bg-error text-white font-bold text-sm shadow-sm transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 cursor-pointer border-none outline-none"
+        >
+          {isDeleting ? "Deleting..." : "Permanently Delete Account"}
+        </button>
+      </div>
 
       {/* Image Library Modal */}
       {showImageLibrary && (
