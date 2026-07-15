@@ -27,9 +27,16 @@ export default function CustomerSSOCallbackPage() {
         setStatus("Creating your account...");
         
         // Grab pending data from storage or fallback to Google name
-        const customerName = sessionStorage.getItem("onboarding_customerName") || user.fullName || "Foodie";
+        const customerName = sessionStorage.getItem("onboarding_customerName");
         const primaryEmail = user.primaryEmailAddress?.emailAddress;
         const clerkId = user.id;
+
+        if (!customerName) {
+          await signOut();
+          setStatus("Please enter your name before continuing with Google.");
+          setTimeout(() => router.push("/register/customer"), 2500);
+          return;
+        }
 
         // Register in MongoDB with our Express API
         await registerCustomer({

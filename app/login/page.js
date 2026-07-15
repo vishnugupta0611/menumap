@@ -8,17 +8,14 @@ import { useSignIn, useClerk } from "@clerk/nextjs";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginWithVerifiedEmail, logout, employeeLogin } = useAuth();
+  const { login, loginWithVerifiedEmail, logout, employeeLogin } = useAuth();
   
   const { isLoaded, signIn, setActive } = useSignIn();
   const { signOut } = useClerk();
   
   const [activePortal, setActivePortal] = useState("owner");
-  const [loginStep, setLoginStep] = useState(1); // 1 = Email, 2 = OTP
-  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
   
   const [employeeUsername, setEmployeeUsername] = useState("");
   const [employeePassword, setEmployeePassword] = useState("");
@@ -39,6 +36,14 @@ export default function LoginPage() {
     }
   }, [isLoaded, session, signOut]);
 
+  useEffect(() => {
+    const authError = sessionStorage.getItem("auth_error");
+    if (authError) {
+      setError(authError);
+      sessionStorage.removeItem("auth_error");
+    }
+  }, []);
+
   const handleGoogleSSO = async () => {
     if (!isLoaded || !signIn) return;
     setIsGoogleLoading(true);
@@ -58,41 +63,37 @@ export default function LoginPage() {
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    if (!isLoaded || !signIn) return;
     setLoading(true);
     setError("");
 
     try {
-      // Step 1: Create a sign in attempt
-      const factor = await signIn.create({
-        identifier: email,
-      });
+      const data = await login(email, password);
 
-      // Step 2: Determine if we need to verify email via OTP
-      const emailFactor = factor.supportedFirstFactors.find(f => f.strategy === "email_code");
-      if (emailFactor) {
-        await signIn.prepareFirstFactor({
-          strategy: "email_code",
-          emailAddressId: emailFactor.emailAddressId,
-        });
-        setLoginStep(2);
-      } else {
-        // Fallback for password logic if enabled in Clerk
-        if (password) {
-          const completeSignIn = await signIn.create({
-            identifier: email,
-            password,
-          });
-          if (completeSignIn.status === "complete") {
-            await finalizeLogin(completeSignIn);
-          }
-        } else {
-          setError("This account requires a password or does not support OTP.");
-        }
+      if (data.user.role !== activePortal) {
+        await logout();
+        setError(
+          activePortal === "owner"
+            ? "This is a customer account. Please use the Discovery User tab."
+            : "This is a restaurant owner account. Please use the Restaurant Owner tab."
+        );
+        return;
       }
-    } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
-      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || "Failed to initiate login. Are you registered?");
+
+      if (isLoaded) {
+        await signOut();
+      }
+
+      if (data.user.role === "owner") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/");
+      }
+    } catch (error) {
+      const accountType = activePortal === "owner" ? "restaurant" : "customer";
+      const message = error.message?.toLowerCase().includes("account not found")
+        ? `Account not found. Please create your ${accountType} account first.`
+        : error.message || "Invalid email or password.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -114,32 +115,6 @@ export default function LoginPage() {
       }
     } catch (error) {
       setError(error.message || "Invalid username or password.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async (e) => {
-    e.preventDefault();
-    if (!isLoaded) return;
-    setLoading(true);
-    setError("");
-
-    try {
-      const completeSignIn = await signIn.attemptFirstFactor({
-        strategy: "email_code",
-        code,
-      });
-
-      if (completeSignIn.status === "complete") {
-        await finalizeLogin(completeSignIn);
-      } else {
-        console.log(completeSignIn);
-        setError("Unable to verify OTP.");
-      }
-    } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
-      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || "Invalid OTP Code.");
     } finally {
       setLoading(false);
     }
@@ -266,7 +241,6 @@ export default function LoginPage() {
                   </form>
                 </div>
               ) : (
-                loginStep === 1 ? (
                 <div className="space-y-6 animate-fadeInUp">
                   <div>
                     <h3 className="text-xl md:text-2xl text-on-surface font-bold mb-1">Login to your account</h3>
@@ -308,43 +282,16 @@ export default function LoginPage() {
                     </div>
 
                     <div className="relative">
-                      <label className="block text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-wide">Password (Optional)</label>
-                      <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-body-md" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+                      <label className="block text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-wide">Password</label>
+                      <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-body-md" type="password" placeholder="Password" required value={password} onChange={(e) => setPassword(e.target.value)} />
                     </div>
 
                     <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-3 bg-primary py-4 px-6 rounded-xl text-on-primary shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200 active:scale-[0.98] cursor-pointer border-none outline-none font-bold">
-                      {loading ? "Verifying..." : "Sign In with Email"}
+                      {loading ? "Signing in..." : "Sign In with Email"}
                     </button>
                   </form>
                 </div>
-              ) : loginStep === 2 ? (
-                <div className="space-y-6 animate-fadeInUp">
-                  <div>
-                    <h3 className="text-xl md:text-2xl text-on-surface font-bold mb-1">Enter OTP</h3>
-                    <p className="text-xs md:text-sm text-on-surface-variant">We've sent a 6-digit code to {email}.</p>
-                  </div>
-                  
-                  {error && (
-                    <div className="p-3 text-xs bg-error-container/20 border border-error-container text-error rounded-xl">
-                      {error}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleVerifyOTP} className="space-y-4">
-                    <div className="relative">
-                      <label className="block text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-wide">Verification Code</label>
-                      <input className="w-full h-14 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-center tracking-[0.5em] font-display-md text-display-md" type="text" maxLength={6} required value={code} onChange={(e) => setCode(e.target.value)} />
-                    </div>
-
-                    <div className="flex gap-4">
-                      <button type="button" onClick={() => setLoginStep(1)} className="flex-1 py-4 border border-outline-variant rounded-xl font-bold hover:bg-surface-container-low transition-all bg-transparent">Back</button>
-                      <button type="submit" disabled={loading} className="flex-2 py-4 bg-primary rounded-xl text-on-primary font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/20">
-                        {loading ? "Verifying..." : "Verify & Login"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              ) : null)}
+              )}
 
               <div className="text-center mt-4">
                 {activePortal === "employee" ? null : activePortal === "owner" ? (

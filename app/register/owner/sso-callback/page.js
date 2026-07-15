@@ -27,12 +27,19 @@ export default function SSOCallbackPage() {
         setStatus("Saving Restaurant OS...");
         
         // Grab pending data from storage
-        const ownerName = sessionStorage.getItem("onboarding_ownerName") || user.fullName || "Owner";
-        const restaurantName = sessionStorage.getItem("onboarding_restaurantName") || "My Restaurant";
-        const restaurantCity = sessionStorage.getItem("onboarding_restaurantCity") || "kanpur";
-        const restaurantCuisines = sessionStorage.getItem("onboarding_restaurantCuisines") || "Multi-Cuisine";
-        const lat = sessionStorage.getItem("onboarding_lat") || "26.4499";
-        const lng = sessionStorage.getItem("onboarding_lng") || "80.3319";
+        const ownerName = sessionStorage.getItem("onboarding_ownerName");
+        const restaurantName = sessionStorage.getItem("onboarding_restaurantName");
+        const restaurantCity = sessionStorage.getItem("onboarding_restaurantCity");
+        const restaurantCuisines = sessionStorage.getItem("onboarding_restaurantCuisines");
+        const lat = sessionStorage.getItem("onboarding_lat");
+        const lng = sessionStorage.getItem("onboarding_lng");
+
+        if (!ownerName || !restaurantName || !restaurantCity || !restaurantCuisines || !lat || !lng) {
+          await signOut();
+          setStatus("Please complete all restaurant setup steps, including location, before using Google.");
+          setTimeout(() => router.push("/register/owner"), 2500);
+          return;
+        }
         
         const primaryEmail = user.primaryEmailAddress?.emailAddress;
         const clerkId = user.id;
@@ -45,6 +52,8 @@ export default function SSOCallbackPage() {
           restaurantName,
           city: restaurantCity,
           cuisine: restaurantCuisines,
+          lat,
+          lng,
         });
 
         // Clear session storage

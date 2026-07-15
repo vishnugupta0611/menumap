@@ -66,6 +66,11 @@ export default function OwnerRegisterPage() {
   // Handle Google OAuth
   const handleGoogleSSO = async () => {
     if (!isSignUpLoaded) return;
+    if (!lat || !lng) {
+      setSignupError("Please fetch your restaurant location before continuing with Google.");
+      setSignupStep(3);
+      return;
+    }
     setIsGoogleLoading(true);
     saveStateToSession();
     try {
@@ -143,6 +148,8 @@ export default function OwnerRegisterPage() {
         restaurantName,
         city: restaurantCity,
         cuisine: restaurantCuisines,
+        lat,
+        lng,
       });
 
       // 4. Redirect to dashboard
@@ -173,9 +180,7 @@ export default function OwnerRegisterPage() {
       (error) => {
         console.error(error);
         setFetchingLocation(false);
-        alert(`Could not fetch location: ${error.message}. Using default coordinates.`);
-        setLat("26.4499");
-        setLng("80.3319");
+        setSignupError(`Could not fetch location: ${error.message}. Please allow location access and try again.`);
       }
     );
   };
@@ -293,7 +298,7 @@ export default function OwnerRegisterPage() {
 
                     <div className="flex gap-4 mt-4">
                       <button onClick={() => setSignupStep(2)} className="flex-1 py-4 border border-outline-variant text-on-surface rounded-xl font-bold cursor-pointer hover:bg-surface-container-low transition-all bg-transparent">Back</button>
-                      <button onClick={() => setSignupStep(4)} className="flex-2 py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none">
+                      <button onClick={() => { if (!lat || !lng) { setSignupError("Please fetch your restaurant location before continuing."); return; } setSignupError(""); setSignupStep(4); }} className="flex-2 py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none">
                         Next: Secure Account
                       </button>
                     </div>

@@ -34,6 +34,10 @@ export default function LoginSSOCallbackPage() {
         const clerkId = user.id;
         const role = sessionStorage.getItem("login_role") || "customer";
 
+        if (!primaryEmail) {
+          throw new Error("Google did not return a verified email address.");
+        }
+
         // Login using Express API (sets the cookie)
         const data = await loginWithVerifiedEmail({
           email: primaryEmail,
@@ -54,7 +58,9 @@ export default function LoginSSOCallbackPage() {
       } catch (error) {
         console.error(error);
         await signOut();
-        setStatus("Failed to login. " + (error.message || ""));
+        sessionStorage.setItem("auth_error", error.message || "Please create your account first.");
+        setStatus(error.message || "Please create your account first.");
+        setTimeout(() => router.push("/login"), 2500);
       }
     };
 
