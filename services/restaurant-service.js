@@ -15,8 +15,39 @@ async function apiGet(endpoint, options = {}) {
 }
 
 export async function listNearbyRestaurants(query = {}) {
-  const params = new URLSearchParams(query);
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+  });
   return apiGet(`/restaurants${params.size ? `?${params.toString()}` : ""}`, { revalidate: 60 });
+}
+
+export async function getApproxLocationFromIp() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1800);
+
+  try {
+    const res = await fetch("https://ipapi.co/json/", {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    const lat = Number(data.latitude);
+    const lng = Number(data.longitude);
+
+    return {
+      city: data.city || "",
+      lat: Number.isFinite(lat) ? lat : null,
+      lng: Number.isFinite(lng) ? lng : null,
+      approximate: true,
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function findRestaurant(city, slug) {

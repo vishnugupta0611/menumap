@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
-import { listNearbyRestaurants, findDishResults } from "@/services/restaurant-service";
+import { listNearbyRestaurants, findDishResults, getApproxLocationFromIp } from "@/services/restaurant-service";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function HomePage() {
@@ -32,23 +32,29 @@ export default function HomePage() {
 
   // Load data dynamically
   useEffect(() => {
-    async function loadData(lat, lng) {
+    async function loadData(location = {}) {
       try {
         setLoading(true);
-        const query = (lat && lng) ? `?lat=${lat}&lng=${lng}` : "";
+        const { lat, lng, city } = location;
+        const locationFilters = {
+          lat: lat || undefined,
+          lng: lng || undefined,
+          city: city || undefined,
+        };
         const TRENDING_KEYWORDS = "Idli Chowmein Dosa Sambhar Pasta Chhole Bhature Pizza Burger Momos";
         
         // Fetch primary data and all fallbacks in ONE parallel burst to eliminate ALL sequential waiting!
         const [restaurantsList, dishesRes, recRes, fallbackRes, ultimateFallbackRes] = await Promise.all([
-          listNearbyRestaurants(query ? { lat, lng } : {}),
-          findDishResults(TRENDING_KEYWORDS, { lat, lng, limit: 10 }),
-          findDishResults("", { lat, lng, limit: 4 }),
+          listNearbyRestaurants(locationFilters),
+          findDishResults(TRENDING_KEYWORDS, { ...locationFilters, limit: 10 }),
+          findDishResults("", { ...locationFilters, limit: 4 }),
           findDishResults(TRENDING_KEYWORDS, { limit: 10 }),
           findDishResults("", { limit: 10 })
         ]);
         
-        setNearbyRestaurants(restaurantsList);
-        setRecommendedDishes(recRes.data || []);
+        const broadRestaurants = restaurantsList.length ? restaurantsList : await listNearbyRestaurants({});
+        setNearbyRestaurants(broadRestaurants);
+        setRecommendedDishes((recRes.data?.length ? recRes.data : ultimateFallbackRes.data) || []);
 
         let dishes = dishesRes.data || [];
         
@@ -86,13 +92,24 @@ export default function HomePage() {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          loadData(pos.coords.latitude, pos.coords.longitude);
+          loadData({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
-        () => loadData(),
+        async () => {
+          const ipLocation = await getApproxLocationFromIp();
+          if (ipLocation?.lat && ipLocation?.lng) {
+            setUserLocation({ lat: ipLocation.lat, lng: ipLocation.lng, approximate: true });
+          }
+          loadData(ipLocation || {});
+        },
         { timeout: 3000, maximumAge: 60000 } // Don't wait longer than 3 seconds for GPS
       );
     } else {
-      loadData();
+      getApproxLocationFromIp().then((ipLocation) => {
+        if (ipLocation?.lat && ipLocation?.lng) {
+          setUserLocation({ lat: ipLocation.lat, lng: ipLocation.lng, approximate: true });
+        }
+        loadData(ipLocation || {});
+      });
     }
 
     const hour = new Date().getHours();

@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
-import { findDishResults, listNearbyRestaurants } from "@/services/restaurant-service";
+import { findDishResults, getApproxLocationFromIp } from "@/services/restaurant-service";
 import { useAuth } from "@/contexts/AuthContext";
 
 function SearchResultsContent() {
@@ -68,9 +68,25 @@ function SearchResultsContent() {
           } catch {}
         },
         () => {
-          // Silent failure if denied, just won't show precise distances
+          getApproxLocationFromIp().then((ipLocation) => {
+            if (!ipLocation) return;
+            if (ipLocation.city) setUserCity(ipLocation.city);
+            if (ipLocation.lat !== null && ipLocation.lng !== null) {
+              setUserLat(ipLocation.lat);
+              setUserLng(ipLocation.lng);
+            }
+          });
         }
       );
+    } else if (userLat === null) {
+      getApproxLocationFromIp().then((ipLocation) => {
+        if (!ipLocation) return;
+        if (ipLocation.city) setUserCity(ipLocation.city);
+        if (ipLocation.lat !== null && ipLocation.lng !== null) {
+          setUserLat(ipLocation.lat);
+          setUserLng(ipLocation.lng);
+        }
+      });
     }
   }, [userLat]);
 
@@ -85,7 +101,7 @@ function SearchResultsContent() {
           nearby: activeFilter === "Nearby" ? true : undefined,
           lat: userLat !== null ? userLat : undefined,
           lng: userLng !== null ? userLng : undefined,
-          city: activeFilter === "Nearby" && userCity ? userCity : undefined,
+          city: userCity || undefined,
           page,
           limit: 6
         };
