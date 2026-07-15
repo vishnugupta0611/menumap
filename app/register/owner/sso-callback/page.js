@@ -7,7 +7,7 @@ import { useUser, useClerk } from "@clerk/nextjs";
 
 export default function SSOCallbackPage() {
   const router = useRouter();
-  const { registerOwner } = useAuth();
+  const { registerOwner, checkAuth } = useAuth();
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
   const processedRef = useRef(false);
@@ -62,6 +62,7 @@ export default function SSOCallbackPage() {
           lat,
           lng,
         });
+        await checkAuth();
 
         [
           "onboarding_ownerName",
@@ -89,7 +90,7 @@ export default function SSOCallbackPage() {
     };
 
     processRegistration();
-  }, [isLoaded, user, registerOwner, router, signOut]);
+  }, [isLoaded, user, registerOwner, checkAuth, router, signOut]);
 
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col items-center justify-center font-body-md">
