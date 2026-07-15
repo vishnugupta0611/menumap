@@ -36,12 +36,18 @@ export default function HomePage() {
       try {
         setLoading(true);
         const query = (lat && lng) ? `?lat=${lat}&lng=${lng}` : "";
-        const restaurantsList = await listNearbyRestaurants(query ? { lat, lng } : {});
-        setNearbyRestaurants(restaurantsList);
-
         const TRENDING_KEYWORDS = "Idli Chowmein Dosa Sambhar Pasta Chhole Bhature Pizza Burger Momos";
         
-        let dishesRes = await findDishResults(TRENDING_KEYWORDS, { lat, lng, limit: 10 });
+        // Fetch primary data in parallel to reduce load time significantly
+        const [restaurantsList, dishesRes, recRes] = await Promise.all([
+          listNearbyRestaurants(query ? { lat, lng } : {}),
+          findDishResults(TRENDING_KEYWORDS, { lat, lng, limit: 10 }),
+          findDishResults("", { lat, lng, limit: 4 })
+        ]);
+        
+        setNearbyRestaurants(restaurantsList);
+        setRecommendedDishes(recRes.data || []);
+
         let dishes = dishesRes.data || [];
         
         if (dishes.length < 3) {
@@ -69,9 +75,6 @@ export default function HomePage() {
         }
         
         setTrendingDishes(dishes.slice(0, 3));
-
-        const recRes = await findDishResults("", { lat, lng, limit: 4 });
-        setRecommendedDishes(recRes.data || []);
       } catch {
         setLoadError("Food discovery is temporarily unavailable. Please try again in a moment.");
       } finally {
@@ -85,7 +88,8 @@ export default function HomePage() {
           setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
           loadData(pos.coords.latitude, pos.coords.longitude);
         },
-        () => loadData()
+        () => loadData(),
+        { timeout: 3000, maximumAge: 60000 } // Don't wait longer than 3 seconds for GPS
       );
     } else {
       loadData();
