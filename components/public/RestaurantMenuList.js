@@ -90,13 +90,13 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
         )}
 
         {/* Search and Filter Section */}
-        <section className="mt-8 md:mt-12 mb-6 space-y-4">
+        <section className="mt-4 md:mt-6 mb-6 space-y-4">
           <div className="relative group">
-            <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">
+            <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-primary/60 group-focus-within:text-primary transition-colors">
               search
             </span>
             <input
-              className="w-full pl-14 pr-5 py-4 md:py-5 bg-white/80 backdrop-blur-md border border-outline-variant/30 rounded-[28px] shadow-[0_8px_24px_rgba(0,0,0,0.03)] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/50 font-body-md text-[16px]"
+              className="w-full pl-14 pr-5 py-4 md:py-5 bg-white/80 backdrop-blur-md border-2 border-primary/30 hover:border-primary/50 rounded-[28px] shadow-[0_8px_24px_rgba(0,0,0,0.03)] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/80 font-body-md text-[16px] text-on-surface font-medium"
               placeholder="Search for flavors..."
               type="text"
               value={searchQuery}
@@ -162,8 +162,39 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
           ))}
         </nav>
 
+        {/* Empty State */}
+        {filteredMenu.length === 0 && (
+          <div className="flex flex-col items-center justify-center pt-8 pb-16 text-center px-4">
+            <span className="text-6xl mb-6 drop-shadow-md">🍽️</span>
+            <h3 className="text-2xl font-black text-on-surface mb-3 tracking-tight">Oops! No items found</h3>
+            <p className="text-[15px] text-on-surface-variant max-w-sm font-medium">
+              {searchQuery || foodFilter !== "all" 
+                ? "We couldn't find any items matching your current filters. Try clearing them to see everything."
+                : "Sorry, this restaurant hasn't added any menu items yet!"}
+            </p>
+            
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
+              {(searchQuery || foodFilter !== "all" || activeCategory) && (
+                <button 
+                  onClick={() => { setSearchQuery(""); setFoodFilter("all"); setActiveCategory(""); }}
+                  className="px-8 py-3 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer border-none outline-none"
+                >
+                  Clear Filters
+                </button>
+              )}
+              
+              <Link
+                href={`/${restaurant.city.toLowerCase()}/${restaurant.slug.toLowerCase()}`}
+                className="px-8 py-3 bg-surface-container-high text-on-surface border border-outline-variant/50 rounded-full font-bold shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer no-underline"
+              >
+                View Profile
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Menu Sections */}
-        {categories
+        {filteredMenu.length > 0 && categories
           .filter((cat) => !activeCategory || cat === activeCategory)
           .map((cat) => {
             const categoryItems = filteredMenu.filter((item) => item.category === cat);
@@ -313,17 +344,17 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
       {/* Floating Order Summary */}
       {!isOwner && getTotalItems() > 0 && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-50 transform transition-transform duration-500 translate-y-0 animate-reveal">
-          <div className="bg-on-surface text-white p-4 rounded-3xl flex justify-between items-center shadow-2xl backdrop-blur-xl border border-white/10">
+          <div className="bg-on-surface text-white p-3 md:p-4 rounded-[20px] md:rounded-3xl flex justify-between items-center shadow-2xl backdrop-blur-xl border border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center font-bold">{getTotalItems()}</div>
+              <div className="w-9 h-9 md:w-10 md:h-10 bg-primary rounded-lg md:rounded-xl flex items-center justify-center font-bold text-[13px] md:text-sm">{getTotalItems()}</div>
               <div>
-                <p className="text-label-sm font-label-sm opacity-70 uppercase tracking-tighter">Items in cart</p>
-                <p className="font-headline-md-mobile text-[16px]">Rs {getTotalAmount()}</p>
+                <p className="text-[9px] md:text-xs font-bold opacity-70 uppercase tracking-wider">Items in cart</p>
+                <p className="text-[13px] md:text-[16px] font-black">Rs {getTotalAmount()}</p>
               </div>
             </div>
-            <Link href={`/${restaurant.city}/${restaurant.slug}/cart`} className="bg-white text-on-surface px-6 py-2.5 rounded-2xl font-bold text-label-sm flex items-center gap-2 active:scale-95 transition-transform cursor-pointer">
+            <Link href={`/${restaurant.city.toLowerCase()}/${restaurant.slug.toLowerCase()}/cart`} className="bg-white text-on-surface px-4 py-2 md:px-6 md:py-2.5 rounded-xl md:rounded-2xl font-bold text-[11px] md:text-sm flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer">
               View Cart
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              <span className="material-symbols-outlined text-[14px] md:text-[18px]">arrow_forward</span>
             </Link>
           </div>
         </div>

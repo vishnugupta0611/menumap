@@ -175,13 +175,17 @@ export default function HomePage() {
           </div>
           
           <div className="flex items-center gap-2">
-            <Link href="/customer/profile#orders" className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent no-underline">
-              <MaterialIcon name="shopping_cart" />
-            </Link>
+            {(!user || (user.role !== "owner" && user.role !== "employee" && !user.isEmployee)) && (
+              <Link href="/customer/profile#orders" className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent no-underline">
+                <MaterialIcon name="shopping_cart" />
+              </Link>
+            )}
             
             {user ? (
-              <Link href="/customer/profile" className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-sm flex items-center justify-center bg-primary text-on-primary font-bold">
-                {user.photo ? (
+              <Link href={(user.role === "owner" || user.role === "employee" || user.isEmployee) ? "/admin/dashboard" : "/customer/profile"} className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-sm flex items-center justify-center bg-primary text-on-primary font-bold">
+                {(user.role === "owner" || user.role === "employee" || user.isEmployee) ? (
+                  <MaterialIcon name="admin_panel_settings" className="text-[20px]" />
+                ) : user.photo ? (
                   <img
                     className="w-full h-full object-cover"
                     alt={user.name}

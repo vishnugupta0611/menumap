@@ -15,4 +15,5 @@ export const adminRoutes = [
   { href: "/admin/menu-ui", icon: "palette", label: "Menu UI" },
   { href: "/admin/settings", icon: "tune", label: "Settings" },
   { href: "/admin/qr", icon: "qr_code_2", label: "QR Code" },
+  { href: "/admin/roles", icon: "manage_accounts", label: "Roles", ownerOnly: true },
 ];

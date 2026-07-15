@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
@@ -16,7 +16,7 @@ const RestaurantMap = dynamic(() => import("@/components/RestaurantMap"), {
   ),
 });
 
-export default function MapPage() {
+function MapContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialLat = searchParams.get("lat");
@@ -130,5 +130,13 @@ export default function MapPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen bg-surface"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>}>
+      <MapContent />
+    </Suspense>
   );
 }

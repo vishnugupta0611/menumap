@@ -19,6 +19,7 @@ export default function ManageMenuPage() {
   const [loadError, setLoadError] = useState("");
 
   const [showModal, setShowModal] = useState(false);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [editDish, setEditDish] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -38,8 +39,26 @@ export default function ManageMenuPage() {
         api.get(`/api/restaurants/id/${user.restaurantId}/menu-items`),
         api.get(`/api/restaurants/id/${user.restaurantId}/categories`),
       ]);
-      setItems(menuRes.data?.data || []);
-      setCategories(catRes.data?.data || []);
+      
+      const fetchedItems = menuRes.data?.data || [];
+      let fetchedCategories = catRes.data?.data || [];
+      
+      // Auto-sync missing categories from items (e.g. added by AI)
+      const existingCatNames = new Set(fetchedCategories.map(c => c.name));
+      const missingCats = [...new Set(fetchedItems.map(i => i.category).filter(c => c && !existingCatNames.has(c)))];
+      
+      if (missingCats.length > 0) {
+        const newCats = await Promise.all(missingCats.map((name, index) => 
+          api.post(`/api/restaurants/id/${user.restaurantId}/categories`, { 
+            name, 
+            sortOrder: fetchedCategories.length + index + 1 
+          }).then(res => res.data.data)
+        ));
+        fetchedCategories = [...fetchedCategories, ...newCats];
+      }
+      
+      setItems(fetchedItems);
+      setCategories(fetchedCategories);
     } catch {
       setLoadError("Menu data could not load. Please check the API connection.");
     }
@@ -149,7 +168,7 @@ export default function ManageMenuPage() {
     if (!cat) return;
     if (!confirm(`Are you sure you want to delete category "${catName}"?`)) return;
     try {
-      await api.delete(`/api/categories/${cat._id}`);
+      await api.delete(`/api/restaurants/categories/${cat._id}`);
       loadMenu();
     } catch (err) {
       alert("Error deleting category");
@@ -162,7 +181,15 @@ export default function ManageMenuPage() {
     const newName = prompt("Enter new category name", catName);
     if (!newName || newName === catName) return;
     try {
-      await api.patch(`/api/categories/${cat._id}`, { name: newName });
+      await api.patch(`/api/restaurants/categories/${cat._id}`, { name: newName });
+      
+      // We also need to update the string `category` on all items that had this category
+      // to keep groupedItems working correctly since it relies on the string `category`
+      const itemsToUpdate = items.filter(i => i.category === catName);
+      await Promise.all(itemsToUpdate.map(item => 
+        api.patch(`/api/restaurants/menu-items/${item._id}`, { category: newName })
+      ));
+      
       loadMenu();
     } catch (err) {
       alert("Error updating category");
@@ -173,14 +200,14 @@ export default function ManageMenuPage() {
     <>
       <section className="flex flex-col md:flex-row gap-4 mb-8 items-center justify-between">
         <SearchBar placeholder="Search menu items..." className="w-full md:max-w-md" />
-        <div className="flex gap-3 w-full md:w-auto">
-          <Button onClick={addCategory} variant="secondary" className="flex-1 md:flex-none flex items-center gap-2">
-            <MdCreateNewFolder className="text-[20px]" />
-            Add Category
+        <div className="flex gap-2 w-full md:w-auto justify-end">
+          <Button onClick={addCategory} variant="secondary" className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm shadow-sm hover:shadow-md transition-all">
+            <MdCreateNewFolder className="text-[18px]" />
+            Category
           </Button>
-          <Button onClick={openAddModal} className="flex-1 md:flex-none flex items-center gap-2">
-            <MdAdd className="text-[20px]" />
-            Add Menu Item
+          <Button onClick={openAddModal} className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm shadow-md hover:shadow-lg transition-all">
+            <MdAdd className="text-[18px]" />
+            Item
           </Button>
         </div>
       </section>
@@ -242,80 +269,105 @@ export default function ManageMenuPage() {
                 close
               </button>
             </div>
-            <form onSubmit={handleSaveItem} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-2">Item Name</label>
-                <input
-                  className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md"
-                  type="text"
-                  placeholder="e.g. Samosa"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+            <form onSubmit={handleSaveItem} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Item Name</label>
+                  <input
+                    className="w-full h-10 px-3 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md"
+                    type="text"
+                    placeholder="e.g. Samosa"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Price (INR)</label>
+                  <input
+                    className="w-full h-10 px-3 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md"
+                    type="number"
+                    placeholder="250"
+                    required
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-2">Category</label>
-                <select
-                  className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md"
-                  required
-                  value={formData.categoryId}
-                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                >
-                  {categories.map((c) => (
-                    <option key={c._id} value={c._id}>{c.name}</option>
-                  ))}
-                  {categories.length === 0 && (
-                    <option value="">No categories found</option>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative">
+                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Category</label>
+                  <div 
+                    onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                    className="w-full h-10 px-3 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus-within:border-primary text-body-md flex items-center justify-between cursor-pointer transition-colors hover:bg-surface-container-low"
+                  >
+                    <span className={`truncate ${formData.categoryId ? "text-on-surface" : "text-on-surface-variant"}`}>
+                      {categories.find(c => c._id === formData.categoryId)?.name || "Select Category"}
+                    </span>
+                    <MaterialIcon name="arrow_drop_down" className={`transition-transform text-on-surface-variant ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                  </div>
+                  
+                  {isCategoryDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsCategoryDropdownOpen(false)}></div>
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-outline-variant shadow-xl rounded-xl overflow-hidden z-50 max-h-48 overflow-y-auto custom-scrollbar animate-reveal origin-top">
+                        {categories.map((c) => (
+                          <div 
+                            key={c._id}
+                            onClick={() => { setFormData({ ...formData, categoryId: c._id }); setIsCategoryDropdownOpen(false); }}
+                            className={`px-4 py-2.5 text-sm cursor-pointer transition-colors ${formData.categoryId === c._id ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-surface-container-low text-on-surface'}`}
+                          >
+                            {c.name}
+                          </div>
+                        ))}
+                        {categories.length === 0 && (
+                          <div className="px-4 py-3 text-sm text-on-surface-variant italic">No categories found</div>
+                        )}
+                      </div>
+                    </>
                   )}
-                </select>
+                </div>
+                <div className="flex flex-col justify-end pb-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="veg-checkbox"
+                      checked={formData.veg}
+                      onChange={(e) => setFormData({ ...formData, veg: e.target.checked })}
+                      className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary"
+                    />
+                    <label htmlFor="veg-checkbox" className="text-sm font-bold text-on-surface flex items-center gap-1 cursor-pointer">
+                      <span className={`w-4 h-4 rounded-full border-2 p-[2px] flex items-center justify-center ${formData.veg ? 'border-green-600' : 'border-red-600'}`}>
+                        <span className={`w-2 h-2 rounded-full ${formData.veg ? 'bg-green-600' : 'bg-red-600'}`}></span>
+                      </span>
+                      {formData.veg ? 'Veg' : 'Non-Veg'}
+                    </label>
+                  </div>
+                </div>
               </div>
+
               <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-2">Price (INR)</label>
-                <input
-                  className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md"
-                  type="number"
-                  placeholder="250"
-                  required
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-2">Description</label>
+                <label className="block text-xs font-bold text-on-surface-variant mb-1">Description</label>
                 <textarea
-                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md resize-none"
-                  rows="3"
+                  className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md resize-none"
+                  rows="2"
                   placeholder="Brief description of the item"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="veg-checkbox"
-                  checked={formData.veg}
-                  onChange={(e) => setFormData({ ...formData, veg: e.target.checked })}
-                  className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary"
-                />
-                <label htmlFor="veg-checkbox" className="text-sm font-bold text-on-surface flex items-center gap-1">
-                  <span className={`w-4 h-4 rounded-full border-2 p-[2px] flex items-center justify-center ${formData.veg ? 'border-green-600' : 'border-red-600'}`}>
-                    <span className={`w-2 h-2 rounded-full ${formData.veg ? 'bg-green-600' : 'bg-red-600'}`}></span>
-                  </span>
-                  {formData.veg ? 'Veg' : 'Non-Veg'}
-                </label>
-              </div>
+
               <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-2">Item Image</label>
+                <label className="block text-xs font-bold text-on-surface-variant mb-1">Item Image</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageSelect}
-                  className="w-full text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-container file:text-primary hover:file:bg-primary-container/80 cursor-pointer"
+                  className="w-full text-xs text-on-surface-variant file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary-container file:text-primary hover:file:bg-primary-container/80 cursor-pointer"
                 />
                 {(imageBase64 || editDish?.image) && (
-                  <div className="mt-2 w-full h-24 rounded-lg overflow-hidden border border-outline-variant">
+                  <div className="mt-2 w-full h-20 rounded-lg overflow-hidden border border-outline-variant">
                     <img src={imageBase64 || editDish.image} alt="Preview" className="w-full h-full object-cover" />
                   </div>
                 )}

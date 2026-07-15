@@ -6,6 +6,21 @@ import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { uploadImageAction } from "@/app/actions/upload";
 import { useAuth } from "@/contexts/AuthContext";
 
+const IMAGE_LIBRARY = [
+  { id: 1, url: 'https://images.unsplash.com/photo-1589302168068-96516f1964f5?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'indian thali curry traditional desi food' },
+  { id: 2, url: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'dosa idli south indian chutney sambar' },
+  { id: 3, url: 'https://images.unsplash.com/photo-1606491956689-2ea866880c8e?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'paneer curry gravy spicy masala' },
+  { id: 4, url: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'paratha aloo bread punjabi breakfast' },
+  { id: 5, url: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1600&auto=format&fit=crop', category: 'Restaurant', tags: 'restaurant interior dining table fine' },
+  { id: 6, url: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1600&auto=format&fit=crop', category: 'Restaurant', tags: 'bar lounge restro pub drink alcohol' },
+  { id: 7, url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1600&auto=format&fit=crop', category: 'Fast Food', tags: 'burger fries fast food american' },
+  { id: 8, url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1600&auto=format&fit=crop', category: 'Fast Food', tags: 'pizza italian cheese slice' },
+  { id: 9, url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1600&auto=format&fit=crop', category: 'Cafe', tags: 'cafe coffee espresso pastry breakfast' },
+  { id: 10, url: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1600&auto=format&fit=crop', category: 'Cafe', tags: 'coffee latte cup table mug' },
+  { id: 11, url: 'https://images.unsplash.com/photo-1495195134817-a165b63bc2e9?q=80&w=1600&auto=format&fit=crop', category: 'Abstract', tags: 'simple abstract ingredients dark moody' },
+  { id: 12, url: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=1600&auto=format&fit=crop', category: 'Abstract', tags: 'simple minimal table setting light' },
+];
+
 export default function SettingsPage() {
   const { user } = useAuth();
   const [restaurantId, setRestaurantId] = useState("");
@@ -32,6 +47,12 @@ export default function SettingsPage() {
   const [saveStatus, setSaveStatus] = useState("All changes synced");
   const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isUploadingHero, setIsUploadingHero] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  
+  const [showImageLibrary, setShowImageLibrary] = useState(false);
+  const [imageSearchQuery, setImageSearchQuery] = useState("");
+  const [activeImageCategory, setActiveImageCategory] = useState("All");
 
   useEffect(() => {
     async function loadSettings() {
@@ -77,9 +98,12 @@ export default function SettingsPage() {
     loadSettings();
   }, [user?.restaurantId]);
 
-  const handleUpload = async (e, setter) => {
+  const handleUpload = async (e, setter, isLogo = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (isLogo) setIsUploadingLogo(true);
+    else setIsUploadingHero(true);
 
     setSaveStatus("Uploading image...");
     try {
@@ -96,6 +120,9 @@ export default function SettingsPage() {
     } catch (err) {
       console.error(err);
       setSaveStatus(`Upload failed: ${err.message}`);
+    } finally {
+      if (isLogo) setIsUploadingLogo(false);
+      else setIsUploadingHero(false);
     }
   };
 
@@ -120,9 +147,10 @@ export default function SettingsPage() {
         menuUiSettings: { ...menuUiSettings, showTabs },
       };
 
-      if (website && website.trim() !== "") payload.website = website;
-      if (heroImage && heroImage.trim() !== "") payload.heroImage = heroImage;
-      if (logoImage && logoImage.trim() !== "") payload.logoImage = logoImage;
+      // Always send these fields so they can be cleared if empty
+      payload.website = website || "";
+      payload.heroImage = heroImage || "";
+      payload.logoImage = logoImage || "";
 
       await api.patch(`/api/restaurants/id/${restaurantId}`, payload);
       setSaveStatus("Saved successfully!");
@@ -257,24 +285,44 @@ export default function SettingsPage() {
                 value={heroImage}
                 onChange={(e) => setHeroImage(e.target.value)}
               />
-              <label className="flex items-center justify-center h-12 px-4 bg-primary text-on-primary rounded-xl cursor-pointer hover:bg-primary/90 transition-colors font-bold whitespace-nowrap">
-                <MaterialIcon name="upload" className="mr-2" />
-                Upload
-                <input type="file" className="hidden" accept="image/*" onChange={(e) => handleUpload(e, setHeroImage)} />
+              <button type="button" onClick={() => setShowImageLibrary(true)} className="flex items-center justify-center h-12 px-4 bg-surface-variant text-on-surface-variant rounded-xl hover:bg-surface-variant/80 transition-colors font-bold whitespace-nowrap shadow-sm border border-outline-variant" title="Choose from library">
+                <MaterialIcon name="photo_library" className="text-[20px]" />
+              </button>
+              <label className={`flex items-center justify-center h-12 px-4 bg-primary text-on-primary rounded-xl cursor-pointer hover:bg-primary/90 transition-colors font-bold whitespace-nowrap ${isUploadingHero ? 'opacity-70 cursor-not-allowed pointer-events-none' : ''}`}>
+                {isUploadingHero ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                ) : (
+                  <MaterialIcon name="upload" className="mr-2" />
+                )}
+                {isUploadingHero ? "Uploading..." : "Upload"}
+                <input type="file" className="hidden" disabled={isUploadingHero} accept="image/*" onChange={(e) => handleUpload(e, setHeroImage, false)} />
               </label>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-on-surface-variant mb-2">Hero Image Shape/Layout</label>
-            <select
-              className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md"
-              value={menuUiSettings.heroImageLayout || "rounded"}
-              onChange={(e) => setMenuUiSettings({ ...menuUiSettings, heroImageLayout: e.target.value })}
-            >
-              <option value="rounded">Rounded Card (Default)</option>
-              <option value="full-width">Full Width Cover</option>
-              <option value="square">Full Width Square</option>
-            </select>
+            <label className="block text-xs font-bold text-on-surface-variant mb-3">Hero Banner Layout</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { id: 'rounded', label: 'Rounded Card', desc: 'Modern card with padding' },
+                { id: 'full-width', label: 'Full Cover', desc: 'Edge-to-edge immersive' },
+                { id: 'square', label: 'Tall Square', desc: 'Max height for mobile' }
+              ].map(layout => {
+                const isActive = (menuUiSettings.heroImageLayout || 'rounded') === layout.id;
+                return (
+                  <div 
+                    key={layout.id}
+                    onClick={() => setMenuUiSettings({ ...menuUiSettings, heroImageLayout: layout.id })}
+                    className={`p-3 rounded-2xl border-2 cursor-pointer transition-colors text-center ${isActive ? 'border-primary bg-primary/5' : 'border-outline-variant hover:border-primary/50'}`}
+                  >
+                    <div className={`w-full aspect-[4/3] mb-3 rounded-xl bg-surface-container flex items-center justify-center overflow-hidden ${layout.id === 'rounded' ? 'p-3' : ''}`}>
+                       <div className={`w-full bg-primary/40 ${layout.id === 'rounded' ? 'h-full rounded-lg' : layout.id === 'square' ? 'h-full aspect-square scale-110' : 'h-full scale-110'}`}></div>
+                    </div>
+                    <div className="font-bold text-sm text-on-surface">{layout.label}</div>
+                    <div className="text-xs text-on-surface-variant leading-tight mt-1">{layout.desc}</div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-on-surface-variant mb-2">Logo Image URL</label>
@@ -286,10 +334,14 @@ export default function SettingsPage() {
                 value={logoImage}
                 onChange={(e) => setLogoImage(e.target.value)}
               />
-              <label className="flex items-center justify-center h-12 px-4 bg-primary text-on-primary rounded-xl cursor-pointer hover:bg-primary/90 transition-colors font-bold whitespace-nowrap">
-                <MaterialIcon name="upload" className="mr-2" />
-                Upload
-                <input type="file" className="hidden" accept="image/*" onChange={(e) => handleUpload(e, setLogoImage)} />
+              <label className={`flex items-center justify-center h-12 px-4 bg-primary text-on-primary rounded-xl cursor-pointer hover:bg-primary/90 transition-colors font-bold whitespace-nowrap ${isUploadingLogo ? 'opacity-70 cursor-not-allowed pointer-events-none' : ''}`}>
+                {isUploadingLogo ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                ) : (
+                  <MaterialIcon name="upload" className="mr-2" />
+                )}
+                {isUploadingLogo ? "Uploading..." : "Upload"}
+                <input type="file" className="hidden" disabled={isUploadingLogo} accept="image/*" onChange={(e) => handleUpload(e, setLogoImage, true)} />
               </label>
             </div>
           </div>
@@ -488,6 +540,97 @@ export default function SettingsPage() {
           </button>
         </section>
       </form>
+
+      {/* Image Library Modal */}
+      {showImageLibrary && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowImageLibrary(false)}></div>
+          <div className="relative bg-surface-container-lowest w-full max-w-4xl max-h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-reveal">
+            
+            {/* Header */}
+            <div className="p-6 border-b border-surface-container flex items-center justify-between bg-white z-10 shrink-0">
+              <h2 className="text-2xl font-bold text-on-surface flex items-center gap-2">
+                <MaterialIcon name="photo_library" className="text-primary" />
+                Image Library
+              </h2>
+              <button 
+                onClick={() => setShowImageLibrary(false)}
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-variant/50 transition-colors text-on-surface-variant"
+              >
+                <MaterialIcon name="close" className="text-2xl" />
+              </button>
+            </div>
+
+            {/* Filters */}
+            <div className="p-6 border-b border-surface-container bg-surface-container-lowest/50 shrink-0">
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                <div className="relative flex-1">
+                  <MaterialIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" />
+                  <input 
+                    type="text" 
+                    placeholder="Search e.g. idli, burger, fine dining..." 
+                    className="w-full h-12 pl-12 pr-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm font-body-md"
+                    value={imageSearchQuery}
+                    onChange={(e) => setImageSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
+                {['All', 'Indian', 'Fast Food', 'Restaurant', 'Cafe', 'Abstract'].map(cat => (
+                  <button 
+                    key={cat}
+                    onClick={() => setActiveImageCategory(cat)}
+                    className={`px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-colors border ${activeImageCategory === cat ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-on-surface border-outline-variant hover:bg-surface-container-low'}`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Image Grid */}
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-surface-container-lowest">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {IMAGE_LIBRARY.filter(img => {
+                  const matchCat = activeImageCategory === 'All' || img.category === activeImageCategory;
+                  const matchSearch = !imageSearchQuery || img.tags.toLowerCase().includes(imageSearchQuery.toLowerCase());
+                  return matchCat && matchSearch;
+                }).map(img => (
+                  <div 
+                    key={img.id} 
+                    className="relative group rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer shadow-sm border border-outline-variant/30 hover:shadow-lg transition-all"
+                    onClick={() => {
+                      setHeroImage(img.url);
+                      setShowImageLibrary(false);
+                    }}
+                  >
+                    <img src={img.url} alt={img.tags} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                      <div className="bg-white text-on-surface px-4 py-2 rounded-full font-bold text-sm transform scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all shadow-lg flex items-center gap-2">
+                        <MaterialIcon name="check_circle" className="text-primary text-[18px]" />
+                        Select
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {IMAGE_LIBRARY.filter(img => {
+                  const matchCat = activeImageCategory === 'All' || img.category === activeImageCategory;
+                  const matchSearch = !imageSearchQuery || img.tags.toLowerCase().includes(imageSearchQuery.toLowerCase());
+                  return matchCat && matchSearch;
+                }).length === 0 && (
+                  <div className="col-span-full py-16 flex flex-col items-center justify-center text-on-surface-variant">
+                    <MaterialIcon name="search_off" className="text-5xl mb-4 opacity-50" />
+                    <p className="font-bold">No images found for "{imageSearchQuery}"</p>
+                    <p className="text-sm mt-1">Try a different category or keyword.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

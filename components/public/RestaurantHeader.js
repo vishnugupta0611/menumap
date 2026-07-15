@@ -9,7 +9,7 @@ export default function RestaurantHeader({ restaurant }) {
   const { user } = useAuth();
   const pathname = usePathname();
   const isMenuPage = pathname?.endsWith("/menu");
-  const isOwner = user?.role === "owner";
+  const isAdmin = user?.role === "owner" || user?.role === "employee" || user?.isEmployee;
   return (
     <nav className="fixed top-0 left-0 w-full z-[60] bg-white/90 backdrop-blur-md flex justify-between items-center px-margin-mobile py-3.5 border-b border-surface-container max-w-7xl mx-auto">
       <Link href={`/${restaurant.city}/${restaurant.slug}`} className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 mr-2">
@@ -38,7 +38,7 @@ export default function RestaurantHeader({ restaurant }) {
           )}
         </div>
 
-        {!isOwner && (
+        {!isAdmin && (
           <Link
             href={`/${restaurant.city}/${restaurant.slug}/cart`}
             className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-variant/60 transition-colors text-on-surface-variant"
@@ -49,11 +49,11 @@ export default function RestaurantHeader({ restaurant }) {
         )}
         {user ? (
           <Link
-            href={isOwner ? "/admin/dashboard" : "/customer/profile"}
+            href={isAdmin ? "/admin/dashboard" : "/customer/profile"}
             className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors font-bold overflow-hidden"
-            title={isOwner ? "Admin Panel" : "My Profile"}
+            title={isAdmin ? "Admin Panel" : "My Profile"}
           >
-            {isOwner ? (
+            {isAdmin ? (
               <MaterialIcon name="admin_panel_settings" className="text-[18px]" />
             ) : user.photo ? (
               <img src={user.photo} alt={user.name} className="w-full h-full object-cover" />

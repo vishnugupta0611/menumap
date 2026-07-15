@@ -37,6 +37,7 @@ export default function LoginSSOCallbackPage() {
         // Login using Express API (sets the cookie)
         const data = await loginWithVerifiedEmail({
           email: primaryEmail,
+          name: user.fullName || "Foodie",
           clerkId: clerkId,
           role: role
         });

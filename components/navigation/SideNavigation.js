@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { adminRoutes } from "@/constants/routes";
 import { cn } from "@/lib/utils";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
@@ -9,7 +9,13 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function SideNavigation({ isOpen, onClose }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
 
   return (
     <>
@@ -37,7 +43,16 @@ export default function SideNavigation({ isOpen, onClose }) {
         </div>
         
         <nav className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">
-          {adminRoutes.map((item) => {
+          {adminRoutes
+            .filter((item) => {
+              if (user?.role === "owner") return true;
+              if (item.ownerOnly) return false;
+              if (user?.isEmployee && user?.permissions) {
+                return user.permissions.includes(item.label);
+              }
+              return false; // Default safe block
+            })
+            .map((item) => {
             const isActive = pathname === item.href || (item.href !== "/admin/dashboard" && pathname.startsWith(item.href));
 
             return (
@@ -56,14 +71,25 @@ export default function SideNavigation({ isOpen, onClose }) {
             );
           })}
         </nav>
-        <div className="mt-auto flex items-center gap-sm border-t border-outline-variant/30 px-6 py-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-container text-secondary">
-            <MaterialIcon name="person" />
+        <div className="mt-auto flex items-center justify-between border-t border-outline-variant/30 px-6 py-4 mb-4">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container text-secondary">
+              <MaterialIcon name="person" />
+            </div>
+            <div className="flex flex-col min-w-0 pr-2">
+              <p className="font-bold text-sm text-on-surface truncate">{user?.name || "Restaurant Owner"}</p>
+              <p className="text-[11px] font-medium text-on-surface-variant truncate">
+                {user?.isEmployee ? `@${user?.username}` : (user?.email || "No Email")}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="font-label-sm text-on-surface font-bold truncate max-w-[160px]">{user?.name || "Restaurant Owner"}</p>
-            <p className="text-[10px] uppercase tracking-widest text-on-surface-variant truncate max-w-[160px]">{user?.email || "No Email"}</p>
-          </div>
+          <button 
+            onClick={handleLogout}
+            className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-error hover:bg-error-container transition-colors"
+            title="Logout"
+          >
+            <MaterialIcon name="logout" className="text-[20px]" />
+          </button>
         </div>
       </aside>
     </>

@@ -44,6 +44,20 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function employeeLogin(username, password) {
+    try {
+      setError(null);
+      const { data } = await api.post('/api/auth/employee-login', { username, password });
+      setUser(data.user);
+      setRestaurant(data.restaurant || null);
+      return data;
+    } catch (error) {
+      const message = error.response?.data?.error || 'Employee Login failed';
+      setError(message);
+      throw new Error(message);
+    }
+  }
+
   async function loginWithVerifiedEmail({ email, name, clerkId, role }) {
     try {
       setError(null);
@@ -120,6 +134,7 @@ export function AuthProvider({ children }) {
         loading,
         error,
         login,
+        employeeLogin,
         loginWithVerifiedEmail,
         registerOwner,
         registerCustomer,

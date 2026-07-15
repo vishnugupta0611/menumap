@@ -94,7 +94,7 @@ export default function MenuUIPage() {
       )}
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start relative">
-        <form onSubmit={handleSave} className="space-y-8 w-full max-w-2xl flex-1">
+        <form onSubmit={handleSave} className="space-y-8 w-full max-w-2xl flex-1 order-last lg:order-first">
         {/* Theming */}
         <div className="bg-white p-6 md:p-8 rounded-[32px] border border-surface-container-highest/20 shadow-[0_2px_24px_rgba(0,0,0,0.02)] space-y-6">
           <h3 className="font-bold text-lg text-on-surface flex items-center gap-3">
@@ -227,7 +227,7 @@ export default function MenuUIPage() {
           <div className="flex items-center justify-between border-t border-outline-variant/30 pt-4">
             <div className="space-y-1">
               <h3 className="font-bold text-sm text-on-surface">Show Navigation Tabs</h3>
-              <p className="text-xs text-on-surface-variant">Display the sticky navigation tabs (Profile, Menu, About, etc) at the top.</p>
+              <p className="text-xs text-on-surface-variant">This nav tab is used when restro wants to sell veg nonveg both</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer select-none">
               <input type="checkbox" className="sr-only" checked={settings.showTabs} onChange={(e) => setSettings({ ...settings, showTabs: !settings.showTabs })} />
@@ -253,7 +253,7 @@ export default function MenuUIPage() {
       </form>
 
       {/* Mobile Preview Panel */}
-      <div className="sticky top-24 w-full max-w-[340px] hidden lg:block self-start z-10 perspective-1000">
+      <div className="w-full flex justify-center lg:block lg:sticky lg:top-24 lg:max-w-[340px] self-start z-10 perspective-1000 order-first lg:order-last mb-8 lg:mb-0">
         <MenuPreview settings={settings} />
       </div>
       </div>
@@ -286,6 +286,14 @@ const MenuPreview = ({ settings }) => {
         )}
 
         <div className="p-4 space-y-4 mt-2">
+          {settings.showTabs && (
+            <div className="flex items-center justify-between p-1 bg-surface-container-low rounded-full border border-surface-container-highest/30 shadow-inner">
+              <button className="flex-1 py-1.5 px-2 rounded-full text-[10px] font-bold tracking-wide bg-white text-on-surface shadow-sm border-none">All</button>
+              <button className="flex-1 py-1.5 px-2 rounded-full text-[10px] font-bold tracking-wide text-on-surface-variant bg-transparent border-none">Veg</button>
+              <button className="flex-1 py-1.5 px-2 rounded-full text-[10px] font-bold tracking-wide text-on-surface-variant bg-transparent border-none">Non-Veg</button>
+            </div>
+          )}
+
           <div className="flex gap-2 overflow-x-hidden">
             <span className="px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">All Items</span>
             <span className="px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant text-[10px] font-medium">Starters</span>

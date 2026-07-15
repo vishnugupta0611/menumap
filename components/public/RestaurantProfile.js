@@ -14,6 +14,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
   const [reviewText, setReviewText] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
+  const isOwner = user?.role === "owner";
 
   const submitReview = async (e) => {
     e.preventDefault();
@@ -50,7 +51,22 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
     .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
     .slice(0, 5);
   const heroLayout = restaurant.menuUiSettings?.heroImageLayout || "rounded";
-  const galleryStyle = restaurant.menuUiSettings?.galleryLayout || "simple";
+  const galleryStyle = restaurant?.menuUiSettings?.galleryLayout || "simple";
+  
+  // Calculate displayGallery based on explicit featuredGalleryIds or fallback to pool slice
+  const featuredIds = restaurant?.menuUiSettings?.featuredGalleryIds || [];
+  let displayGallery = [];
+  if (featuredIds.length > 0) {
+    displayGallery = featuredIds
+      .map(id => gallery.find(g => g._id === id))
+      .filter(Boolean);
+  }
+  
+  if (displayGallery.length === 0) {
+    if (galleryStyle === "aesthetic") displayGallery = gallery.slice(0, 5);
+    else if (galleryStyle === "decent") displayGallery = gallery.slice(0, 4);
+    else displayGallery = gallery.slice(0, 3);
+  }
 
   const formatTime = (t) => {
     if (!t) return null;
@@ -140,18 +156,27 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
               </div>
 
               {heroLayout === "full-width" && (
-                <div className="w-full max-w-2xl text-black">
-                  <div className="relative group">
-                    <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[24px]">
-                      search
-                    </span>
-                    <input
-                      className="w-full pl-14 pr-6 py-5 bg-white/95 backdrop-blur-md border-none focus:outline-none focus:ring-4 focus:ring-primary/50 transition-all font-body-lg text-[18px] rounded-full shadow-2xl"
-                      placeholder="Search the menu..."
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                <div className="w-full max-w-3xl text-black">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative group flex-1">
+                      <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[24px]">
+                        search
+                      </span>
+                      <input
+                        className="w-full pl-14 pr-6 py-4 sm:py-5 bg-white/95 backdrop-blur-md border-none focus:outline-none focus:ring-4 focus:ring-primary/50 transition-all font-body-lg text-[16px] sm:text-[18px] rounded-full shadow-2xl"
+                        placeholder="Search the menu..."
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <Link
+                      href={menuPath}
+                      className="h-14 sm:h-auto sm:py-0 py-4 px-8 bg-primary text-white font-bold rounded-full flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-xl shrink-0"
+                    >
+                      <MaterialIcon name="restaurant_menu" className="text-[20px]" />
+                      Open Menu
+                    </Link>
                   </div>
                 </div>
               )}
@@ -162,7 +187,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
 
       {/* Search Bar & Actions */}
       {heroLayout !== "full-width" && (
-        <div className="px-margin-mobile mb-12 max-w-4xl mx-auto">
+        <div className={`px-margin-mobile mb-12 max-w-4xl mx-auto ${!restaurant.heroImage ? 'mt-6 md:mt-10' : ''}`}>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative group flex-1">
               <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[22px] group-focus-within:text-primary transition-colors">
@@ -200,6 +225,29 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
       )}
 
       {/* Menu Preview Section */}
+      {menu.length === 0 && (
+        <section className="px-margin-mobile mb-16 max-w-4xl mx-auto">
+          <div className="py-12 md:py-16 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
+              <MaterialIcon name="restaurant_menu" className="text-3xl" />
+            </div>
+            <h3 className="text-xl font-bold text-on-surface mb-2">Oops! No items found</h3>
+            <p className="text-on-surface-variant text-sm mb-6 max-w-md mx-auto">
+              Sorry, this restaurant hasn't added any menu items yet!
+            </p>
+            {isOwner && (
+              <Link
+                href="/admin/menu"
+                className="inline-flex items-center gap-2 bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                <MaterialIcon name="add" className="text-[20px]" />
+                Add Item
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
+      
       {featuredItems.length > 0 && (
         <section className="px-margin-mobile mb-16 max-w-4xl mx-auto">
           <div className="flex items-center justify-between gap-4 mb-6">
@@ -382,14 +430,14 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
       {/* Move to Menu Button (Removed as it is now at the top) */}
 
       {/* Gallery Section */}
-      {gallery && gallery.length > 0 && (
+      {displayGallery && displayGallery.length > 0 && (
         <section className="px-margin-mobile mb-20 max-w-5xl mx-auto overflow-hidden">
           <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface mb-8 text-center sm:text-left max-w-4xl mx-auto">Gallery</h2>
           
           {/* Style 1: Aesthetic (Dynamic Accordion, max 5) */}
           {galleryStyle === "aesthetic" && (
             <div className="flex items-center gap-2 sm:gap-3 h-[300px] sm:h-[450px] w-full max-w-5xl mx-auto mt-4 px-2">
-              {gallery.slice(0, 5).map((img, idx) => (
+              {displayGallery.map((img, idx) => (
                 <div
                   key={img._id || idx}
                   className="relative group transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] flex-1 hover:flex-[4] rounded-[24px] sm:rounded-[32px] overflow-hidden h-full cursor-pointer shadow-sm hover:shadow-xl"
@@ -410,7 +458,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
           {/* Style 2: Decent (Grid with Title, max 4) */}
           {galleryStyle === "decent" && (
             <div className="grid grid-cols-2 md:grid-cols-4 mt-4 gap-4 max-w-5xl mx-auto">
-              {gallery.slice(0, 4).map((img, idx) => (
+              {displayGallery.map((img, idx) => (
                 <div
                   key={img._id || idx}
                   className="relative group rounded-[24px] sm:rounded-[32px] overflow-hidden w-full aspect-square md:aspect-[3/4] cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300"
@@ -434,12 +482,12 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
           {/* Style 3: Simple (Overlapping Polaroids, max 3) */}
           {galleryStyle === "simple" && (
             <div className="flex items-center justify-center mt-8 sm:mt-12 mb-8 relative max-w-2xl mx-auto min-h-[220px] sm:min-h-[300px]">
-              {gallery.slice(0, 3).map((img, idx) => {
+              {displayGallery.map((img, idx) => {
                 const isLeft = idx === 0;
                 const isCenter = idx === 1;
                 const isRight = idx === 2;
                 
-                if (gallery.length === 1) {
+                if (displayGallery.length === 1) {
                   return (
                     <div key={img._id || idx} className="relative bg-white p-2 sm:p-3 rounded-xl shadow-xl z-20 hover:scale-105 transition-transform duration-300 cursor-pointer">
                       <img src={img.url} alt={img.alt} className="w-48 h-56 sm:w-64 sm:h-80 object-cover rounded-lg" />
@@ -486,19 +534,18 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
         </div>
 
         {/* Add Review Form */}
-        <div className="bg-white p-6 md:p-10 rounded-[40px] border border-outline-variant/30 shadow-md mb-12">
-          <h3 className="font-bold text-xl text-on-surface mb-8 text-center">Rate your experience</h3>
+        <div className="mb-16">
+          <h3 className="font-bold text-2xl text-on-surface mb-8">Rate your experience</h3>
           {user ? (
-            <form onSubmit={submitReview}>
-              <div className="flex justify-center mb-8 relative">
-                <div className="flex items-center justify-center gap-2 sm:gap-6">
+            <form onSubmit={submitReview} className="w-full">
+              <div className="flex mb-6 relative">
+                <div className="flex items-center gap-3">
                   {[1, 2, 3, 4, 5].map((star) => {
-                    const archOffsets = ["translate-y-2", "translate-y-0.5", "translate-y-0", "translate-y-0.5", "translate-y-2"];
                     return (
                       <button
                         key={star}
                         type="button"
-                        className={`transition-all hover:scale-125 focus:outline-none ${archOffsets[star - 1]}`}
+                        className={`transition-all hover:scale-110 focus:outline-none`}
                         onMouseEnter={() => setHoverRating(star)}
                         onMouseLeave={() => setHoverRating(0)}
                         onClick={() => setRating(star)}
@@ -506,8 +553,8 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
                         <MaterialIcon 
                           name="star" 
                           fill={(hoverRating || rating) >= star} 
-                          className={`text-4xl sm:text-5xl transition-colors drop-shadow-sm ${
-                            (hoverRating || rating) >= star ? "text-primary" : "text-on-surface-variant/20"
+                          className={`text-4xl transition-colors drop-shadow-sm ${
+                            (hoverRating || rating) >= star ? "text-primary" : "text-on-surface-variant/30"
                           }`} 
                         />
                       </button>
@@ -517,8 +564,8 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
               </div>
               <div className="mb-6">
                 <textarea
-                  className="w-full h-36 p-6 rounded-3xl border border-outline-variant bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none text-body-lg shadow-inner"
-                  placeholder="Share details of your own experience at this place..."
+                  className="w-full h-36 p-6 rounded-[24px] border border-outline-variant/50 bg-surface-container-lowest/50 focus:bg-transparent focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all resize-none text-body-lg shadow-sm"
+                  placeholder="What was your experience like? Share the details..."
                   value={reviewText}
                   onChange={(e) => setReviewText(e.target.value)}
                   required
@@ -537,8 +584,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
               </div>
             </form>
           ) : (
-            <div className="text-center py-10 bg-surface-container-lowest rounded-[32px] border border-dashed border-outline-variant">
-              <MaterialIcon name="account_circle" className="text-5xl text-on-surface-variant/40 mb-3" />
+            <div className="py-8 text-left">
               <p className="font-bold text-on-surface-variant text-lg mb-6">You must be logged in to leave a review.</p>
               <Link href="/login" className="inline-flex items-center justify-center h-12 gap-2 px-8 bg-primary text-white font-bold rounded-full hover:brightness-110 transition-all shadow-sm">
                 Log In or Sign Up
@@ -548,38 +594,54 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
         </div>
 
         {/* Existing Reviews List */}
-        {reviews.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {reviews.map((review) => (
-              <div
-                key={review.id || review._id}
-                className="flex flex-col group relative"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0 border border-primary/20 shadow-sm">
-                    {(review.name || "G").charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-on-surface text-base">{review.name}</h4>
-                    <div className="flex text-primary/80 mt-0.5">
-                      {Array.from({ length: review.rating || 5 }).map((_, index) => (
-                        <MaterialIcon key={index} name="star" fill className="text-[16px]" />
-                      ))}
-                    </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+          {/* MenuMap Default Review */}
+          <div className="flex flex-col relative">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shrink-0 shadow-sm border border-primary/20">
+                <MaterialIcon name="verified" className="text-[24px]" />
+              </div>
+              <div>
+                <h4 className="font-bold text-on-surface text-base flex items-center gap-1.5">
+                  MenuMap Team
+                  <MaterialIcon name="check_circle" className="text-primary text-[14px]" fill />
+                </h4>
+                <div className="flex text-primary mt-0.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <MaterialIcon key={star} name="star" fill className="text-[16px]" />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <p className="text-on-surface-variant font-medium text-base leading-relaxed pl-1">
+              "Welcome to MenuMap! We wish you immense success and hope your business grows beautifully with us. 🚀"
+            </p>
+          </div>
+
+          {reviews.map((review) => (
+            <div
+              key={review.id || review._id}
+              className="flex flex-col relative"
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0 border border-primary/20 shadow-sm">
+                  {(review.name || "G").charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h4 className="font-bold text-on-surface text-base">{review.name}</h4>
+                  <div className="flex text-primary/80 mt-0.5">
+                    {Array.from({ length: review.rating || 5 }).map((_, index) => (
+                      <MaterialIcon key={index} name="star" fill className="text-[16px]" />
+                    ))}
                   </div>
                 </div>
-                <p className="text-on-surface-variant font-medium text-base leading-relaxed pl-1">
-                  "{review.text}"
-                </p>
-                <div className="mt-4 border-b border-outline-variant/20 w-1/3"></div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <p className="font-bold text-on-surface-variant text-lg">No reviews yet.</p>
-          </div>
-        )}
+              <p className="text-on-surface-variant font-medium text-base leading-relaxed pl-1">
+                "{review.text}"
+              </p>
+            </div>
+          ))}
+        </div>
       </section>
     </>
   );

@@ -1,27 +1,43 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import TopAppBar from "@/components/navigation/TopAppBar";
 import SideNavigation from "@/components/navigation/SideNavigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { adminRoutes } from "@/constants/routes";
 
 export default function AdminLayout({ children }) {
   const [isOpen, setIsOpen] = useState(false);
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push("/login");
-      } else if (user.role !== "owner") {
-        router.push("/");
+        return router.push("/login");
+      } 
+      
+      if (user.role !== "owner" && user.role !== "employee") {
+        return router.push("/");
+      }
+
+      if (user.role === "employee") {
+        // Find the route they are trying to access
+        const currentRoute = adminRoutes.find(r => pathname === r.href || (r.href !== "/admin/dashboard" && pathname.startsWith(r.href)));
+        
+        if (currentRoute) {
+          if (currentRoute.ownerOnly || !user.permissions?.includes(currentRoute.label)) {
+            // Unauthorized access attempt
+            return router.push("/admin/dashboard");
+          }
+        }
       }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname]);
 
-  if (loading || !user || user.role !== "owner") {
+  if (loading || !user || !["owner", "employee"].includes(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>

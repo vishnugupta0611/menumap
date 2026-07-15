@@ -41,7 +41,6 @@ export default function SSOCallbackPage() {
         await registerOwner({
           name: ownerName,
           email: primaryEmail,
-          password: "", // Optional for SSO users
           clerkId: clerkId,
           restaurantName,
           city: restaurantCity,

@@ -35,7 +35,6 @@ export default function CustomerSSOCallbackPage() {
         await registerCustomer({
           name: customerName,
           email: primaryEmail,
-          password: "", // Optional for SSO users
           clerkId: clerkId,
         });
 
