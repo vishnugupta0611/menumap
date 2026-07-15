@@ -11,7 +11,7 @@ export default function RestaurantHeader({ restaurant }) {
   const isMenuPage = pathname?.endsWith("/menu");
   const isAdmin = user?.role === "owner" || user?.role === "employee" || user?.isEmployee;
   return (
-    <nav className="fixed top-0 left-0 w-full z-[60] bg-white/90 backdrop-blur-md flex justify-between items-center px-margin-mobile py-3.5 border-b border-surface-container max-w-7xl mx-auto">
+    <nav className="fixed top-0 left-0 w-full z-[60] bg-surface/90 backdrop-blur-md flex justify-between items-center px-margin-mobile py-3.5 border-b border-surface-container max-w-7xl mx-auto">
       <Link href={`/${restaurant.city}/${restaurant.slug}`} className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 mr-2">
         <div className="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden shrink-0">
           {restaurant.logoImage ? (

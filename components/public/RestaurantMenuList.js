@@ -96,7 +96,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
               search
             </span>
             <input
-              className="w-full pl-14 pr-5 py-4 md:py-5 bg-white/80 backdrop-blur-md border-2 border-primary/30 hover:border-primary/50 rounded-[28px] shadow-[0_8px_24px_rgba(0,0,0,0.03)] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/80 font-body-md text-[16px] text-on-surface font-medium"
+              className="w-full pl-14 pr-5 py-4 md:py-5 bg-surface/80 backdrop-blur-md border-2 border-primary/30 hover:border-primary/50 rounded-[28px] shadow-[0_8px_24px_rgba(0,0,0,0.03)] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/80 font-body-md text-[16px] text-on-surface font-medium"
               placeholder="Search for flavors..."
               type="text"
               value={searchQuery}
@@ -109,7 +109,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
               onClick={() => setFoodFilter("all")}
               className={`flex-1 py-2.5 px-4 rounded-[20px] text-[13px] font-bold tracking-wide transition-all duration-300 cursor-pointer ${
                 foodFilter === "all"
-                  ? "bg-white text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                  ? "bg-surface text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
                   : "text-on-surface-variant hover:bg-surface-variant/50"
               }`}
             >
@@ -119,7 +119,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
               onClick={() => setFoodFilter("veg")}
               className={`flex-1 py-2.5 px-4 rounded-[20px] text-[13px] font-bold tracking-wide transition-all duration-300 cursor-pointer ${
                 foodFilter === "veg"
-                  ? "bg-white text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                  ? "bg-surface text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
                   : "text-on-surface-variant hover:bg-surface-variant/50"
               }`}
             >
@@ -129,7 +129,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
               onClick={() => setFoodFilter("non-veg")}
               className={`flex-1 py-2.5 px-4 rounded-[20px] text-[13px] font-bold tracking-wide transition-all duration-300 cursor-pointer ${
                 foodFilter === "non-veg"
-                  ? "bg-white text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                  ? "bg-surface text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
                   : "text-on-surface-variant hover:bg-surface-variant/50"
               }`}
             >
@@ -216,10 +216,10 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
                     <div
                       key={item.id}
                       className={`group overflow-hidden ${
-                        settings.layout === "list" ? "bg-white flex items-center justify-between gap-4 p-4 md:p-5 rounded-[24px] border border-surface-container-highest/30 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-shadow duration-300" :
-                        settings.layout === "grid" ? "bg-white rounded-[24px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all flex flex-col border border-surface-container-highest/20" :
+                        settings.layout === "list" ? "bg-surface flex items-center justify-between gap-4 p-4 md:p-5 rounded-[24px] border border-surface-container-highest/30 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-shadow duration-300" :
+                        settings.layout === "grid" ? "bg-surface rounded-[24px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all flex flex-col border border-surface-container-highest/20" :
                         settings.layout === "simple-list" ? "flex items-center justify-between py-3 md:py-4 bg-transparent border-none rounded-none gap-3" :
-                        "bg-white p-5 md:p-6 rounded-[28px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-shadow duration-300 border border-surface-container-highest/30 flex items-start justify-between gap-5 md:gap-6"
+                        "bg-surface p-5 md:p-6 rounded-[28px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-shadow duration-300 border border-surface-container-highest/30 flex items-start justify-between gap-5 md:gap-6"
                       }`}
                       onClick={() => {
                         // Allow clicking anywhere on simple-list to add if desired, or let it just be decorative
@@ -352,7 +352,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
                 <p className="text-[13px] md:text-[16px] font-black">Rs {getTotalAmount()}</p>
               </div>
             </div>
-            <Link href={`/${restaurant.city.toLowerCase()}/${restaurant.slug.toLowerCase()}/cart`} className="bg-white text-on-surface px-4 py-2 md:px-6 md:py-2.5 rounded-xl md:rounded-2xl font-bold text-[11px] md:text-sm flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer">
+            <Link href={`/${restaurant.city.toLowerCase()}/${restaurant.slug.toLowerCase()}/cart`} className="bg-surface text-on-surface px-4 py-2 md:px-6 md:py-2.5 rounded-xl md:rounded-2xl font-bold text-[11px] md:text-sm flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer">
               View Cart
               <span className="material-symbols-outlined text-[14px] md:text-[18px]">arrow_forward</span>
             </Link>
