@@ -5,7 +5,7 @@ import { AdminPanel } from "@/components/admin/AdminPanel";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
-import { io } from "socket.io-client";
+import { socket } from "@/lib/socket";
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -62,11 +62,11 @@ export default function OrdersPage() {
   useEffect(() => {
     if (!user?.restaurantId) return;
 
-    const socket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:4000');
-    
-    socket.on("connect", () => {
-      socket.emit("restaurant:join", user.restaurantId);
-    });
+    if (!socket.connected) {
+      socket.connect();
+    }
+    socket.emit("restaurant:join", user.restaurantId);
+
 
     socket.on("orders:new", (order) => {
       setOrders(prev => {
@@ -83,7 +83,8 @@ export default function OrdersPage() {
     });
 
     return () => {
-      socket.disconnect();
+      socket.off("orders:new");
+      socket.off("orders:status");
     };
   }, [user?.restaurantId]);
 

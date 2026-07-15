@@ -7,6 +7,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { uploadImageAction } from "@/app/actions/upload";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
+import { socket } from "@/lib/socket";
 
 export default function CustomerProfilePage() {
   const { user, loading, updateProfile, logout } = useAuth();
@@ -41,13 +42,30 @@ export default function CustomerProfilePage() {
   const fetchOrders = async () => {
     try {
       const { data } = await api.get("/api/orders/my-orders");
-      setOrders(data.data || []);
+      const fetchedOrders = data.data || [];
+      setOrders(fetchedOrders);
+      
+      if (!socket.connected) socket.connect();
+      
+      const uniqueRestaurantIds = [...new Set(fetchedOrders.map(o => o.restaurantId?._id).filter(Boolean))];
+      uniqueRestaurantIds.forEach(id => socket.emit("restaurant:join", id));
+      
     } catch (err) {
       console.error("Failed to fetch orders:", err);
     } finally {
       setLoadingOrders(false);
     }
   };
+
+  useEffect(() => {
+    socket.on("orders:status", (updatedOrder) => {
+      setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
+    });
+
+    return () => {
+      socket.off("orders:status");
+    };
+  }, []);
 
   const handleFetchLocation = () => {
     if (!navigator.geolocation) {

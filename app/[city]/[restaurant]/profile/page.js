@@ -7,7 +7,7 @@ import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { useCartStore } from "@/stores/cart-store";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
-import { io } from "socket.io-client";
+import { socket } from "@/lib/socket";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -28,8 +28,15 @@ export default function ProfilePage() {
     if (displayEmail) {
       api.get(`/api/orders/customer?email=${encodeURIComponent(displayEmail)}`)
         .then(res => {
-          setOrders(res.data.data || []);
+          const fetchedOrders = res.data.data || [];
+          setOrders(fetchedOrders);
           setLoading(false);
+
+          if (!socket.connected) socket.connect();
+          
+          // Join rooms for all restaurants the user has orders in
+          const uniqueRestaurantIds = [...new Set(fetchedOrders.map(o => o.restaurantId?._id).filter(Boolean))];
+          uniqueRestaurantIds.forEach(id => socket.emit("restaurant:join", id));
         })
         .catch(err => {
           console.error(err);
@@ -37,15 +44,12 @@ export default function ProfilePage() {
           setLoading(false);
         });
 
-      // Real-time tracking
-      const socket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:4000');
-      
       socket.on("orders:status", (updatedOrder) => {
         setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
       });
 
       return () => {
-        socket.disconnect();
+        socket.off("orders:status");
       };
     } else {
       setLoading(false);
