@@ -74,7 +74,7 @@ export default function MenuOcrPage() {
       
       setSaveStatus(`Successfully saved ${successCount} items!`);
       setTimeout(() => {
-        router.push("/admin/menu/manage");
+        router.push("/admin/menu");
       }, 1500);
       
     } catch (err) {
