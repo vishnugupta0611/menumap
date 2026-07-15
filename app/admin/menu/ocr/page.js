@@ -101,10 +101,10 @@ export default function MenuOcrPage() {
               <>
                 <MaterialIcon name="add_a_photo" className="mb-4 text-5xl text-primary" />
                 <span className="font-headline-md text-headline-md text-on-surface">Click or upload menu photo</span>
-                <span className="mt-2 text-sm text-on-surface-variant max-w-xs">Camera capture works on mobile. OCR output stays editable before publishing.</span>
+                <span className="mt-2 text-sm text-on-surface-variant max-w-xs">Upload a clear photo of your printed menu from your gallery or camera. OCR output stays editable before publishing.</span>
               </>
             )}
-            <input className="sr-only" type="file" accept="image/*" capture="environment" onChange={handleFile} />
+            <input className="sr-only" type="file" accept="image/*" onChange={handleFile} />
           </label>
           
           <div className="rounded-[32px] bg-surface-container-low p-6 flex flex-col max-h-[80vh]">
