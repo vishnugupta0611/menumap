@@ -27,7 +27,6 @@ function SearchResultsContent() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
   const [activeTab, setActiveTab] = useState(searchActiveTab);
-  const [activeFilter, setActiveFilter] = useState(initialFilter);
   const [userLat, setUserLat] = useState(initialLat ? Number(initialLat) : null);
   const [userLng, setUserLng] = useState(initialLng ? Number(initialLng) : null);
   const [userCity, setUserCity] = useState("");
@@ -91,7 +90,7 @@ function SearchResultsContent() {
     
     async function loadResults() {
       // If navigating back and we have cached data for the exact same query and filter, skip fetching
-      if (searchPageLoaded && page === searchPage && searchCachedQuery === submittedQuery && searchCachedFilter === activeFilter && (activeTab === "All" ? searchAllDishes.length > 0 : searchTrendingDishes.length > 0)) {
+      if (searchPageLoaded && page === searchPage && searchCachedQuery === submittedQuery && searchCachedFilter === activeTab && (activeTab === "All" ? searchAllDishes.length > 0 : searchTrendingDishes.length > 0)) {
         return;
       }
       
@@ -113,16 +112,16 @@ function SearchResultsContent() {
             page,
             limit: 6
           };
-          if (activeFilter === "Veg") reqFilters.veg = true;
-          if (activeFilter === "Under Rs 200") reqFilters.maxPrice = 200;
+          if (activeTab === "Veg") reqFilters.veg = true;
+          if (activeTab === "Under Rs 200") reqFilters.maxPrice = 200;
           
           resultsRes = await findDishResults(submittedQuery, reqFilters);
           const newDishes = resultsRes.data || [];
           
           if (page === 1) {
-            setSearchAllInitial(newDishes, resultsRes.hasMore || false, submittedQuery, activeFilter);
+            setSearchAllInitial(newDishes, resultsRes.hasMore || false, submittedQuery, activeTab);
           } else {
-            setSearchAllInitial([...searchAllDishes, ...newDishes], resultsRes.hasMore || false, submittedQuery, activeFilter);
+            setSearchAllInitial([...searchAllDishes, ...newDishes], resultsRes.hasMore || false, submittedQuery, activeTab);
             // Updating page explicitly via Zustand state
             useGlobalStore.setState({ searchPage: page });
           }
@@ -137,7 +136,7 @@ function SearchResultsContent() {
     }
 
     loadResults();
-  }, [submittedQuery, activeFilter, activeTab, userLat, userLng, page]);
+  }, [submittedQuery, activeTab, userLat, userLng, page]);
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
@@ -187,7 +186,6 @@ function SearchResultsContent() {
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.set("q", searchQuery.trim());
     if (activeTab !== "All") params.set("tab", activeTab);
-    if (activeFilter !== "All") params.set("filter", activeFilter);
     if (userLat !== null && userLng !== null) {
       params.set("lat", String(userLat));
       params.set("lng", String(userLng));
@@ -195,8 +193,8 @@ function SearchResultsContent() {
     router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
-  const tabs = ["All", "Trending"];
-  const displayData = activeTab === "All" ? searchAllDishes : searchTrendingDishes;
+  const tabs = ["All", "Trending", "Veg", "Under Rs 200"];
+  const displayData = activeTab === "Trending" ? searchTrendingDishes : searchAllDishes;
 
   return (
     <div className="bg-background text-on-background min-h-screen pb-16">
@@ -259,25 +257,6 @@ function SearchResultsContent() {
               Search
             </button>
           </div>
-          
-          {activeTab === "All" && (
-            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar -mx-margin-mobile px-margin-mobile">
-              {["All", "Veg", "Under Rs 200"].map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => { setActiveFilter(f); setPage(1); }}
-                  className={`whitespace-nowrap px-4 py-1.5 rounded-full font-bold text-xs cursor-pointer transition-all active:scale-95 ${
-                    activeFilter === f
-                      ? "bg-primary-container text-on-primary-container shadow-sm border border-primary/20"
-                      : "bg-surface border border-outline-variant text-on-surface hover:bg-surface-variant/50"
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          )}
         </form>
 
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-margin-mobile px-margin-mobile">
@@ -292,6 +271,7 @@ function SearchResultsContent() {
               }`}
             >
               {tab === "Trending" && <MaterialIcon name="trending_up" className={`text-[18px] ${activeTab === tab ? "text-on-primary" : "text-primary"}`} />}
+              {tab === "Veg" && <div className="w-3 h-3 rounded-sm border border-green-600 flex items-center justify-center mr-1"><div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div></div>}
               {tab}
             </button>
           ))}
