@@ -352,10 +352,10 @@ export default function DummyMenuList({ restaurant, menu, offers = [] }) {
                 <p className="text-[13px] md:text-[16px] font-black">Rs {getTotalAmount()}</p>
               </div>
             </div>
-            <Link href={`/dummy/cart?number=${restaurant.phone}`} className="bg-surface text-on-surface px-4 py-2 md:px-6 md:py-2.5 rounded-xl md:rounded-2xl font-bold text-[11px] md:text-sm flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer">
+            <button onClick={() => alert("This is a dummy menu page, you can't order from here")} className="bg-surface text-on-surface px-4 py-2 md:px-6 md:py-2.5 rounded-xl md:rounded-2xl font-bold text-[11px] md:text-sm flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer border-none outline-none">
               View Cart
               <span className="material-symbols-outlined text-[14px] md:text-[18px]">arrow_forward</span>
-            </Link>
+            </button>
           </div>
         </div>
       )}
