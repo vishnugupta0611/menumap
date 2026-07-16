@@ -24,20 +24,25 @@ export default function CategorySection({ title, itemCount, children, showHeader
   );
 }
 
-export function CategorySectionWithEdit({ title, itemCount, children }) {
+export function CategorySectionWithEdit({ title, itemCount, children, onEdit, onDelete }) {
   return (
     <section className="group mb-10">
-      <div className="flex items-center justify-between mb-4 border-b border-outline-variant pb-2">
-        <div className="flex items-center gap-3">
-          <MdDragIndicator className="cursor-grab text-on-surface-variant" />
-          <h2 className="font-headline-md text-headline-md text-on-surface">{title}</h2>
-          <span className="bg-primary-container/10 text-primary px-3 py-0.5 rounded-full text-label-sm font-label-sm">
+      <div className="flex flex-wrap items-center justify-between mb-4 border-b border-outline-variant pb-2 gap-2">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+          <MdDragIndicator className="cursor-grab text-on-surface-variant shrink-0" />
+          <h2 className="font-headline-sm md:font-headline-md text-on-surface truncate">{title}</h2>
+          <span className="bg-primary-container/10 text-primary px-2 md:px-3 py-0.5 rounded-full text-[10px] md:text-label-sm font-label-sm whitespace-nowrap shrink-0">
             {itemCount} Items
           </span>
         </div>
-        <button className="text-on-surface-variant hover:text-primary transition-colors">
-          <MdEdit />
-        </button>
+        <div className="flex gap-1 shrink-0">
+          <button onClick={onEdit} className="p-2 text-on-surface-variant hover:text-primary transition-colors cursor-pointer border-none bg-transparent rounded-lg hover:bg-surface-container">
+            <MdEdit />
+          </button>
+          <button onClick={onDelete} className="p-2 text-on-surface-variant hover:text-error transition-colors cursor-pointer border-none bg-transparent rounded-lg hover:bg-error-container/20">
+            <MdDelete className="text-xl" />
+          </button>
+        </div>
       </div>
       {children}
     </section>

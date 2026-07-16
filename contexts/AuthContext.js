@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
@@ -44,10 +45,12 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setRestaurant(data.restaurant || null);
       setLoading(false);
+      toast.success('Successfully logged in!');
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Login failed';
       setError(message);
+      toast.error(message);
       throw new Error(message);
     }
   }
@@ -60,10 +63,12 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setRestaurant(data.restaurant || null);
       setLoading(false);
+      toast.success('Logged in as Employee');
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Employee Login failed';
       setError(message);
+      toast.error(message);
       throw new Error(message);
     }
   }
@@ -76,10 +81,12 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setRestaurant(data.restaurant || null);
       setLoading(false);
+      toast.success('Successfully authenticated');
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Verified Login failed';
       setError(message);
+      toast.error(message);
       throw new Error(message);
     }
   }
@@ -92,10 +99,12 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setRestaurant(data.restaurant || null);
       setLoading(false);
+      toast.success('Account created successfully!');
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Registration failed';
       setError(message);
+      toast.error(message);
       throw new Error(message);
     }
   }
@@ -108,10 +117,12 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setRestaurant(null);
       setLoading(false);
+      toast.success('Account created successfully!');
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Registration failed';
       setError(message);
+      toast.error(message);
       throw new Error(message);
     }
   }
@@ -123,6 +134,7 @@ export function AuthProvider({ children }) {
       setUser(null);
       setRestaurant(null);
       setError(null);
+      toast.success('Successfully logged out');
     } catch (error) {
       // Even if logout fails on server, clear local state
       setUser(null);
@@ -135,10 +147,12 @@ export function AuthProvider({ children }) {
       setError(null);
       const { data } = await api.put('/api/auth/me', profileData);
       setUser(data.user);
+      toast.success('Profile updated successfully!');
       return data;
     } catch (error) {
       const message = error.response?.data?.error || 'Failed to update profile';
       setError(message);
+      toast.error(message);
       throw new Error(message);
     }
   }

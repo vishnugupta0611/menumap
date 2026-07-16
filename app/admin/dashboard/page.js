@@ -89,8 +89,8 @@ export default function DashboardPage() {
         <MetricCard label="Revenue Today" value={`Rs ${stats.revenueToday}`} icon="payments" tone="green" />
         <MetricCard label="Menu Items" value={stats.menuItemsCount.toString()} icon="restaurant_menu" />
       </div>
-      <AdminPanel title="Live Order Flow" eyebrow="Realtime ready" icon="notifications_active" action={<Link href="/admin/orders" className="rounded-full bg-primary px-5 py-2 font-bold text-on-primary">View All Orders</Link>}>
-        <div className="grid gap-3 md:grid-cols-4">
+      <AdminPanel title="Live Order Flow" eyebrow="Realtime ready" icon="notifications_active" action={<Link href="/admin/orders" className="rounded-full bg-primary px-5 py-2 font-bold text-on-primary text-sm whitespace-nowrap">View All Orders</Link>}>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {recentOrders.length > 0 ? (
             recentOrders.map((order, i) => (
               <div key={order._id || i} className="rounded-2xl bg-surface-container-low p-5 shadow-sm border border-primary/20 bg-primary/5 relative overflow-hidden">

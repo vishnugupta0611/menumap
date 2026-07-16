@@ -22,7 +22,7 @@ export default function Button({
   return (
     <button
       className={cn(
-        "rounded-full font-label-sm text-label-sm transition-all duration-200 active:scale-95",
+        "rounded-full font-label-sm text-label-sm transition-all duration-200 active:scale-95 cursor-pointer border-none outline-none",
         variants[variant],
         sizes[size],
         className

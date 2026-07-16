@@ -19,6 +19,8 @@ export default function ManageMenuPage() {
   const [loadError, setLoadError] = useState("");
 
   const [showModal, setShowModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryFormName, setCategoryFormName] = useState("");
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [editDish, setEditDish] = useState(null);
   const [formData, setFormData] = useState({
@@ -75,16 +77,18 @@ export default function ManageMenuPage() {
     }, {});
   }, [items]);
 
-  async function addCategory() {
-    const name = prompt("Enter category name");
-    if (!name || !restaurantId) return;
+  const handleSaveCategory = async (e) => {
+    e.preventDefault();
+    if (!categoryFormName.trim() || !restaurantId) return;
     try {
-      await api.post(`/api/restaurants/id/${restaurantId}/categories`, { name, sortOrder: categories.length + 1 });
+      await api.post(`/api/restaurants/id/${restaurantId}/categories`, { name: categoryFormName, sortOrder: categories.length + 1 });
+      setCategoryFormName("");
+      setShowCategoryModal(false);
       loadMenu();
     } catch (err) {
       alert("Error adding category");
     }
-  }
+  };
 
   const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
@@ -201,16 +205,41 @@ export default function ManageMenuPage() {
       <section className="flex flex-col md:flex-row gap-4 mb-8 items-center justify-between">
         <SearchBar placeholder="Search menu items..." className="w-full md:max-w-md" />
         <div className="flex gap-2 w-full md:w-auto justify-end">
-          <Button onClick={addCategory} variant="secondary" className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm shadow-sm hover:shadow-md transition-all">
+          <Button onClick={() => setShowCategoryModal(true)} variant="secondary" className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm shadow-sm hover:shadow-md transition-all cursor-pointer">
             <MdCreateNewFolder className="text-[18px]" />
             Category
           </Button>
-          <Button onClick={openAddModal} className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm shadow-md hover:shadow-lg transition-all">
+          <Button onClick={openAddModal} className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm shadow-md hover:shadow-lg transition-all cursor-pointer">
             <MdAdd className="text-[18px]" />
             Item
           </Button>
         </div>
       </section>
+
+      {/* Categories Row */}
+      <div className="flex overflow-x-auto gap-3 pb-3 mb-6 no-scrollbar">
+        <button 
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="px-5 py-2 rounded-xl font-bold whitespace-nowrap bg-primary text-white shadow-sm cursor-pointer border-none"
+        >
+          All
+        </button>
+        {categories.map(c => (
+          <button 
+            key={c._id}
+            onClick={() => {
+              const el = document.getElementById(`category-${c.name}`);
+              if (el) {
+                const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+              }
+            }}
+            className="px-5 py-2 rounded-xl font-bold whitespace-nowrap bg-surface-container-low text-on-surface hover:bg-surface-container shadow-sm border border-outline-variant/30 cursor-pointer transition-colors"
+          >
+            {c.name}
+          </button>
+        ))}
+      </div>
 
       {loadError && (
         <div className="mb-6 rounded-2xl border border-error-container bg-error-container/40 p-4 text-sm text-on-error-container">
@@ -220,25 +249,26 @@ export default function ManageMenuPage() {
 
       <div className="space-y-10">
         {Object.entries(groupedItems).map(([category, categoryItems]) => (
-          <CategorySectionWithEdit 
-            key={category} 
-            title={category} 
-            itemCount={categoryItems.length}
-            onEdit={() => handleEditCategory(category)}
-            onDelete={() => handleDeleteCategory(category)}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categoryItems.map((dish) => (
-                <MenuItemCard 
-                  key={dish._id} 
-                  dish={{ ...dish, id: dish._id }}
-                  onEdit={openEditModal}
-                  onDelete={handleDeleteItem}
-                  onToggleAvailability={handleToggleAvailability}
-                />
-              ))}
-            </div>
-          </CategorySectionWithEdit>
+          <div key={category} id={`category-${category}`}>
+            <CategorySectionWithEdit 
+              title={category} 
+              itemCount={categoryItems.length}
+              onEdit={() => handleEditCategory(category)}
+              onDelete={() => handleDeleteCategory(category)}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {categoryItems.map((dish) => (
+                  <MenuItemCard 
+                    key={dish._id} 
+                    dish={{ ...dish, id: dish._id }}
+                    onEdit={openEditModal}
+                    onDelete={handleDeleteItem}
+                    onToggleAvailability={handleToggleAvailability}
+                  />
+                ))}
+              </div>
+            </CategorySectionWithEdit>
+          </div>
         ))}
       </div>
 
@@ -378,6 +408,43 @@ export default function ManageMenuPage() {
                 className="w-full py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none mt-6 disabled:opacity-50"
               >
                 {isUploading ? "Uploading..." : "Save Menu Item"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+      {showCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full border border-surface-container shadow-2xl animate-reveal">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-lg text-on-surface flex items-center gap-2">
+                <MaterialIcon name="create_new_folder" className="text-primary" />
+                Add Category
+              </h3>
+              <button
+                onClick={() => setShowCategoryModal(false)}
+                className="material-symbols-outlined text-on-surface-variant bg-transparent border-none hover:scale-110 cursor-pointer"
+              >
+                close
+              </button>
+            </div>
+            <form onSubmit={handleSaveCategory} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant mb-1">Category Name</label>
+                <input
+                  className="w-full h-11 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md"
+                  type="text"
+                  placeholder="e.g. Starters"
+                  required
+                  value={categoryFormName}
+                  onChange={(e) => setCategoryFormName(e.target.value)}
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-3.5 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:bg-primary/90 transition-all border-none outline-none mt-2 shadow-md"
+              >
+                Create Category
               </button>
             </form>
           </div>

@@ -20,9 +20,14 @@ export default function DummyHeader({ restaurant }) {
             <MaterialIcon name="restaurant_menu" className="text-primary text-[18px]" />
           )}
         </div>
-        <span className="font-display-lg-mobile text-[19px] leading-tight text-on-surface font-bold truncate">
-          {restaurant.name}
-        </span>
+        <div className="flex items-center gap-2 overflow-hidden">
+          <span className="font-display-lg-mobile text-[19px] leading-tight text-on-surface font-bold truncate">
+            {restaurant.name}
+          </span>
+          <span className="px-1.5 py-0.5 text-[10px] uppercase font-black bg-yellow-400 text-yellow-900 rounded shadow-sm shrink-0">
+            Dummy
+          </span>
+        </div>
       </Link>
       <div className="flex items-center gap-1 md:gap-3 shrink-0">
         {/* Navigation Links */}

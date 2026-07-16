@@ -27,12 +27,19 @@ export default function TopAppBar({ title = "MenuMap", showActions = true, onMen
         </div>
         {showActions && (
           <div className="flex items-center gap-3">
-            <IconButton>
-              <MdNotifications className="text-primary text-xl" />
-            </IconButton>
-            <IconButton>
-              <MdSettings className="text-primary text-xl" />
-            </IconButton>
+            <Link href="/admin/orders">
+              <IconButton>
+                <div className="relative">
+                  <MdNotifications className="text-primary text-xl" />
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface animate-pulse"></span>
+                </div>
+              </IconButton>
+            </Link>
+            <Link href="/admin/settings">
+              <IconButton>
+                <MdSettings className="text-primary text-xl" />
+              </IconButton>
+            </Link>
           </div>
         )}
       </div>

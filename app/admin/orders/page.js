@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { AdminPanel } from "@/components/admin/AdminPanel";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
@@ -17,6 +16,13 @@ export default function OrdersPage() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const observer = useRef();
+
+  // POS State
+  const [isPosOpen, setIsPosOpen] = useState(false);
+  const [menuItems, setMenuItems] = useState([]);
+  const [posCart, setPosCart] = useState([]);
+  const [tableNumber, setTableNumber] = useState("");
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
   const lastOrderElementRef = useCallback(node => {
     if (loadingMore) return;
@@ -36,7 +42,7 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
       try {
         if (page > 1) setLoadingMore(true);
-        const res = await api.get(`/api/orders?restaurantId=${user.restaurantId}&page=${page}&limit=10`);
+        const res = await api.get(`/api/orders?restaurantId=${user.restaurantId}&page=${page}&limit=15`);
         const newOrders = res.data.data || [];
         
         setOrders(prev => {
@@ -58,6 +64,15 @@ export default function OrdersPage() {
     fetchOrders();
   }, [user?.restaurantId, page]);
 
+  // Load Menu Items for POS when opened
+  useEffect(() => {
+    if (isPosOpen && menuItems.length === 0 && user?.restaurantId) {
+      api.get(`/api/restaurants/id/${user.restaurantId}/menu-items`).then(res => {
+        setMenuItems(res.data.data || []);
+      }).catch(console.error);
+    }
+  }, [isPosOpen, menuItems.length, user?.restaurantId]);
+
   // Setup Socket.IO
   useEffect(() => {
     if (!user?.restaurantId) return;
@@ -66,7 +81,6 @@ export default function OrdersPage() {
       socket.connect();
     }
     socket.emit("restaurant:join", user.restaurantId);
-
 
     socket.on("orders:new", (order) => {
       setOrders(prev => {
@@ -107,9 +121,62 @@ export default function OrdersPage() {
     }
   };
 
-  return (
-    <AdminPanel title="Live Orders" eyebrow="Real-time Management" icon="notifications_active">
+  // POS Functions
+  const addToPosCart = (item) => {
+    setPosCart(prev => {
+      const existing = prev.find(i => i.menuItemId === item._id);
+      if (existing) {
+        return prev.map(i => i.menuItemId === item._id ? { ...i, quantity: i.quantity + 1 } : i);
+      }
+      return [...prev, { menuItemId: item._id, name: item.name, price: item.price, quantity: 1 }];
+    });
+  };
+
+  const removeFromPosCart = (itemId) => {
+    setPosCart(prev => {
+      const existing = prev.find(i => i.menuItemId === itemId);
+      if (existing.quantity > 1) {
+        return prev.map(i => i.menuItemId === itemId ? { ...i, quantity: i.quantity - 1 } : i);
+      }
+      return prev.filter(i => i.menuItemId !== itemId);
+    });
+  };
+
+  const submitPosOrder = async () => {
+    if (posCart.length === 0) return;
+    setIsSubmittingOrder(true);
+    try {
+      const payload = {
+        restaurantId: user.restaurantId,
+        customerName: "Walk-in Customer",
+        tableNumber: tableNumber.trim() || undefined,
+        items: posCart
+      };
       
+      const res = await api.post("/api/orders", payload);
+      const newOrder = res.data.data;
+      setOrders(prev => {
+        if (prev.find(o => o._id === newOrder._id)) return prev;
+        return [newOrder, ...prev];
+      });
+      
+      // Reset POS
+      setPosCart([]);
+      setTableNumber("");
+      setIsPosOpen(false);
+      
+    } catch (error) {
+      console.error("Failed to create POS order", error);
+      alert("Failed to create order");
+    } finally {
+      setIsSubmittingOrder(false);
+    }
+  };
+
+  const posTotal = posCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  return (
+    <div className="w-[95%] mx-auto">
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant pb-4">
         <div>
           <h2 className="text-lg font-bold text-on-surface">Order Management</h2>
@@ -121,16 +188,23 @@ export default function OrdersPage() {
             <span className="text-xs font-medium text-on-surface-variant">Listening for live updates...</span>
           </div>
         </div>
-        <div className="text-sm font-medium text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/50">
-          Showing {orders.length} Orders
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsPosOpen(true)}
+            className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 transition-colors cursor-pointer"
+          >
+            <MaterialIcon name="add_circle" className="text-[18px]" />
+            Create Order
+          </button>
+          <div className="text-sm font-medium text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/50">
+            Showing {orders.length} Orders
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-48 bg-surface-container-low rounded-xl animate-pulse border border-outline-variant"></div>
-          ))}
+        <div className="flex justify-center py-10">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : orders.length === 0 ? (
         <div className="py-16 text-center bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col items-center">
@@ -139,111 +213,193 @@ export default function OrdersPage() {
           <p className="text-sm text-on-surface-variant max-w-sm mt-1">When an order is placed, it will automatically appear here.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {orders.map((order, index) => {
-            const isLastElement = orders.length === index + 1;
-            
-            return (
-              <div 
-                ref={isLastElement ? lastOrderElementRef : null}
-                key={order._id} 
-                className="bg-white border border-outline-variant rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 border-b border-outline-variant pb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-bold text-on-surface text-lg">#{order._id.slice(-6).toUpperCase()}</h3>
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${getStatusBadgeColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                      {order.tableNumber && (
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-surface-variant text-on-surface-variant border border-outline-variant">
-                          Table {order.tableNumber}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-sm text-on-surface-variant mt-1.5 flex items-center gap-2">
-                      <MaterialIcon name="schedule" className="text-[14px]" />
-                      {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
-                      <span>•</span>
-                      <MaterialIcon name="person" className="text-[14px]" />
-                      {order.customerName || 'Guest'}
-                    </div>
-                  </div>
-                  
-                  <div className="w-full md:w-auto shrink-0 flex flex-col items-end gap-2">
-                    <select 
-                      value={order.status} 
-                      onChange={(event) => updateStatus(order._id, event.target.value)} 
-                      className="w-full md:w-auto rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-1.5 outline-none focus:border-primary text-sm font-medium cursor-pointer"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Accepted">Accepted</option>
-                      <option value="Preparing">Preparing</option>
-                      <option value="Ready">Ready</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="pt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="md:col-span-2">
-                    <h4 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Order Items</h4>
-                    <ul className="space-y-2">
-                      {order.items?.map((item, idx) => (
-                        <li key={idx} className="flex justify-between items-start text-sm">
-                          <div className="flex items-start gap-2">
-                            <span className="font-bold text-on-surface bg-surface-container-low px-1.5 py-0.5 rounded text-xs">
-                              {item.quantity}x
-                            </span>
-                            <span className="text-on-surface mt-0.5">{item.name}</span>
-                          </div>
-                          <span className="text-on-surface-variant font-medium mt-0.5">Rs {item.price * item.quantity}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="flex flex-col justify-end items-start md:items-end md:border-l border-outline-variant md:pl-6 pt-4 md:pt-0">
-                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Total</p>
-                    <p className="text-2xl font-bold text-on-surface leading-none">Rs {order.totalAmount}</p>
-                    
-                    <div className="mt-4 flex gap-2 w-full justify-end">
+        <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-outline-variant">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr className="bg-surface-container-low border-b border-outline-variant text-sm text-on-surface-variant">
+                <th className="py-3 px-4 font-bold uppercase tracking-wider">Order ID</th>
+                <th className="py-3 px-4 font-bold uppercase tracking-wider">Customer / Table</th>
+                <th className="py-3 px-4 font-bold uppercase tracking-wider">Items</th>
+                <th className="py-3 px-4 font-bold uppercase tracking-wider">Total</th>
+                <th className="py-3 px-4 font-bold uppercase tracking-wider">Status</th>
+                <th className="py-3 px-4 font-bold uppercase tracking-wider">Time</th>
+                <th className="py-3 px-4 font-bold uppercase tracking-wider text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/50">
+              {orders.map((order, index) => {
+                const isLastElement = orders.length === index + 1;
+                return (
+                  <tr ref={isLastElement ? lastOrderElementRef : null} key={order._id} className="hover:bg-surface-container-lowest transition-colors">
+                    <td className="py-3 px-4 font-bold text-sm">#{order._id.slice(-6).toUpperCase()}</td>
+                    <td className="py-3 px-4">
+                      <div className="text-sm font-semibold">{order.customerName || 'Guest'}</div>
+                      {order.tableNumber && <div className="text-xs text-on-surface-variant">Table {order.tableNumber}</div>}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-xs max-w-[200px] truncate text-on-surface-variant" title={order.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}>
+                        {order.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 font-bold text-sm">Rs {order.totalAmount}</td>
+                    <td className="py-3 px-4">
+                      <select 
+                        value={order.status} 
+                        onChange={(event) => updateStatus(order._id, event.target.value)} 
+                        className={`text-xs font-bold px-2 py-1 rounded-md border outline-none cursor-pointer ${getStatusBadgeColor(order.status)}`}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Accepted">Accepted</option>
+                        <option value="Preparing">Preparing</option>
+                        <option value="Ready">Ready</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </td>
+                    <td className="py-3 px-4 text-xs text-on-surface-variant">
+                      {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td className="py-3 px-4 text-right">
                       {order.status === 'Pending' && (
-                        <button onClick={() => updateStatus(order._id, 'Accepted')} className="w-full md:w-auto px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors">
-                          Accept
-                        </button>
+                        <button onClick={() => updateStatus(order._id, 'Accepted')} className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 cursor-pointer">Accept</button>
                       )}
                       {order.status === 'Accepted' && (
-                        <button onClick={() => updateStatus(order._id, 'Preparing')} className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors">
-                          Cook
-                        </button>
+                        <button onClick={() => updateStatus(order._id, 'Preparing')} className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 cursor-pointer">Cook</button>
                       )}
                       {order.status === 'Preparing' && (
-                        <button onClick={() => updateStatus(order._id, 'Ready')} className="w-full md:w-auto px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 transition-colors">
-                          Ready
-                        </button>
+                        <button onClick={() => updateStatus(order._id, 'Ready')} className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded hover:bg-emerald-700 cursor-pointer">Ready</button>
                       )}
                       {order.status === 'Ready' && (
-                        <button onClick={() => updateStatus(order._id, 'Completed')} className="w-full md:w-auto px-4 py-2 bg-green-700 text-white text-sm font-bold rounded-lg hover:bg-green-800 transition-colors">
-                          Finish
-                        </button>
+                        <button onClick={() => updateStatus(order._id, 'Completed')} className="px-3 py-1.5 bg-green-700 text-white text-xs font-bold rounded hover:bg-green-800 cursor-pointer">Finish</button>
                       )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
           
           {loadingMore && (
-            <div className="py-4 flex justify-center">
+            <div className="py-4 flex justify-center border-t border-outline-variant">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
         </div>
       )}
-    </AdminPanel>
+
+      {/* POS Modal */}
+      {isPosOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="bg-surface w-full max-w-5xl h-[90vh] rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden border border-outline-variant">
+            
+            {/* Menu Items Section */}
+            <div className="flex-1 flex flex-col h-[50vh] md:h-full border-b md:border-b-0 md:border-r border-outline-variant">
+              <div className="p-4 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+                <h3 className="font-bold text-lg text-on-surface">Menu Items</h3>
+                <button onClick={() => setIsPosOpen(false)} className="md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-surface-variant cursor-pointer text-on-surface-variant hover:bg-outline-variant/30">
+                  <MaterialIcon name="close" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 lg:grid-cols-3 gap-4 bg-surface">
+                {menuItems.filter(i => i.available).map(item => (
+                  <button 
+                    key={item._id} 
+                    onClick={() => addToPosCart(item)}
+                    className="p-4 border border-outline-variant rounded-2xl bg-white text-left hover:border-primary hover:shadow-md transition-all cursor-pointer flex flex-col justify-between h-full group relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative z-10">
+                      <div className="text-xs font-bold text-primary mb-1 uppercase tracking-wider">{item.category}</div>
+                      <div className="font-semibold text-sm line-clamp-2 text-on-surface">{item.name}</div>
+                    </div>
+                    <div className="mt-3 font-black text-on-surface relative z-10 flex justify-between items-center">
+                      <span>Rs {item.price}</span>
+                      <MaterialIcon name="add_circle" className="text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </button>
+                ))}
+                {menuItems.length === 0 && (
+                  <div className="col-span-full py-10 text-center text-on-surface-variant text-sm font-medium flex flex-col items-center justify-center">
+                    <MaterialIcon name="restaurant_menu" className="text-4xl text-outline mb-2" />
+                    Loading menu...
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Cart Section */}
+            <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col h-[40vh] md:h-full bg-surface-container-lowest">
+              <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center">
+                <h3 className="font-bold text-lg text-on-surface">Current Order</h3>
+                <button onClick={() => setIsPosOpen(false)} className="w-8 h-8 hidden md:flex items-center justify-center rounded-full bg-surface-variant cursor-pointer text-on-surface-variant hover:bg-outline-variant/50 transition-colors">
+                  <MaterialIcon name="close" className="text-[20px]" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface-container-lowest">
+                {posCart.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-on-surface-variant opacity-70">
+                    <MaterialIcon name="shopping_basket" className="text-5xl mb-3 text-outline" />
+                    <p className="font-medium text-sm">No items added yet</p>
+                    <p className="text-xs mt-1">Tap a menu item to add it</p>
+                  </div>
+                ) : (
+                  posCart.map(item => (
+                    <div key={item.menuItemId} className="flex items-center justify-between bg-white p-3 border border-outline-variant rounded-xl shadow-sm">
+                      <div className="flex-1 min-w-0 pr-3">
+                        <div className="font-bold text-sm truncate text-on-surface">{item.name}</div>
+                        <div className="text-xs text-on-surface-variant font-medium mt-0.5">Rs {item.price}</div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 bg-surface-container-low rounded-lg p-1 border border-outline-variant/50">
+                        <button onClick={() => removeFromPosCart(item.menuItemId)} className="w-7 h-7 rounded-md bg-white shadow-sm flex items-center justify-center cursor-pointer hover:bg-surface-variant transition-colors border-none">
+                          <MaterialIcon name="remove" className="text-[16px] text-on-surface" />
+                        </button>
+                        <span className="font-bold text-sm w-4 text-center text-on-surface">{item.quantity}</span>
+                        <button onClick={() => addToPosCart({ _id: item.menuItemId, name: item.name, price: item.price })} className="w-7 h-7 rounded-md bg-white shadow-sm flex items-center justify-center cursor-pointer hover:bg-surface-variant transition-colors border-none">
+                          <MaterialIcon name="add" className="text-[16px] text-on-surface" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="p-5 border-t border-outline-variant bg-white space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant mb-1.5 block">Table Number (Optional)</label>
+                  <input 
+                    type="text" 
+                    value={tableNumber}
+                    onChange={(e) => setTableNumber(e.target.value)}
+                    placeholder="e.g. 12"
+                    className="w-full border border-outline-variant rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary bg-surface-container-lowest font-medium"
+                  />
+                </div>
+                <div className="w-full h-px bg-outline-variant/50"></div>
+                <div className="flex justify-between items-center font-black text-xl text-on-surface">
+                  <span>Total</span>
+                  <span className="text-primary">Rs {posTotal}</span>
+                </div>
+                <button 
+                  onClick={submitPosOrder}
+                  disabled={posCart.length === 0 || isSubmittingOrder}
+                  className="w-full py-3.5 mt-2 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none hover:bg-primary/90 transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {isSubmittingOrder ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <MaterialIcon name="send" className="text-[18px]" />
+                      Place Order
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

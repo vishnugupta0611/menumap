@@ -60,20 +60,29 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
 
   return (
     <div className="custom-scrollbar menu-gradient-bg pb-28 relative">
-      {/* Offer Ribbon */}
-      {activeOffer && (
-        <div className="fixed md:absolute top-24 md:top-6 right-0 z-50 overflow-hidden w-32 h-32 pointer-events-none">
-          <div className="bg-primary text-white font-bold text-[11px] text-center uppercase tracking-widest py-1.5 w-40 absolute top-7 -right-9 rotate-45 shadow-lg border-y border-white/20 whitespace-nowrap z-50">
-            {activeOffer.title || "Special Offer!"}
+      <main className="pt-4 md:pt-8 px-5 md:px-8 max-w-3xl mx-auto relative">
+        {/* Offer Ribbon (Fallback if no hero image) */}
+        {activeOffer && (!settings.showBanner || !restaurant.heroImage) && (
+          <div className="absolute top-4 md:top-8 right-5 md:right-8 z-50 overflow-hidden w-32 h-32 pointer-events-none">
+            <div className="bg-primary text-white font-bold text-[11px] text-center uppercase tracking-widest py-1.5 w-40 absolute top-7 -right-9 rotate-45 shadow-lg border-y border-white/20 whitespace-nowrap">
+              {activeOffer.title || "Special Offer!"}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <main className="pt-4 md:pt-8 px-5 md:px-8 max-w-3xl mx-auto">
         {settings.showBanner && restaurant.heroImage && (
           <section className="mb-8 md:mb-10 rounded-[32px] overflow-hidden h-56 md:h-72 shadow-[0_8px_30px_rgba(0,0,0,0.06)] relative group">
              <img src={restaurant.heroImage} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+             
+             {/* Offer Ribbon (Inside Hero Image) */}
+             {activeOffer && (
+               <div className="absolute top-0 right-0 z-50 overflow-hidden w-32 h-32 pointer-events-none">
+                 <div className="bg-primary text-white font-bold text-[11px] text-center uppercase tracking-widest py-1.5 w-40 absolute top-7 -right-9 rotate-45 shadow-lg border-y border-white/20 whitespace-nowrap">
+                   {activeOffer.title || "Special Offer!"}
+                 </div>
+               </div>
+             )}
           </section>
         )}
 

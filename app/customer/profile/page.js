@@ -187,9 +187,9 @@ export default function CustomerProfilePage() {
               </div>
               <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
             </label>
-            <div>
-              <h1 className="text-2xl font-bold text-on-surface">{user.name}</h1>
-              <p className="text-sm text-on-surface-variant">{user.email}</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-bold text-on-surface truncate">{user.name}</h1>
+              <p className="text-sm text-on-surface-variant truncate">{user.email}</p>
             </div>
           </div>
           <button 

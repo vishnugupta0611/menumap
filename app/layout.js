@@ -16,6 +16,8 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+import { Toaster } from "react-hot-toast";
+
 export const metadata = {
   title: "MenuMap | Restaurant OS and Food Discovery",
   description: "Search food first, discover nearby restaurants, and manage QR menus with MenuMap.",
@@ -42,7 +44,10 @@ export default function RootLayout({ children }) {
       <body className={`${plusJakarta.variable} ${inter.variable}`} suppressHydrationWarning>
         <OptionalClerkProvider>
           <AuthProvider>
-            <QueryProvider>{children}</QueryProvider>
+            <QueryProvider>
+              {children}
+              <Toaster position="top-center" toastOptions={{ duration: 4000, style: { background: '#363636', color: '#fff', fontSize: '14px', borderRadius: '12px' } }} />
+            </QueryProvider>
           </AuthProvider>
         </OptionalClerkProvider>
       </body>

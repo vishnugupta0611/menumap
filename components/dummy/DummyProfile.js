@@ -129,8 +129,11 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                 ? "justify-center items-center text-center px-margin-mobile"
                 : `justify-end pb-6 md:pb-8 ${heroLayout === "rounded" ? "px-6 md:px-8" : "w-full max-w-4xl mx-auto px-margin-mobile"}`
             }`}>
-              <h1 className={`font-display-lg font-bold mb-2 leading-tight ${heroLayout === "full-width" ? "text-5xl md:text-7xl mb-4" : "text-4xl md:text-5xl"}`}>
+              <h1 className={`font-display-lg font-bold mb-2 leading-tight flex items-center flex-wrap gap-3 ${heroLayout === "full-width" ? "text-5xl md:text-7xl mb-4 justify-center" : "text-4xl md:text-5xl"}`}>
                 {restaurant.name}
+                <span className="px-3 py-1 text-sm md:text-base uppercase font-black bg-yellow-400 text-yellow-900 rounded-lg shadow-sm shrink-0">
+                  Dummy
+                </span>
               </h1>
               {restaurant.cuisine && (
                 <p className={`font-body-md text-white/90 text-sm md:text-base mb-3 flex items-center gap-2 ${heroLayout === "full-width" ? "justify-center md:text-xl mb-6" : ""}`}>

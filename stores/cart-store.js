@@ -7,23 +7,42 @@ export const useCartStore = create(
       customerInfo: null, // { name: "", email: "", phone: "" }
       cart: [], // { menuItemId, name, quantity, price, image }
       
+      restaurantId: null,
+      
       setCustomerInfo: (info) => set({ customerInfo: info }),
       
       addItem: (item) => {
         set((state) => {
-          const existing = state.cart.find((i) => i.menuItemId === item.id);
+          // If cart belongs to a different restaurant, clear it first
+          if (state.cart.length > 0 && state.restaurantId && state.restaurantId !== item.restaurantId) {
+            return {
+              restaurantId: item.restaurantId,
+              cart: [
+                {
+                  menuItemId: item.id || item._id, // Handle both id formats
+                  name: item.name,
+                  price: item.price,
+                  image: item.image,
+                  quantity: 1,
+                },
+              ],
+            };
+          }
+
+          const existing = state.cart.find((i) => i.menuItemId === (item.id || item._id));
           if (existing) {
             return {
               cart: state.cart.map((i) =>
-                i.menuItemId === item.id ? { ...i, quantity: i.quantity + 1 } : i
+                i.menuItemId === (item.id || item._id) ? { ...i, quantity: i.quantity + 1 } : i
               ),
             };
           }
           return {
+            restaurantId: item.restaurantId || state.restaurantId,
             cart: [
               ...state.cart,
               {
-                menuItemId: item.id,
+                menuItemId: item.id || item._id,
                 name: item.name,
                 price: item.price,
                 image: item.image,
@@ -48,7 +67,7 @@ export const useCartStore = create(
         });
       },
 
-      clearCart: () => set({ cart: [] }),
+      clearCart: () => set({ cart: [], restaurantId: null }),
 
       getTotalAmount: () => {
         return get().cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
