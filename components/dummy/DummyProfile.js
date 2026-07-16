@@ -490,7 +490,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                 if (displayGallery.length === 1) {
                   return (
                     <div key={img._id || idx} className="relative bg-white p-2 sm:p-3 rounded-xl shadow-xl z-20 hover:scale-105 transition-transform duration-300 cursor-pointer">
-                      <img src={img.url} alt={img.alt} className="w-48 h-56 sm:w-64 sm:h-80 object-cover rounded-lg" />
+                      <img referrerPolicy="no-referrer" src={img.url} alt={img.alt} className="w-48 h-56 sm:w-64 sm:h-80 object-cover rounded-lg" />
                     </div>
                   );
                 }
@@ -499,7 +499,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                    const transforms = isLeft ? "-rotate-3 -mr-6 sm:-mr-8 z-10" : "rotate-3 -ml-6 sm:-ml-8 z-20";
                    return (
                     <div key={img._id || idx} className={`relative bg-white p-2 sm:p-3 rounded-xl shadow-xl transition-all duration-500 hover:z-30 hover:scale-105 hover:rotate-0 cursor-pointer ${transforms}`}>
-                      <img src={img.url} alt={img.alt} className="w-40 h-48 sm:w-56 sm:h-72 object-cover rounded-lg" />
+                      <img referrerPolicy="no-referrer" src={img.url} alt={img.alt} className="w-40 h-48 sm:w-56 sm:h-72 object-cover rounded-lg" />
                     </div>
                   );
                 }
