@@ -22,8 +22,12 @@ export default function HomePage() {
 
   const [loadError, setLoadError] = useState("");
   const [userLocation, setUserLocation] = useState(null);
-  const [loading, setLoading] = useState(!homeDataLoaded);
+  
+  // Derived state: it's loading if we haven't loaded data yet AND there's no error
+  const loading = !homeDataLoaded && !loadError;
   const [greeting, setGreeting] = useState("Good morning");
+
+  console.log("RENDER app/page.js:", { loading, homeDataLoaded, nearbyLen: nearbyRestaurants?.length, trendingLen: trendingDishes?.length });
 
   const formatDistance = (distKm) => {
     if (distKm === undefined) return "Locating...";
@@ -38,7 +42,6 @@ export default function HomePage() {
       if (homeDataLoaded) return; // Use cached data instantly
       
       try {
-        setLoading(true);
         const { lat, lng, city } = location;
         const locationFilters = {
           lat: lat || undefined,
@@ -57,9 +60,7 @@ export default function HomePage() {
         ]);
         
         const broadRestaurants = restaurantsList.length ? restaurantsList : await listNearbyRestaurants({});
-        setNearbyRestaurants(broadRestaurants);
-        setRecommendedDishes((recRes.data?.length ? recRes.data : ultimateFallbackRes.data) || []);
-
+        
         let dishes = dishesRes.data || [];
         
         if (dishes.length < 3) {
@@ -93,8 +94,6 @@ export default function HomePage() {
         });
       } catch {
         setLoadError("Food discovery is temporarily unavailable. Please try again in a moment.");
-      } finally {
-        setLoading(false);
       }
     }
     
