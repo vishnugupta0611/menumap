@@ -246,8 +246,8 @@ export default function HomePage() {
           <p className="font-body-md text-on-surface-variant opacity-80">Ready to discover your next favorite meal?</p>
         </section>
 
-        {/* Floating Search Bar */}
-        <section className="sticky top-20 z-30 mb-8">
+        {/* Search Bar */}
+        <section className="relative z-30 mb-8">
           <form
             onSubmit={handleSearchSubmit}
             className="relative flex items-center shadow-md hover:shadow-lg transition-shadow duration-300 rounded-full overflow-hidden bg-surface border-2 border-primary/20 focus-within:border-primary/60 pr-2 pl-4 py-1"
