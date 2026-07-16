@@ -33,7 +33,8 @@ export default function HomePage() {
     if (distKm === undefined) return "Locating...";
     if (distKm === null) return "No GPS Data";
     const m = Math.round(distKm * 1000);
-    return `${m} meters`;
+    if (m >= 1000) return `${(m / 1000).toFixed(1)} km`;
+    return `${m} m`;
   };
 
   // Load data dynamically
