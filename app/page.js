@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { listNearbyRestaurants, findDishResults, getApproxLocationFromIp } from "@/services/restaurant-service";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGlobalStore } from "@/stores/global-store";
 
 export default function HomePage() {
   const router = useRouter();
@@ -15,12 +16,13 @@ export default function HomePage() {
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
-  const [nearbyRestaurants, setNearbyRestaurants] = useState([]);
-  const [trendingDishes, setTrendingDishes] = useState([]);
-  const [recommendedDishes, setRecommendedDishes] = useState([]);
+  const {
+    homeDataLoaded, nearbyRestaurants, trendingDishes, recommendedDishes, setHomeData
+  } = useGlobalStore();
+
   const [loadError, setLoadError] = useState("");
   const [userLocation, setUserLocation] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!homeDataLoaded);
   const [greeting, setGreeting] = useState("Good morning");
 
   const formatDistance = (distKm) => {
@@ -33,6 +35,8 @@ export default function HomePage() {
   // Load data dynamically
   useEffect(() => {
     async function loadData(location = {}) {
+      if (homeDataLoaded) return; // Use cached data instantly
+      
       try {
         setLoading(true);
         const { lat, lng, city } = location;
@@ -80,7 +84,13 @@ export default function HomePage() {
           }
         }
         
-        setTrendingDishes(dishes.slice(0, 3));
+        const finalTrending = dishes.slice(0, 3);
+        
+        setHomeData({
+          nearbyRestaurants: broadRestaurants,
+          trendingDishes: finalTrending,
+          recommendedDishes: (recRes.data?.length ? recRes.data : ultimateFallbackRes.data) || []
+        });
       } catch {
         setLoadError("Food discovery is temporarily unavailable. Please try again in a moment.");
       } finally {
@@ -116,7 +126,7 @@ export default function HomePage() {
     if (hour < 12) setGreeting("Good morning");
     else if (hour < 18) setGreeting("Good afternoon");
     else setGreeting("Good evening");
-  }, []);
+  }, [homeDataLoaded]);
 
   // Handle header show/hide on scroll
   useEffect(() => {

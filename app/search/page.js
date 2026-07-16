@@ -16,45 +16,46 @@ function SearchResultsContent() {
   const initialLat = searchParams.get("lat");
   const initialLng = searchParams.get("lng");
 
+  const {
+    searchPageLoaded, searchActiveTab, searchAllDishes, searchTrendingDishes,
+    searchPage, searchHasMore, setSearchActiveTab, setSearchAllInitial,
+    appendSearchAll, setSearchTrending
+  } = useGlobalStore();
+
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [activeFilter, setActiveFilter] = useState(initialFilter);
-  const [filteredData, setFilteredData] = useState([]);
+  const [activeTab, setActiveTab] = useState(searchActiveTab);
   const [userLat, setUserLat] = useState(initialLat ? Number(initialLat) : null);
   const [userLng, setUserLng] = useState(initialLng ? Number(initialLng) : null);
   const [userCity, setUserCity] = useState("");
   const [locating, setLocating] = useState(false);
   const [loadError, setLoadError] = useState("");
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(searchPageLoaded ? searchPage : 1);
   const [loadingMore, setLoadingMore] = useState(false);
   const observer = useRef();
+
+  const TRENDING_KEYWORDS = "Idli Chowmein Dosa Sambhar Pasta Chhole Bhature Pizza Burger Momos";
 
   const lastDishElementRef = useCallback(node => {
     if (loadingMore) return;
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
+      // Only paginate if we haven't hit the 30 items limit (5 pages of 6) to keep frontend light
+      if (entries[0].isIntersecting && searchHasMore && activeTab === "All" && page < 5) {
         setPage(prevPage => prevPage + 1);
       }
     });
     if (node) observer.current.observe(node);
-  }, [loadingMore, hasMore]);
-
-  const TRENDING_KEYWORDS = "Idli Chowmein Dosa Sambhar Pasta Chhole Bhature Pizza Burger Momos";
-  const isTrendingMode = searchQuery.trim() === "" || searchParams.get("trending") === "true";
+  }, [loadingMore, searchHasMore, activeTab, page]);
 
   const formatDistance = (distKm, city) => {
     if (distKm === undefined) return "Locating...";
     if (distKm === null) return city || "Unknown Location";
     const m = Math.round(distKm * 1000);
-    if (m >= 1000) {
-      return `${(m / 1000).toFixed(1)} km`;
-    }
+    if (m >= 1000) return `${(m / 1000).toFixed(1)} km`;
     return `${m} m`;
   };
 
   useEffect(() => {
-    // Attempt to get location silently on mount for accurate distances everywhere
     if (navigator.geolocation && userLat === null) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
@@ -78,53 +79,51 @@ function SearchResultsContent() {
           });
         }
       );
-    } else if (userLat === null) {
-      getApproxLocationFromIp().then((ipLocation) => {
-        if (!ipLocation) return;
-        if (ipLocation.city) setUserCity(ipLocation.city);
-        if (ipLocation.lat !== null && ipLocation.lng !== null) {
-          setUserLat(ipLocation.lat);
-          setUserLng(ipLocation.lng);
-        }
-      });
     }
   }, [userLat]);
 
   useEffect(() => {
+    setSearchActiveTab(activeTab);
+    
     async function loadResults() {
+      // If navigating back and we have cached data for the first page, skip fetching
+      if (searchPageLoaded && page === searchPage && (activeTab === "All" ? searchAllDishes.length > 0 : searchTrendingDishes.length > 0)) {
+        return;
+      }
+      
       try {
         if (page > 1) setLoadingMore(true);
-        const filters = {
-          maxPrice: activeFilter === "Under Rs 200" ? 200 : undefined,
-          veg: activeFilter === "Veg" ? true : undefined,
-          openNow: activeFilter === "Open Now" ? true : undefined,
-          nearby: activeFilter === "Nearby" ? true : undefined,
-          lat: userLat !== null ? userLat : undefined,
-          lng: userLng !== null ? userLng : undefined,
-          city: userCity || undefined,
-          page,
-          limit: 6
-        };
         
-        const actualQuery = isTrendingMode ? TRENDING_KEYWORDS : searchQuery;
-        let resultsRes = await findDishResults(actualQuery, filters);
+        let resultsRes;
         
-        const newDishes = resultsRes.data || [];
-        setHasMore(resultsRes.hasMore || false);
-        
-        if (page === 1) {
-          setFilteredData(newDishes);
+        if (activeTab === "Trending") {
+          // Fetch trending quickly without rigid location bounds
+          resultsRes = await findDishResults(TRENDING_KEYWORDS, { limit: 12 });
+          setSearchTrending(resultsRes.data || []);
         } else {
-          setFilteredData(prev => {
-            const seen = new Set(prev.map(d => String(d._id || d.id)));
-            const deduplicated = newDishes.filter(d => !seen.has(String(d._id || d.id)));
-            return [...prev, ...deduplicated];
-          });
+          // 'All' tab: robust fallback logic by sorting by nearby globally instead of filtering by city
+          const filters = {
+            nearby: true, // sorts by distance
+            lat: userLat !== null ? userLat : undefined,
+            lng: userLng !== null ? userLng : undefined,
+            page,
+            limit: 6
+          };
+          
+          resultsRes = await findDishResults(searchQuery, filters);
+          const newDishes = resultsRes.data || [];
+          
+          if (page === 1) {
+            setSearchAllInitial(newDishes, resultsRes.hasMore || false);
+          } else {
+            setSearchAllInitial([...searchAllDishes, ...newDishes], resultsRes.hasMore || false);
+            // Updating page explicitly via Zustand state
+            useGlobalStore.setState({ searchPage: page });
+          }
         }
         
         setLoadError("");
       } catch (err) {
-        if (page === 1) setFilteredData([]);
         setLoadError("Search is temporarily unavailable.");
       } finally {
         setLoadingMore(false);
@@ -132,7 +131,12 @@ function SearchResultsContent() {
     }
 
     loadResults();
-  }, [searchQuery, activeFilter, userLat, userLng, page, searchParams, isTrendingMode]);
+  }, [searchQuery, activeTab, userLat, userLng, page]);
+
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    setPage(1);
+  };
 
   const handleFilterClick = (filter) => {
     if (filter === "Nearby" && userLat === null) {
@@ -173,8 +177,7 @@ function SearchResultsContent() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (searchQuery.trim()) params.set("q", searchQuery.trim());
-    if (activeFilter !== "All") params.set("filter", activeFilter);
+    if (activeTab !== "All") params.set("tab", activeTab);
     if (userLat !== null && userLng !== null) {
       params.set("lat", String(userLat));
       params.set("lng", String(userLng));
@@ -182,7 +185,8 @@ function SearchResultsContent() {
     router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
-  const filterOptions = ["All", "Under Rs 200", "Nearby", "Open Now", "Veg"];
+  const tabs = ["All", "Trending"];
+  const displayData = activeTab === "All" ? searchAllDishes : searchTrendingDishes;
 
   return (
     <div className="bg-background text-on-background min-h-screen pb-16">
@@ -246,24 +250,25 @@ function SearchResultsContent() {
         </form>
 
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-margin-mobile px-margin-mobile">
-          {filterOptions.map((filter) => (
+          {tabs.map((tab) => (
             <button
-              key={filter}
-              onClick={() => handleFilterClick(filter)}
-              className={`whitespace-nowrap px-4 py-2 rounded-full font-label-sm text-label-sm cursor-pointer transition-all active:scale-95 flex items-center gap-1 ${
-                activeFilter === filter
-                  ? "bg-primary text-on-primary shadow-sm"
-                  : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-variant/20"
+              key={tab}
+              onClick={() => handleTabClick(tab)}
+              className={`whitespace-nowrap px-6 py-2 rounded-full font-bold text-sm cursor-pointer transition-all active:scale-95 flex items-center gap-1 ${
+                activeTab === tab
+                  ? "bg-primary text-on-primary shadow-md"
+                  : "bg-surface border border-outline-variant text-on-surface-variant hover:bg-surface-variant/30"
               }`}
             >
-              {filter === "Nearby" && locating ? "Locating..." : filter}
+              {tab === "Trending" && <MaterialIcon name="trending_up" className={`text-[18px] ${activeTab === tab ? "text-on-primary" : "text-primary"}`} />}
+              {tab}
             </button>
           ))}
         </div>
       </section>
 
       <main className="px-margin-mobile mt-6 max-w-7xl mx-auto">
-        {isTrendingMode && (
+        {activeTab === "Trending" && (
           <div className="mb-4">
             <h2 className="font-headline-sm text-headline-sm text-on-surface mb-1 flex items-center gap-2">
               <MaterialIcon name="trending_up" className="text-primary" /> Trending Now
@@ -278,9 +283,9 @@ function SearchResultsContent() {
             {loadError}
           </div>
         )}
-        {filteredData.length > 0 ? (
-          filteredData.map((item, index) => {
-            const isLast = index === filteredData.length - 1;
+        {displayData.length > 0 ? (
+          displayData.map((item, index) => {
+            const isLast = index === displayData.length - 1;
             return (
             <article
               ref={isLast ? lastDishElementRef : null}
@@ -353,9 +358,7 @@ function SearchResultsContent() {
           })
         ) : (
           <div className="col-span-full py-16 text-center text-on-surface-variant font-body-lg">
-            {activeFilter === "Nearby" && userLat === null 
-              ? "Please allow location access to see nearby dishes." 
-              : "No dishes found matching your query."}
+            No dishes found.
           </div>
         )}
         </div>
