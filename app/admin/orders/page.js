@@ -23,6 +23,7 @@ export default function OrdersPage() {
   const [posCart, setPosCart] = useState([]);
   const [tableNumber, setTableNumber] = useState("");
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [mobileTab, setMobileTab] = useState('menu'); // 'menu' or 'cart'
 
   const lastOrderElementRef = useCallback(node => {
     if (loadingMore) return;
@@ -289,40 +290,64 @@ export default function OrdersPage() {
 
       {/* POS Modal */}
       {isPosOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-0 md:p-4 backdrop-blur-sm">
-          <div className="bg-surface w-full h-full md:h-[90vh] md:max-h-[900px] md:max-w-5xl md:rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden border-none md:border md:border-outline-variant">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-0 md:p-6">
+          <div className="bg-surface w-full h-full md:h-[85vh] md:max-h-[900px] md:max-w-6xl md:rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden border-none md:border border-outline-variant relative">
             
+            {/* Mobile Tab Bar */}
+            <div className="md:hidden flex bg-surface-container-low p-2 gap-2 shadow-sm z-10 shrink-0">
+              <button 
+                onClick={() => setMobileTab('menu')} 
+                className={`flex-1 py-3 font-bold rounded-xl transition-all cursor-pointer ${mobileTab === 'menu' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:bg-surface-variant'}`}
+              >
+                Menu
+              </button>
+              <button 
+                onClick={() => setMobileTab('cart')} 
+                className={`flex-1 py-3 font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${mobileTab === 'cart' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:bg-surface-variant'}`}
+              >
+                Cart <span className={`${mobileTab === 'cart' ? 'bg-white/20 text-white' : 'bg-surface-variant text-on-surface'} px-2 py-0.5 rounded-full text-xs`}>{posCart.length}</span>
+              </button>
+              <button onClick={() => setIsPosOpen(false)} className="w-12 flex items-center justify-center rounded-xl bg-surface-variant text-on-surface-variant cursor-pointer hover:bg-outline-variant/30">
+                <MaterialIcon name="close" />
+              </button>
+            </div>
+
             {/* Menu Items Section */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-surface">
-              <div className="p-4 border-b border-outline-variant bg-surface-container-low flex justify-between items-center shrink-0">
-                <h3 className="font-bold text-lg text-on-surface">Menu Items</h3>
-                <button onClick={() => setIsPosOpen(false)} className="md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-surface-variant cursor-pointer text-on-surface-variant hover:bg-outline-variant/30">
+            <div className={`${mobileTab === 'menu' ? 'flex' : 'hidden'} md:flex flex-1 flex-col min-h-0 overflow-hidden bg-surface-container-lowest`}>
+              <div className="p-5 border-b border-outline-variant/50 bg-white/50 backdrop-blur-md flex justify-between items-center shrink-0 z-10 sticky top-0">
+                <div>
+                  <h3 className="font-bold text-xl text-on-surface">Menu Items</h3>
+                  <p className="text-xs text-on-surface-variant font-medium mt-0.5">Tap an item to add it to the order</p>
+                </div>
+                <button onClick={() => setIsPosOpen(false)} className="hidden md:flex w-9 h-9 items-center justify-center rounded-full bg-surface-variant cursor-pointer text-on-surface-variant hover:bg-outline-variant/30 transition-colors">
                   <MaterialIcon name="close" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 bg-surface min-h-0">
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-surface-container-lowest min-h-0">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   {menuItems.filter(i => i.available).map(item => (
                   <button 
                     key={item._id} 
                     onClick={() => addToPosCart(item)}
-                    className="p-4 border border-outline-variant rounded-2xl bg-white text-left hover:border-primary hover:shadow-md transition-all cursor-pointer flex flex-col justify-between h-full group relative overflow-hidden"
+                    className="p-4 md:p-5 border border-outline-variant rounded-2xl bg-white text-left hover:border-primary hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between h-full group relative overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div className="relative z-10">
-                      <div className="text-xs font-bold text-primary mb-1 uppercase tracking-wider">{item.category}</div>
-                      <div className="font-semibold text-sm line-clamp-2 text-on-surface">{item.name}</div>
+                      <div className="text-[10px] md:text-xs font-black text-primary mb-1.5 uppercase tracking-widest">{item.category}</div>
+                      <div className="font-bold text-sm md:text-base line-clamp-2 text-on-surface leading-tight">{item.name}</div>
                     </div>
-                    <div className="mt-3 font-black text-on-surface relative z-10 flex justify-between items-center">
-                      <span>Rs {item.price}</span>
-                      <MaterialIcon name="add_circle" className="text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="mt-4 font-black text-on-surface relative z-10 flex justify-between items-center">
+                      <span className="text-base">Rs {item.price}</span>
+                      <div className="w-8 h-8 rounded-full bg-surface-variant group-hover:bg-primary group-hover:text-white text-on-surface-variant flex items-center justify-center transition-colors">
+                        <MaterialIcon name="add" className="text-[18px]" />
+                      </div>
                     </div>
                   </button>
                 ))}
                 {menuItems.length === 0 && (
-                  <div className="col-span-full py-10 text-center text-on-surface-variant text-sm font-medium flex flex-col items-center justify-center">
-                    <MaterialIcon name="restaurant_menu" className="text-4xl text-outline mb-2" />
-                    Loading menu...
+                  <div className="col-span-full py-16 text-center text-on-surface-variant flex flex-col items-center justify-center">
+                    <MaterialIcon name="restaurant_menu" className="text-5xl text-outline mb-3 opacity-50" />
+                    <span className="font-semibold">No menu items found</span>
                   </div>
                 )}
                 </div>
@@ -330,36 +355,34 @@ export default function OrdersPage() {
             </div>
 
             {/* Cart Section */}
-            <div className="w-full md:w-[380px] lg:w-[420px] flex-[0.85] md:flex-none flex flex-col shrink-0 border-t md:border-t-0 md:border-l border-outline-variant bg-surface-container-lowest min-h-0">
-              <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center shrink-0">
-                <h3 className="font-bold text-lg text-on-surface">Current Order</h3>
-                <button onClick={() => setIsPosOpen(false)} className="w-8 h-8 hidden md:flex items-center justify-center rounded-full bg-surface-variant cursor-pointer text-on-surface-variant hover:bg-outline-variant/50 transition-colors">
-                  <MaterialIcon name="close" className="text-[20px]" />
-                </button>
+            <div className={`${mobileTab === 'cart' ? 'flex' : 'hidden'} md:flex w-full md:w-[400px] lg:w-[450px] flex-col shrink-0 border-l border-outline-variant/50 bg-surface min-h-0 relative z-10 shadow-[-10px_0_20px_-10px_rgba(0,0,0,0.05)]`}>
+              <div className="p-5 border-b border-outline-variant/50 bg-white/50 backdrop-blur-md flex justify-between items-center shrink-0">
+                <h3 className="font-bold text-xl text-on-surface">Current Order</h3>
+                <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold">{posCart.length} Items</span>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 bg-surface-container-lowest min-h-0">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-surface min-h-0">
                 <div className="space-y-3 h-full">
                   {posCart.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-on-surface-variant opacity-70 min-h-[200px]">
-                    <MaterialIcon name="shopping_basket" className="text-5xl mb-3 text-outline" />
-                    <p className="font-medium text-sm">No items added yet</p>
-                    <p className="text-xs mt-1">Tap a menu item to add it</p>
+                    <div className="h-full flex flex-col items-center justify-center text-on-surface-variant opacity-60 min-h-[200px]">
+                    <MaterialIcon name="local_mall" className="text-6xl mb-4 text-outline" />
+                    <p className="font-bold text-base">Cart is empty</p>
+                    <p className="text-sm mt-1">Select items from the menu</p>
                   </div>
                 ) : (
                   posCart.map(item => (
-                    <div key={item.menuItemId} className="flex items-center justify-between bg-white p-3 border border-outline-variant rounded-xl shadow-sm">
+                    <div key={item.menuItemId} className="flex items-center justify-between bg-white p-3.5 border border-outline-variant rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex-1 min-w-0 pr-3">
                         <div className="font-bold text-sm truncate text-on-surface">{item.name}</div>
-                        <div className="text-xs text-on-surface-variant font-medium mt-0.5">Rs {item.price}</div>
+                        <div className="text-xs text-primary font-black mt-1">Rs {item.price}</div>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0 bg-surface-container-low rounded-lg p-1 border border-outline-variant/50">
-                        <button onClick={() => removeFromPosCart(item.menuItemId)} className="w-7 h-7 rounded-md bg-white shadow-sm flex items-center justify-center cursor-pointer hover:bg-surface-variant transition-colors border-none">
-                          <MaterialIcon name="remove" className="text-[16px] text-on-surface" />
+                      <div className="flex items-center gap-1 shrink-0 bg-surface-container-lowest rounded-xl p-1 border border-outline-variant">
+                        <button onClick={() => removeFromPosCart(item.menuItemId)} className="w-8 h-8 rounded-lg bg-surface hover:bg-surface-variant flex items-center justify-center cursor-pointer transition-colors border-none">
+                          <MaterialIcon name="remove" className="text-[18px] text-on-surface" />
                         </button>
-                        <span className="font-bold text-sm w-4 text-center text-on-surface">{item.quantity}</span>
-                        <button onClick={() => addToPosCart({ _id: item.menuItemId, name: item.name, price: item.price })} className="w-7 h-7 rounded-md bg-white shadow-sm flex items-center justify-center cursor-pointer hover:bg-surface-variant transition-colors border-none">
-                          <MaterialIcon name="add" className="text-[16px] text-on-surface" />
+                        <span className="font-black text-sm w-6 text-center text-on-surface">{item.quantity}</span>
+                        <button onClick={() => addToPosCart({ _id: item.menuItemId, name: item.name, price: item.price })} className="w-8 h-8 rounded-lg bg-primary text-white hover:bg-primary/90 flex items-center justify-center cursor-pointer transition-colors border-none">
+                          <MaterialIcon name="add" className="text-[18px]" />
                         </button>
                       </div>
                     </div>
@@ -368,39 +391,38 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="p-5 border-t border-outline-variant bg-white space-y-4 shrink-0">
+              <div className="p-5 md:p-6 border-t border-outline-variant/50 bg-white space-y-5 shrink-0 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant mb-1.5 block">Table Number (Optional)</label>
+                  <label className="text-xs font-bold text-on-surface-variant mb-2 block uppercase tracking-wider">Table Number</label>
                   <input 
                     type="text" 
                     value={tableNumber}
                     onChange={(e) => setTableNumber(e.target.value)}
-                    placeholder="e.g. 12"
-                    className="w-full border border-outline-variant rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary bg-surface-container-lowest font-medium"
+                    placeholder="e.g. Table 12 (Optional)"
+                    className="w-full border-2 border-outline-variant/50 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary focus:bg-primary/5 bg-surface-container-lowest font-semibold transition-all"
                   />
                 </div>
                 <div className="w-full h-px bg-outline-variant/50"></div>
-                <div className="flex justify-between items-center font-black text-xl text-on-surface">
+                <div className="flex justify-between items-center font-black text-2xl text-on-surface">
                   <span>Total</span>
                   <span className="text-primary">Rs {posTotal}</span>
                 </div>
                 <button 
                   onClick={submitPosOrder}
                   disabled={posCart.length === 0 || isSubmittingOrder}
-                  className="w-full py-3.5 mt-2 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none hover:bg-primary/90 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl shadow-[0_8px_16px_rgba(var(--color-primary-rgb),0.3)] disabled:opacity-50 disabled:shadow-none hover:bg-primary/90 hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   {isSubmittingOrder ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <>
-                      <MaterialIcon name="send" className="text-[18px]" />
-                      Place Order
+                      <MaterialIcon name="bolt" className="text-[20px]" />
+                      Place Order Instantly
                     </>
                   )}
                 </button>
               </div>
             </div>
-            
           </div>
         </div>
       )}
