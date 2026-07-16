@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { findDishResults, getApproxLocationFromIp } from "@/services/restaurant-service";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGlobalStore } from "@/stores/global-store";
 
 function SearchResultsContent() {
   const { user } = useAuth();
