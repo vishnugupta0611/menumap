@@ -166,7 +166,7 @@ export default function QrCodePage() {
           <div className="space-y-10">
 
             {/* Top Bar (Download Button) */}
-            <div className="flex justify-between items-center bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/30 shadow-sm relative">
+            <div className="flex flex-wrap justify-between items-center bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/30 shadow-sm relative gap-4">
               <div className="text-sm font-bold text-on-surface ml-2">Preview</div>
               
               <div className="relative">
@@ -214,7 +214,7 @@ export default function QrCodePage() {
             {/* Poster Preview Area */}
             {/* We use a fixed size 400x500 box that scales down on mobile to prevent clipping issues */}
             <div className="flex justify-center w-full overflow-hidden">
-              <div className="transform scale-[0.75] sm:scale-100 origin-top h-[375px] sm:h-[500px] w-full flex justify-center">
+              <div className="transform scale-[0.65] min-[400px]:scale-[0.8] sm:scale-[0.9] md:scale-100 origin-top h-[325px] min-[400px]:h-[400px] sm:h-[450px] md:h-[500px] w-full flex justify-center">
                 
                 <div 
                   ref={posterRef}
