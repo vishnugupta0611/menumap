@@ -17,6 +17,8 @@ export const useGlobalStore = create((set) => ({
   // --- Search Page State ---
   searchPageLoaded: false,
   searchActiveTab: "All",
+  searchCachedQuery: "",
+  searchCachedFilter: "All",
   searchAllDishes: [],
   searchTrendingDishes: [],
   searchPage: 1,
@@ -24,10 +26,12 @@ export const useGlobalStore = create((set) => ({
   
   setSearchActiveTab: (tab) => set({ searchActiveTab: tab }),
   
-  setSearchAllInitial: (dishes, hasMore) => set({
+  setSearchAllInitial: (dishes, hasMore, query, filter) => set({
     searchAllDishes: dishes,
     searchPage: 1,
     searchHasMore: hasMore,
+    searchCachedQuery: query,
+    searchCachedFilter: filter,
     searchPageLoaded: true
   }),
   

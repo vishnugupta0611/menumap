@@ -19,12 +19,15 @@ function SearchResultsContent() {
 
   const {
     searchPageLoaded, searchActiveTab, searchAllDishes, searchTrendingDishes,
-    searchPage, searchHasMore, setSearchActiveTab, setSearchAllInitial,
+    searchPage, searchHasMore, searchCachedQuery, searchCachedFilter,
+    setSearchActiveTab, setSearchAllInitial,
     appendSearchAll, setSearchTrending
   } = useGlobalStore();
 
   const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
   const [activeTab, setActiveTab] = useState(searchActiveTab);
+  const [activeFilter, setActiveFilter] = useState(initialFilter);
   const [userLat, setUserLat] = useState(initialLat ? Number(initialLat) : null);
   const [userLng, setUserLng] = useState(initialLng ? Number(initialLng) : null);
   const [userCity, setUserCity] = useState("");
@@ -87,8 +90,8 @@ function SearchResultsContent() {
     setSearchActiveTab(activeTab);
     
     async function loadResults() {
-      // If navigating back and we have cached data for the first page, skip fetching
-      if (searchPageLoaded && page === searchPage && (activeTab === "All" ? searchAllDishes.length > 0 : searchTrendingDishes.length > 0)) {
+      // If navigating back and we have cached data for the exact same query and filter, skip fetching
+      if (searchPageLoaded && page === searchPage && searchCachedQuery === submittedQuery && searchCachedFilter === activeFilter && (activeTab === "All" ? searchAllDishes.length > 0 : searchTrendingDishes.length > 0)) {
         return;
       }
       
@@ -103,21 +106,23 @@ function SearchResultsContent() {
           setSearchTrending(resultsRes.data || []);
         } else {
           // 'All' tab: robust fallback logic by sorting by nearby globally instead of filtering by city
-          const filters = {
+          const reqFilters = {
             nearby: true, // sorts by distance
             lat: userLat !== null ? userLat : undefined,
             lng: userLng !== null ? userLng : undefined,
             page,
             limit: 6
           };
+          if (activeFilter === "Veg") reqFilters.veg = true;
+          if (activeFilter === "Under Rs 200") reqFilters.maxPrice = 200;
           
-          resultsRes = await findDishResults(searchQuery, filters);
+          resultsRes = await findDishResults(submittedQuery, reqFilters);
           const newDishes = resultsRes.data || [];
           
           if (page === 1) {
-            setSearchAllInitial(newDishes, resultsRes.hasMore || false);
+            setSearchAllInitial(newDishes, resultsRes.hasMore || false, submittedQuery, activeFilter);
           } else {
-            setSearchAllInitial([...searchAllDishes, ...newDishes], resultsRes.hasMore || false);
+            setSearchAllInitial([...searchAllDishes, ...newDishes], resultsRes.hasMore || false, submittedQuery, activeFilter);
             // Updating page explicitly via Zustand state
             useGlobalStore.setState({ searchPage: page });
           }
@@ -132,7 +137,7 @@ function SearchResultsContent() {
     }
 
     loadResults();
-  }, [searchQuery, activeTab, userLat, userLng, page]);
+  }, [submittedQuery, activeFilter, activeTab, userLat, userLng, page]);
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
@@ -177,8 +182,12 @@ function SearchResultsContent() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setSubmittedQuery(searchQuery);
+    setPage(1);
     const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
     if (activeTab !== "All") params.set("tab", activeTab);
+    if (activeFilter !== "All") params.set("filter", activeFilter);
     if (userLat !== null && userLng !== null) {
       params.set("lat", String(userLat));
       params.set("lng", String(userLng));
@@ -236,18 +245,39 @@ function SearchResultsContent() {
       </header>
 
       <section className="px-margin-mobile pt-4 space-y-4 max-w-4xl mx-auto">
-        <form onSubmit={handleSearchSubmit} className="flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant/30">
-          <MaterialIcon name="search" className="text-on-surface-variant" />
-          <input
-            type="text"
-            className="font-body-md text-on-surface font-semibold bg-transparent border-none outline-none focus:ring-0 w-full p-0"
-            placeholder="Search dishes..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(1);
-            }}
-          />
+        <form onSubmit={handleSearchSubmit} className="flex flex-col gap-2">
+          <div className="flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant/30 w-full">
+            <MaterialIcon name="search" className="text-on-surface-variant" />
+            <input
+              type="text"
+              className="font-body-md text-on-surface font-semibold bg-transparent border-none outline-none focus:ring-0 w-full p-0"
+              placeholder="Search dishes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button type="submit" className="bg-primary text-on-primary px-3 py-1 rounded-lg text-sm font-bold flex items-center justify-center cursor-pointer border-none shadow-sm shrink-0 hover:opacity-90">
+              Search
+            </button>
+          </div>
+          
+          {activeTab === "All" && (
+            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar -mx-margin-mobile px-margin-mobile">
+              {["All", "Veg", "Under Rs 200"].map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => { setActiveFilter(f); setPage(1); }}
+                  className={`whitespace-nowrap px-4 py-1.5 rounded-full font-bold text-xs cursor-pointer transition-all active:scale-95 ${
+                    activeFilter === f
+                      ? "bg-primary-container text-on-primary-container shadow-sm border border-primary/20"
+                      : "bg-surface border border-outline-variant text-on-surface hover:bg-surface-variant/50"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          )}
         </form>
 
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-margin-mobile px-margin-mobile">
