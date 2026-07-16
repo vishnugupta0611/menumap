@@ -176,8 +176,8 @@ export default function OrdersPage() {
   const posTotal = posCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
-    <div className="w-[95%] mx-auto">
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant pb-4">
+    <div className="w-[95%] mx-auto pb-10">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-2xl border border-surface-container bg-white p-4 md:p-6 shadow-sm">
         <div>
           <h2 className="text-lg font-bold text-on-surface">Order Management</h2>
           <div className="flex items-center gap-2 mt-1">
@@ -191,9 +191,9 @@ export default function OrdersPage() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsPosOpen(true)}
-            className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 transition-colors cursor-pointer"
+            className="flex items-center gap-2 bg-primary text-on-primary px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm hover:bg-primary/90 transition-colors cursor-pointer"
           >
-            <MaterialIcon name="add_circle" className="text-[18px]" />
+            <MaterialIcon name="add_circle" className="text-[16px]" />
             Create Order
           </button>
           <div className="text-sm font-medium text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/50">
@@ -213,10 +213,10 @@ export default function OrdersPage() {
           <p className="text-sm text-on-surface-variant max-w-sm mt-1">When an order is placed, it will automatically appear here.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-outline-variant">
+        <div className="overflow-x-auto w-full">
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
-              <tr className="bg-surface-container-low border-b border-outline-variant text-sm text-on-surface-variant">
+              <tr className="border-b border-outline-variant text-xs text-on-surface-variant">
                 <th className="py-3 px-4 font-bold uppercase tracking-wider">Order ID</th>
                 <th className="py-3 px-4 font-bold uppercase tracking-wider">Customer / Table</th>
                 <th className="py-3 px-4 font-bold uppercase tracking-wider">Items</th>
@@ -230,19 +230,19 @@ export default function OrdersPage() {
               {orders.map((order, index) => {
                 const isLastElement = orders.length === index + 1;
                 return (
-                  <tr ref={isLastElement ? lastOrderElementRef : null} key={order._id} className="hover:bg-surface-container-lowest transition-colors">
-                    <td className="py-3 px-4 font-bold text-sm">#{order._id.slice(-6).toUpperCase()}</td>
-                    <td className="py-3 px-4">
-                      <div className="text-sm font-semibold">{order.customerName || 'Guest'}</div>
-                      {order.tableNumber && <div className="text-xs text-on-surface-variant">Table {order.tableNumber}</div>}
+                  <tr ref={isLastElement ? lastOrderElementRef : null} key={order._id} className="hover:bg-surface-container-lowest transition-colors border-b border-outline-variant/30">
+                    <td className="py-2.5 px-3 font-bold text-xs">#{order._id.slice(-6).toUpperCase()}</td>
+                    <td className="py-2.5 px-3">
+                      <div className="text-xs font-semibold">{order.customerName || 'Guest'}</div>
+                      {order.tableNumber && <div className="text-[10px] text-on-surface-variant">Table {order.tableNumber}</div>}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-2.5 px-3">
                       <div className="text-xs max-w-[200px] truncate text-on-surface-variant" title={order.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}>
                         {order.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}
                       </div>
                     </td>
-                    <td className="py-3 px-4 font-bold text-sm">Rs {order.totalAmount}</td>
-                    <td className="py-3 px-4">
+                    <td className="py-2.5 px-3 font-bold text-xs">Rs {order.totalAmount}</td>
+                    <td className="py-2.5 px-3">
                       <select 
                         value={order.status} 
                         onChange={(event) => updateStatus(order._id, event.target.value)} 
@@ -256,21 +256,21 @@ export default function OrdersPage() {
                         <option value="Cancelled">Cancelled</option>
                       </select>
                     </td>
-                    <td className="py-3 px-4 text-xs text-on-surface-variant">
+                    <td className="py-2.5 px-3 text-[11px] text-on-surface-variant">
                       {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-2.5 px-3 text-right">
                       {order.status === 'Pending' && (
-                        <button onClick={() => updateStatus(order._id, 'Accepted')} className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 cursor-pointer">Accept</button>
+                        <button onClick={() => updateStatus(order._id, 'Accepted')} className="px-2 py-1 bg-primary text-white text-[11px] font-bold rounded hover:bg-primary/90 cursor-pointer border-none">Accept</button>
                       )}
                       {order.status === 'Accepted' && (
-                        <button onClick={() => updateStatus(order._id, 'Preparing')} className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 cursor-pointer">Cook</button>
+                        <button onClick={() => updateStatus(order._id, 'Preparing')} className="px-2 py-1 bg-blue-600 text-white text-[11px] font-bold rounded hover:bg-blue-700 cursor-pointer border-none">Cook</button>
                       )}
                       {order.status === 'Preparing' && (
-                        <button onClick={() => updateStatus(order._id, 'Ready')} className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded hover:bg-emerald-700 cursor-pointer">Ready</button>
+                        <button onClick={() => updateStatus(order._id, 'Ready')} className="px-2 py-1 bg-emerald-600 text-white text-[11px] font-bold rounded hover:bg-emerald-700 cursor-pointer border-none">Ready</button>
                       )}
                       {order.status === 'Ready' && (
-                        <button onClick={() => updateStatus(order._id, 'Completed')} className="px-3 py-1.5 bg-green-700 text-white text-xs font-bold rounded hover:bg-green-800 cursor-pointer">Finish</button>
+                        <button onClick={() => updateStatus(order._id, 'Completed')} className="px-2 py-1 bg-green-700 text-white text-[11px] font-bold rounded hover:bg-green-800 cursor-pointer border-none">Finish</button>
                       )}
                     </td>
                   </tr>
@@ -293,7 +293,7 @@ export default function OrdersPage() {
           <div className="bg-surface w-full max-w-5xl h-[90vh] rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden border border-outline-variant">
             
             {/* Menu Items Section */}
-            <div className="flex-1 flex flex-col h-[50vh] md:h-full border-b md:border-b-0 md:border-r border-outline-variant">
+            <div className="flex-1 flex flex-col h-[50vh] md:h-full border-b md:border-b-0 md:border-r border-outline-variant min-h-0">
               <div className="p-4 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
                 <h3 className="font-bold text-lg text-on-surface">Menu Items</h3>
                 <button onClick={() => setIsPosOpen(false)} className="md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-surface-variant cursor-pointer text-on-surface-variant hover:bg-outline-variant/30">
@@ -328,7 +328,7 @@ export default function OrdersPage() {
             </div>
 
             {/* Cart Section */}
-            <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col h-[40vh] md:h-full bg-surface-container-lowest">
+            <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col h-[40vh] md:h-full bg-surface-container-lowest min-h-0">
               <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center">
                 <h3 className="font-bold text-lg text-on-surface">Current Order</h3>
                 <button onClick={() => setIsPosOpen(false)} className="w-8 h-8 hidden md:flex items-center justify-center rounded-full bg-surface-variant cursor-pointer text-on-surface-variant hover:bg-outline-variant/50 transition-colors">
