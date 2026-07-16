@@ -289,8 +289,8 @@ export default function OrdersPage() {
 
       {/* POS Modal */}
       {isPosOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="bg-surface w-full max-w-5xl h-[90vh] max-h-[900px] rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden border border-outline-variant">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-0 md:p-4 backdrop-blur-sm">
+          <div className="bg-surface w-full h-full md:h-[90vh] md:max-h-[900px] md:max-w-5xl md:rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden border-none md:border md:border-outline-variant">
             
             {/* Menu Items Section */}
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-surface">
@@ -300,8 +300,9 @@ export default function OrdersPage() {
                   <MaterialIcon name="close" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 lg:grid-cols-3 gap-4 h-full">
-                {menuItems.filter(i => i.available).map(item => (
+              <div className="flex-1 overflow-y-auto p-4 bg-surface min-h-0">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  {menuItems.filter(i => i.available).map(item => (
                   <button 
                     key={item._id} 
                     onClick={() => addToPosCart(item)}
@@ -324,11 +325,12 @@ export default function OrdersPage() {
                     Loading menu...
                   </div>
                 )}
+                </div>
               </div>
             </div>
 
             {/* Cart Section */}
-            <div className="w-full md:w-[380px] lg:w-[420px] h-[50vh] md:h-auto flex flex-col shrink-0 border-t md:border-t-0 md:border-l border-outline-variant bg-surface-container-lowest">
+            <div className="w-full md:w-[380px] lg:w-[420px] flex-[0.85] md:flex-none flex flex-col shrink-0 border-t md:border-t-0 md:border-l border-outline-variant bg-surface-container-lowest min-h-0">
               <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center shrink-0">
                 <h3 className="font-bold text-lg text-on-surface">Current Order</h3>
                 <button onClick={() => setIsPosOpen(false)} className="w-8 h-8 hidden md:flex items-center justify-center rounded-full bg-surface-variant cursor-pointer text-on-surface-variant hover:bg-outline-variant/50 transition-colors">
@@ -336,9 +338,10 @@ export default function OrdersPage() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface-container-lowest min-h-0">
-                {posCart.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-on-surface-variant opacity-70">
+              <div className="flex-1 overflow-y-auto p-4 bg-surface-container-lowest min-h-0">
+                <div className="space-y-3 h-full">
+                  {posCart.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-on-surface-variant opacity-70 min-h-[200px]">
                     <MaterialIcon name="shopping_basket" className="text-5xl mb-3 text-outline" />
                     <p className="font-medium text-sm">No items added yet</p>
                     <p className="text-xs mt-1">Tap a menu item to add it</p>
@@ -362,6 +365,7 @@ export default function OrdersPage() {
                     </div>
                   ))
                 )}
+                </div>
               </div>
 
               <div className="p-5 border-t border-outline-variant bg-white space-y-4 shrink-0">
