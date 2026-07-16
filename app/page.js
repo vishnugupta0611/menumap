@@ -250,16 +250,19 @@ export default function HomePage() {
         <section className="sticky top-20 z-30 mb-8">
           <form
             onSubmit={handleSearchSubmit}
-            className="relative flex items-center shadow-[0px_10px_30px_rgba(0,0,0,0.04)] rounded-full overflow-hidden glass-card border border-white/20 bg-white"
+            className="relative flex items-center shadow-md hover:shadow-lg transition-shadow duration-300 rounded-full overflow-hidden bg-surface border-2 border-primary/20 focus-within:border-primary/60 pr-2 pl-4 py-1"
           >
-            <MaterialIcon name="search" className="absolute left-4 text-outline" />
+            <MaterialIcon name="search" className="text-primary text-[22px]" />
             <input
-              className="w-full py-4 pl-12 pr-4 bg-transparent border-none focus:ring-0 text-body-md placeholder:text-outline-variant outline-none"
-              placeholder="Search dishes, restaurants or cuisines..."
+              className="w-full py-3 px-3 bg-transparent border-none focus:ring-0 text-on-surface font-semibold placeholder:text-on-surface-variant/70 outline-none"
+              placeholder="Search dishes, restaurants..."
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <button type="submit" className="bg-primary text-on-primary px-4 py-2 rounded-full text-sm font-bold flex items-center justify-center cursor-pointer border-none shadow-sm shrink-0 hover:scale-105 active:scale-95 transition-transform">
+              Search
+            </button>
           </form>
         </section>
 
