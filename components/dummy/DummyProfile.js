@@ -118,7 +118,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                 ? "h-72 md:h-96"
                 : "h-[calc(100vh-65px)]"
           }`}>
-            <img
+            <img referrerPolicy="no-referrer"
               src={restaurant.heroImage}
               alt={restaurant.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
@@ -277,7 +277,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                 >
                   {/* Background Image */}
                   {dish.image ? (
-                    <img
+                    <img referrerPolicy="no-referrer"
                       alt={dish.name}
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       src={dish.image}
@@ -442,7 +442,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                   key={img._id || idx}
                   className="relative group transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] flex-1 hover:flex-[4] rounded-[24px] sm:rounded-[32px] overflow-hidden h-full cursor-pointer shadow-sm hover:shadow-xl"
                 >
-                  <img
+                  <img referrerPolicy="no-referrer"
                     className="h-full w-full object-cover object-center"
                     src={img.url}
                     alt={img.alt || `Gallery Image ${idx + 1}`}
@@ -463,7 +463,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                   key={img._id || idx}
                   className="relative group rounded-[24px] sm:rounded-[32px] overflow-hidden w-full aspect-square md:aspect-[3/4] cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300"
                 >
-                  <img
+                  <img referrerPolicy="no-referrer"
                     src={img.url}
                     alt={img.alt || `Gallery Image ${idx + 1}`}
                     className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700"
@@ -490,7 +490,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                 if (displayGallery.length === 1) {
                   return (
                     <div key={img._id || idx} className="relative bg-white p-2 sm:p-3 rounded-xl shadow-xl z-20 hover:scale-105 transition-transform duration-300 cursor-pointer">
-                      <img referrerPolicy="no-referrer" src={img.url} alt={img.alt} className="w-48 h-56 sm:w-64 sm:h-80 object-cover rounded-lg" />
+                      <img referrerPolicy="no-referrer"  src={img.url} alt={img.alt} className="w-48 h-56 sm:w-64 sm:h-80 object-cover rounded-lg" />
                     </div>
                   );
                 }
@@ -499,7 +499,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                    const transforms = isLeft ? "-rotate-3 -mr-6 sm:-mr-8 z-10" : "rotate-3 -ml-6 sm:-ml-8 z-20";
                    return (
                     <div key={img._id || idx} className={`relative bg-white p-2 sm:p-3 rounded-xl shadow-xl transition-all duration-500 hover:z-30 hover:scale-105 hover:rotate-0 cursor-pointer ${transforms}`}>
-                      <img referrerPolicy="no-referrer" src={img.url} alt={img.alt} className="w-40 h-48 sm:w-56 sm:h-72 object-cover rounded-lg" />
+                      <img referrerPolicy="no-referrer"  src={img.url} alt={img.alt} className="w-40 h-48 sm:w-56 sm:h-72 object-cover rounded-lg" />
                     </div>
                   );
                 }
@@ -514,7 +514,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                     key={img._id || idx}
                     className={`relative bg-white p-2 sm:p-3 rounded-xl shadow-lg hover:z-30 hover:scale-110 hover:rotate-0 transition-all duration-300 cursor-pointer ${transforms}`}
                   >
-                    <img
+                    <img referrerPolicy="no-referrer"
                       src={img.url}
                       alt={img.alt}
                       className="w-32 h-40 sm:w-56 sm:h-72 object-cover rounded-lg"

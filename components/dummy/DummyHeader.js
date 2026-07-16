@@ -15,7 +15,7 @@ export default function DummyHeader({ restaurant }) {
       <Link href={`/dummy?number=${restaurant.phone}`} className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 mr-2">
         <div className="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden shrink-0">
           {restaurant.logoImage ? (
-            <img referrerPolicy="no-referrer" src={restaurant.logoImage} alt={restaurant.name} className="w-full h-full object-cover" />
+            <img referrerPolicy="no-referrer"  src={restaurant.logoImage} alt={restaurant.name} className="w-full h-full object-cover" />
           ) : (
             <MaterialIcon name="restaurant_menu" className="text-primary text-[18px]" />
           )}
@@ -56,9 +56,9 @@ export default function DummyHeader({ restaurant }) {
             {isAdmin ? (
               <MaterialIcon name="admin_panel_settings" className="text-[18px]" />
             ) : user.photo ? (
-              <img referrerPolicy="no-referrer" src={user.photo} alt={user.name} className="w-full h-full object-cover" />
+              <img referrerPolicy="no-referrer"  src={user.photo} alt={user.name} className="w-full h-full object-cover" />
             ) : (
-              <img
+              <img referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
                 alt={user.name}
                 src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=random`}

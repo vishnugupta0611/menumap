@@ -72,7 +72,7 @@ export default function DummyMenuList({ restaurant, menu, offers = [] }) {
       <main className="pt-4 md:pt-8 px-5 md:px-8 max-w-3xl mx-auto">
         {settings.showBanner && restaurant.heroImage && (
           <section className="mb-8 md:mb-10 rounded-[32px] overflow-hidden h-56 md:h-72 shadow-[0_8px_30px_rgba(0,0,0,0.06)] relative group">
-             <img referrerPolicy="no-referrer" src={restaurant.heroImage} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+             <img referrerPolicy="no-referrer"  src={restaurant.heroImage} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
           </section>
         )}
@@ -294,7 +294,7 @@ export default function DummyMenuList({ restaurant, menu, offers = [] }) {
                             "w-28 h-28 md:w-36 md:h-36 rounded-2xl md:rounded-[24px]"
                           }`}>
                             {item.image ? (
-                              <img referrerPolicy="no-referrer" alt={item.name} className="w-full h-full object-cover" src={item.image} />
+                              <img referrerPolicy="no-referrer"  alt={item.name} className="w-full h-full object-cover" src={item.image} />
                             ) : (
                               <MaterialIcon name="restaurant" className="text-on-surface-variant/30 text-4xl h-full flex items-center justify-center" />
                             )}
