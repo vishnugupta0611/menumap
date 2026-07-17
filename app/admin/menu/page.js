@@ -22,6 +22,7 @@ export default function ManageMenuPage() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categoryFormName, setCategoryFormName] = useState("");
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
   const [editDish, setEditDish] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -102,6 +103,7 @@ export default function ManageMenuPage() {
     setEditDish(null);
     setFormData({ name: "", price: "", categoryId: categories[0]?._id || "", description: "", veg: true });
     setImageBase64("");
+    setShowDescription(false);
     setShowModal(true);
   };
 
@@ -109,6 +111,7 @@ export default function ManageMenuPage() {
     setEditDish(dish);
     setFormData({ name: dish.name, price: dish.price, categoryId: dish.categoryId || categories[0]?._id || "", description: dish.description || "", veg: dish.veg !== undefined ? dish.veg : true });
     setImageBase64("");
+    setShowDescription(!!dish.description);
     setShowModal(true);
   };
 
@@ -288,7 +291,7 @@ export default function ManageMenuPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
           <div className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full border border-surface-container shadow-2xl animate-reveal max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg text-on-surface flex items-center gap-2">
+              <h3 className="font-bold text-base text-on-surface flex items-center gap-2">
                 <MaterialIcon name={editDish ? "edit" : "add"} className="text-primary" />
                 {editDish ? "Edit Menu Item" : "Add Menu Item"}
               </h3>
@@ -368,35 +371,44 @@ export default function ManageMenuPage() {
                     </>
                   )}
                 </div>
-                <div className="flex flex-col justify-end pb-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="veg-checkbox"
-                      checked={formData.veg}
-                      onChange={(e) => setFormData({ ...formData, veg: e.target.checked })}
-                      className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary"
-                    />
-                    <label htmlFor="veg-checkbox" className="text-sm font-bold text-on-surface flex items-center gap-1 cursor-pointer">
-                      <span className={`w-4 h-4 rounded-full border-2 p-[2px] flex items-center justify-center ${formData.veg ? 'border-green-600' : 'border-red-600'}`}>
-                        <span className={`w-2 h-2 rounded-full ${formData.veg ? 'bg-green-600' : 'bg-red-600'}`}></span>
-                      </span>
-                      {formData.veg ? 'Veg' : 'Non-Veg'}
-                    </label>
+                <div className="flex flex-col justify-end">
+                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Type</label>
+                  <div className="relative">
+                    <select
+                      value={formData.veg ? "veg" : "non-veg"}
+                      onChange={(e) => setFormData({ ...formData, veg: e.target.value === "veg" })}
+                      className="w-full h-10 px-3 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md appearance-none cursor-pointer"
+                    >
+                      <option value="veg">Veg</option>
+                      <option value="non-veg">Non-Veg</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-on-surface-variant">
+                      <MaterialIcon name="expand_more" />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-1">Description</label>
-                <textarea
-                  className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md resize-none"
-                  rows="2"
-                  placeholder="Brief description of the item"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
+              {!showDescription ? (
+                <button 
+                  type="button" 
+                  onClick={() => setShowDescription(true)}
+                  className="text-primary text-sm font-bold hover:underline bg-transparent border-none cursor-pointer flex items-center gap-1 p-0"
+                >
+                  <MaterialIcon name="add" className="text-[16px]" /> Add Description
+                </button>
+              ) : (
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Description</label>
+                  <textarea
+                    className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-md resize-none"
+                    rows="2"
+                    placeholder="Brief description of the item"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant mb-1">Item Image</label>
