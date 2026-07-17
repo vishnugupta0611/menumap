@@ -292,14 +292,24 @@ export default function ManageMenuPage() {
                 <MaterialIcon name={editDish ? "edit" : "add"} className="text-primary" />
                 {editDish ? "Edit Menu Item" : "Add Menu Item"}
               </h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="material-symbols-outlined text-on-surface-variant bg-transparent border-none hover:scale-110 cursor-pointer"
-              >
-                close
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  form="item-form"
+                  disabled={isUploading}
+                  className="px-4 py-1.5 bg-primary text-white rounded-full font-bold text-sm cursor-pointer hover:bg-primary/90 transition-all border-none outline-none disabled:opacity-50"
+                >
+                  {isUploading ? "..." : "Save"}
+                </button>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="material-symbols-outlined text-on-surface-variant bg-transparent border-none hover:scale-110 cursor-pointer"
+                >
+                  close
+                </button>
+              </div>
             </div>
-            <form onSubmit={handleSaveItem} className="space-y-3">
+            <form id="item-form" onSubmit={handleSaveItem} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-on-surface-variant mb-1">Item Name</label>
@@ -402,13 +412,6 @@ export default function ManageMenuPage() {
                   </div>
                 )}
               </div>
-              <button
-                type="submit"
-                disabled={isUploading}
-                className="w-full py-4 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all border-none outline-none mt-6 disabled:opacity-50"
-              >
-                {isUploading ? "Uploading..." : "Save Menu Item"}
-              </button>
             </form>
           </div>
         </div>
