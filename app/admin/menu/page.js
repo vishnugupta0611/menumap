@@ -468,16 +468,16 @@ export default function ManageMenuPage() {
                   <button 
                     type="button"
                     onClick={() => document.getElementById('image-upload').click()}
-                    className="flex-1 py-2 px-3 rounded-xl border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low transition-colors text-sm font-bold flex items-center justify-center gap-2 text-on-surface cursor-pointer"
+                    className="flex-1 py-2 px-2 rounded-xl border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low transition-colors text-[10px] sm:text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-on-surface cursor-pointer"
                   >
-                    <MaterialIcon name="upload" className="text-[18px]" /> Upload Image
+                    <MaterialIcon name="upload" className="text-[16px]" /> Upload Image
                   </button>
                   <button 
                     type="button"
                     onClick={openGallery}
-                    className="flex-1 py-2 px-3 rounded-xl border border-transparent bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-bold flex items-center justify-center gap-2 text-primary cursor-pointer"
+                    className="flex-1 py-2 px-2 rounded-xl border border-transparent bg-primary/10 hover:bg-primary/20 transition-colors text-[10px] sm:text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-primary cursor-pointer"
                   >
-                    <MaterialIcon name="imagesmode" className="text-[18px]" /> Choose from Gallery
+                    <MaterialIcon name="imagesmode" className="text-[16px]" /> Choose from Gallery
                   </button>
                 </div>
                 <input
@@ -488,7 +488,7 @@ export default function ManageMenuPage() {
                   className="hidden"
                 />
                 {(imageBase64 || editDish?.image) && (
-                  <div className="mt-2 w-full h-32 rounded-lg overflow-hidden border border-outline-variant relative group">
+                  <div className="mt-2 w-full h-40 rounded-lg overflow-hidden border border-outline-variant relative group">
                     <img src={imageBase64 || editDish.image} alt="Preview" className="w-full h-full object-cover" />
                     <button type="button" onClick={() => setImageBase64("")} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-error transition-colors cursor-pointer opacity-0 group-hover:opacity-100">
                       <MaterialIcon name="close" />
@@ -540,7 +540,7 @@ export default function ManageMenuPage() {
       {showGallery && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setShowGallery(false)}>
           <div 
-            className="w-full h-[80vh] bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] animate-slide-up flex flex-col overflow-hidden"
+            className="w-full h-[70vh] bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] animate-slide-up flex flex-col overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-4 md:p-6 border-b border-outline-variant/30 flex flex-col gap-4 bg-surface-container-lowest shrink-0">
