@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MdDragIndicator, MdEdit, MdAddCircle } from "react-icons/md";
+import { MdDragIndicator, MdEdit, MdAddCircle, MdDelete } from "react-icons/md";
 
 export default function CategorySection({ title, itemCount, children, showHeader = true }) {
   if (!showHeader) {
