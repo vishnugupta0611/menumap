@@ -23,26 +23,35 @@ export default function MenuItemCard({ dish, onToggleAvailability, onEdit, onDel
 
   return (
     <div className={cn(
-      "bg-white rounded-2xl overflow-hidden shadow-sm border border-outline-variant/30 hover:shadow-md transition-all duration-300 flex flex-col",
-      !available && "opacity-75 grayscale-[50%]"
+      "bg-white rounded-2xl overflow-hidden shadow-sm border border-outline-variant/30 hover:shadow-md transition-all duration-300 flex flex-col h-full relative",
+      !available && "opacity-80 grayscale-[40%]"
     )}>
       {/* Image Container */}
-      <div className="w-full aspect-square relative bg-surface-container-lowest">
+      <div className="w-full aspect-square relative bg-surface-container-lowest shrink-0">
         <img
           src={dish.image || "https://placehold.co/400x400?text=No+Image"}
           alt={dish.name}
           className="w-full h-full object-cover"
         />
         
-        {/* Availability Toggle Overlay */}
+        {/* Delete Button Overlay (Top Left) */}
+        <button 
+          onClick={() => onDelete?.(dish.id || dish._id)} 
+          className="absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 text-white/90 hover:bg-error/90 hover:text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer shadow-sm z-10"
+          title="Delete Item"
+        >
+          <MdDelete className="text-lg" />
+        </button>
+        
+        {/* Availability Toggle Overlay (Top Right) */}
         <button 
           onClick={handleToggle}
           disabled={loading}
           className={cn(
-            "absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md border transition-all cursor-pointer shadow-sm",
+            "absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md border transition-all cursor-pointer shadow-sm z-10",
             available 
-              ? "bg-white/80 border-green-500/30 text-green-600 hover:bg-white" 
-              : "bg-black/50 border-white/20 text-white hover:bg-black/70"
+              ? "bg-white/90 border-green-500/30 text-green-600 hover:bg-white" 
+              : "bg-black/60 border-white/20 text-white hover:bg-black/80"
           )}
           title={available ? "Mark as Unavailable" : "Mark as Available"}
         >
@@ -54,54 +63,41 @@ export default function MenuItemCard({ dish, onToggleAvailability, onEdit, onDel
         </button>
 
         {!available && (
-          <div className="absolute top-2 left-2 bg-error/90 text-white px-2 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider shadow-sm backdrop-blur-sm">
-            Sold Out
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
+            <span className="bg-error/90 text-white px-3 py-1 rounded-full font-bold text-[11px] uppercase tracking-wider shadow-md backdrop-blur-sm">
+              Sold Out
+            </span>
           </div>
         )}
-      </div>
 
-      {/* Content Container */}
-      <div className="p-3 flex flex-col flex-1">
-        {/* Title and Veg/Non-veg */}
-        <div className="flex items-start gap-2 mb-1">
+        {/* Title Overlay at the bottom of the image */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 pt-12 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-end gap-2">
           <span className={cn(
-            "mt-1 w-3 h-3 flex-shrink-0 rounded-[3px] border p-[1.5px] flex items-center justify-center bg-white",
-            dish.veg ? "border-green-600" : "border-red-600"
+            "w-3.5 h-3.5 flex-shrink-0 rounded-[3px] border-2 p-[2px] flex items-center justify-center bg-white/10 backdrop-blur-sm border-white",
+            dish.veg ? "border-green-400" : "border-red-400"
           )}>
-            <span className={cn("w-full h-full rounded-full", dish.veg ? "bg-green-600" : "bg-red-600")}></span>
+            <span className={cn("w-full h-full rounded-full", dish.veg ? "bg-green-500" : "bg-red-500")}></span>
           </span>
-          <h3 className="font-bold text-on-surface text-[15px] leading-tight line-clamp-2">
+          <h3 className="font-bold text-white text-[15px] leading-tight line-clamp-2 drop-shadow-md">
             {dish.name}
           </h3>
         </div>
+      </div>
 
-        {/* Spacer to push bottom row down if title is short */}
-        <div className="flex-1"></div>
-
-        {/* Bottom Row: Price & Actions */}
-        <div className="flex justify-between items-end mt-3 pt-2 border-t border-outline-variant/20">
-          <div className="flex flex-col leading-tight">
-            <span className="text-[#9A3412] font-bold text-[13px]">Rs</span>
-            <span className="text-[#9A3412] font-bold text-lg">{dish.price}</span>
-          </div>
-          
-          <div className="flex gap-1">
-            <button 
-              onClick={() => onEdit?.(dish)} 
-              className="w-8 h-8 flex items-center justify-center rounded-xl bg-surface-container-lowest text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer border border-outline-variant/30"
-              title="Edit Item"
-            >
-              <MdEdit className="text-[16px]" />
-            </button>
-            <button 
-              onClick={() => onDelete?.(dish.id || dish._id)} 
-              className="w-8 h-8 flex items-center justify-center rounded-xl bg-surface-container-lowest text-error/80 hover:bg-error/10 hover:text-error transition-colors cursor-pointer border border-error/20"
-              title="Delete Item"
-            >
-              <MdDelete className="text-[16px]" />
-            </button>
-          </div>
+      {/* Content Container (Bottom row for Price and Edit) */}
+      <div className="p-3 flex items-center justify-between flex-1 bg-white">
+        <div className="flex flex-col leading-tight">
+          <span className="text-[#9A3412] font-semibold text-[11px]">Rs</span>
+          <span className="text-[#9A3412] font-bold text-[15px]">{dish.price}</span>
         </div>
+        
+        <button 
+          onClick={() => onEdit?.(dish)} 
+          className="w-8 h-8 flex items-center justify-center rounded-xl bg-surface-container-lowest text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer border border-outline-variant/30"
+          title="Edit Item"
+        >
+          <MdEdit className="text-[16px]" />
+        </button>
       </div>
     </div>
   );
