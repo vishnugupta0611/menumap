@@ -540,7 +540,7 @@ export default function ManageMenuPage() {
       {showGallery && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setShowGallery(false)}>
           <div 
-            className="w-full h-[70vh] bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] animate-slide-up flex flex-col overflow-hidden"
+            className="w-full h-[90vh] bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] animate-slide-up flex flex-col overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-4 md:p-6 border-b border-outline-variant/30 flex flex-col gap-4 bg-surface-container-lowest shrink-0">
