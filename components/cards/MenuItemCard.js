@@ -27,11 +27,11 @@ export default function MenuItemCard({ dish, onToggleAvailability, onEdit, onDel
       !available && "opacity-80 grayscale-[40%]"
     )}>
       {/* Image Container */}
-      <div className="w-full aspect-square relative bg-surface-container-lowest shrink-0">
+      <div className="w-full aspect-square relative bg-surface-container-lowest shrink-0 overflow-hidden">
         <img
           src={dish.image || "https://placehold.co/400x400?text=No+Image"}
           alt={dish.name}
-          className="w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover"
         />
         
         {/* Delete Button Overlay (Top Left) */}
