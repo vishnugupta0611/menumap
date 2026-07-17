@@ -7,20 +7,7 @@ import { uploadImageAction } from "@/app/actions/upload";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 
-const IMAGE_LIBRARY = [
-  { id: 1, url: 'https://images.unsplash.com/photo-1589302168068-96516f1964f5?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'indian thali curry traditional desi food' },
-  { id: 2, url: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'dosa idli south indian chutney sambar' },
-  { id: 3, url: 'https://images.unsplash.com/photo-1606491956689-2ea866880c8e?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'paneer curry gravy spicy masala' },
-  { id: 4, url: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'paratha aloo bread punjabi breakfast' },
-  { id: 5, url: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1600&auto=format&fit=crop', category: 'Restaurant', tags: 'restaurant interior dining table fine' },
-  { id: 6, url: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1600&auto=format&fit=crop', category: 'Restaurant', tags: 'bar lounge restro pub drink alcohol' },
-  { id: 7, url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1600&auto=format&fit=crop', category: 'Fast Food', tags: 'burger fries fast food american' },
-  { id: 8, url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1600&auto=format&fit=crop', category: 'Fast Food', tags: 'pizza italian cheese slice' },
-  { id: 9, url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1600&auto=format&fit=crop', category: 'Cafe', tags: 'cafe coffee espresso pastry breakfast' },
-  { id: 10, url: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1600&auto=format&fit=crop', category: 'Cafe', tags: 'coffee latte cup table mug' },
-  { id: 11, url: 'https://images.unsplash.com/photo-1495195134817-a165b63bc2e9?q=80&w=1600&auto=format&fit=crop', category: 'Abstract', tags: 'simple abstract ingredients dark moody' },
-  { id: 12, url: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=1600&auto=format&fit=crop', category: 'Abstract', tags: 'simple minimal table setting light' },
-];
+import GlobalImageLibrary from "@/components/modals/GlobalImageLibrary";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -55,8 +42,6 @@ export default function SettingsPage() {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   
   const [showImageLibrary, setShowImageLibrary] = useState(false);
-  const [imageSearchQuery, setImageSearchQuery] = useState("");
-  const [activeImageCategory, setActiveImageCategory] = useState("All");
 
   useEffect(() => {
     async function loadSettings() {
@@ -581,96 +566,15 @@ export default function SettingsPage() {
         </button>
       </div>
 
-      {/* Image Library Modal */}
-      {showImageLibrary && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowImageLibrary(false)}></div>
-          <div className="relative bg-surface-container-lowest w-full max-w-4xl max-h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-reveal">
-            
-            {/* Header */}
-            <div className="p-6 border-b border-surface-container flex items-center justify-between bg-white z-10 shrink-0">
-              <h2 className="text-2xl font-bold text-on-surface flex items-center gap-2">
-                <MaterialIcon name="photo_library" className="text-primary" />
-                Image Library
-              </h2>
-              <button 
-                onClick={() => setShowImageLibrary(false)}
-                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-variant/50 transition-colors text-on-surface-variant"
-              >
-                <MaterialIcon name="close" className="text-2xl" />
-              </button>
-            </div>
-
-            {/* Filters */}
-            <div className="p-6 border-b border-surface-container bg-surface-container-lowest/50 shrink-0">
-              <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                <div className="relative flex-1">
-                  <MaterialIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" />
-                  <input 
-                    type="text" 
-                    placeholder="Search e.g. idli, burger, fine dining..." 
-                    className="w-full h-12 pl-12 pr-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm font-body-md"
-                    value={imageSearchQuery}
-                    onChange={(e) => setImageSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
-                {['All', 'Indian', 'Fast Food', 'Restaurant', 'Cafe', 'Abstract'].map(cat => (
-                  <button 
-                    key={cat}
-                    onClick={() => setActiveImageCategory(cat)}
-                    className={`px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-colors border ${activeImageCategory === cat ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-on-surface border-outline-variant hover:bg-surface-container-low'}`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Image Grid */}
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-surface-container-lowest">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {IMAGE_LIBRARY.filter(img => {
-                  const matchCat = activeImageCategory === 'All' || img.category === activeImageCategory;
-                  const matchSearch = !imageSearchQuery || img.tags.toLowerCase().includes(imageSearchQuery.toLowerCase());
-                  return matchCat && matchSearch;
-                }).map(img => (
-                  <div 
-                    key={img.id} 
-                    className="relative group rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer shadow-sm border border-outline-variant/30 hover:shadow-lg transition-all"
-                    onClick={() => {
-                      setHeroImage(img.url);
-                      setShowImageLibrary(false);
-                    }}
-                  >
-                    <img src={img.url} alt={img.tags} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                      <div className="bg-white text-on-surface px-4 py-2 rounded-full font-bold text-sm transform scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all shadow-lg flex items-center gap-2">
-                        <MaterialIcon name="check_circle" className="text-primary text-[18px]" />
-                        Select
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {IMAGE_LIBRARY.filter(img => {
-                  const matchCat = activeImageCategory === 'All' || img.category === activeImageCategory;
-                  const matchSearch = !imageSearchQuery || img.tags.toLowerCase().includes(imageSearchQuery.toLowerCase());
-                  return matchCat && matchSearch;
-                }).length === 0 && (
-                  <div className="col-span-full py-16 flex flex-col items-center justify-center text-on-surface-variant">
-                    <MaterialIcon name="search_off" className="text-5xl mb-4 opacity-50" />
-                    <p className="font-bold">No images found for "{imageSearchQuery}"</p>
-                    <p className="text-sm mt-1">Try a different category or keyword.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Global Image Library */}
+      <GlobalImageLibrary 
+        isOpen={showImageLibrary}
+        onClose={() => setShowImageLibrary(false)}
+        onSelectImage={(url) => {
+          setHeroImage(url);
+          setShowImageLibrary(false);
+        }}
+      />
     </div>
   );
 }
