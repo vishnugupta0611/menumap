@@ -295,6 +295,15 @@ export default function ManageMenuPage() {
                 <MaterialIcon name={editDish ? "edit" : "add"} className="text-primary" />
               </h3>
               <div className="flex items-center gap-3">
+                {!showDescription && (
+                  <button 
+                    type="button" 
+                    onClick={() => setShowDescription(true)}
+                    className="text-primary text-sm font-bold hover:underline bg-transparent border-none cursor-pointer flex items-center gap-1 p-0 mr-2"
+                  >
+                    <MaterialIcon name="add" className="text-[16px]" /> Add Description
+                  </button>
+                )}
                 <button
                   type="submit"
                   form="item-form"
@@ -388,15 +397,7 @@ export default function ManageMenuPage() {
                 </div>
               </div>
 
-              {!showDescription ? (
-                <button 
-                  type="button" 
-                  onClick={() => setShowDescription(true)}
-                  className="text-primary text-sm font-bold hover:underline bg-transparent border-none cursor-pointer flex items-center gap-1 p-0"
-                >
-                  <MaterialIcon name="add" className="text-[16px]" /> Add Description
-                </button>
-              ) : (
+              {showDescription && (
                 <div>
                   <label className="block text-xs font-bold text-on-surface-variant mb-1">Description</label>
                   <textarea
