@@ -109,6 +109,19 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function checkAccountStatus(email) {
+    try {
+      const { data } = await api.get('/api/auth/account-status', {
+        params: { email },
+      });
+      return data;
+    } catch (error) {
+      const message = error.response?.data?.error || 'Could not verify account status';
+      toast.error(message);
+      throw new Error(message);
+    }
+  }
+
   async function registerCustomer(userData) {
     try {
       authMutationVersion.current += 1;
@@ -169,6 +182,7 @@ export function AuthProvider({ children }) {
         loginWithVerifiedEmail,
         registerOwner,
         registerCustomer,
+        checkAccountStatus,
         logout,
         checkAuth,
         updateProfile,

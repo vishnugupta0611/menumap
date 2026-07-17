@@ -8,7 +8,7 @@ import { useSignUp, useClerk } from "@clerk/nextjs";
 
 export default function CustomerRegisterPage() {
   const router = useRouter();
-  const { registerCustomer } = useAuth();
+  const { registerCustomer, checkAccountStatus } = useAuth();
   
   // Clerk Hooks
   const { isLoaded: isSignUpLoaded, signUp, setActive } = useSignUp();
@@ -84,6 +84,16 @@ export default function CustomerRegisterPage() {
     setError("");
     
     try {
+      const status = await checkAccountStatus(emailAddress);
+      if (status.exists || status.clerkExists) {
+        setError(
+          status.role === "owner"
+            ? "This email is already registered as a restaurant account. Please use another email."
+            : "Account already exists. Please login instead."
+        );
+        return;
+      }
+
       await signUp.create({
         emailAddress,
         password,
