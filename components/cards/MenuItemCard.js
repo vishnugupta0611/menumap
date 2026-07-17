@@ -85,15 +85,15 @@ export default function MenuItemCard({ dish, onToggleAvailability, onEdit, onDel
       </div>
 
       {/* Content Container (Bottom row for Price and Edit) */}
-      <div className="p-3 flex items-center justify-between flex-1 bg-white">
-        <div className="flex flex-col leading-tight">
+      <div className="p-3 flex items-center justify-between flex-1 bg-white min-w-0">
+        <div className="flex flex-col leading-tight min-w-0 pr-2">
           <span className="text-[#9A3412] font-semibold text-[11px]">Rs</span>
-          <span className="text-[#9A3412] font-bold text-[15px]">{dish.price}</span>
+          <span className="text-[#9A3412] font-bold text-[15px] truncate">{dish.price}</span>
         </div>
         
         <button 
           onClick={() => onEdit?.(dish)} 
-          className="w-8 h-8 flex items-center justify-center rounded-xl bg-surface-container-lowest text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer border border-outline-variant/30"
+          className="w-8 h-8 flex items-center justify-center rounded-xl bg-surface-container-lowest text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer border border-outline-variant/30 shrink-0"
           title="Edit Item"
         >
           <MdEdit className="text-[16px]" />
