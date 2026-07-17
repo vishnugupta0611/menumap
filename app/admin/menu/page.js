@@ -299,9 +299,9 @@ export default function ManageMenuPage() {
                   <button 
                     type="button" 
                     onClick={() => setShowDescription(true)}
-                    className="text-primary text-sm font-bold hover:underline bg-transparent border-none cursor-pointer flex items-center gap-1 p-0 mr-2"
+                    className="text-primary text-[11px] sm:text-xs font-bold hover:underline bg-transparent border-none cursor-pointer flex items-center gap-0.5 p-0 mr-1 sm:mr-2 whitespace-nowrap"
                   >
-                    <MaterialIcon name="add" className="text-[16px]" /> Add Description
+                    <MaterialIcon name="add" className="text-[14px]" /> Add Desc
                   </button>
                 )}
                 <button
