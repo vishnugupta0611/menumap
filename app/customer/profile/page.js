@@ -10,7 +10,7 @@ import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { socket } from "@/lib/socket";
 
 export default function CustomerProfilePage() {
-  const { user, loading, updateProfile, logout } = useAuth();
+  const { user, loading, updateProfile, logout, deleteAccount } = useAuth();
   const router = useRouter();
 
   const [name, setName] = useState("");
@@ -305,6 +305,31 @@ export default function CustomerProfilePage() {
           )}
         </div>
 
+        {/* Danger Zone */}
+        <div className="bg-error-container/10 p-6 rounded-3xl border border-error-container/30 shadow-sm">
+          <h2 className="text-lg font-bold text-error mb-2 flex items-center gap-2">
+            <MaterialIcon name="warning" className="text-error" />
+            Danger Zone
+          </h2>
+          <p className="text-sm text-on-surface-variant mb-6">
+            Once you delete your account, there is no going back. Please be certain.
+          </p>
+          <button
+            onClick={async () => {
+              if (window.confirm("Are you sure you want to permanently delete your account? This action cannot be undone.")) {
+                try {
+                  await deleteAccount();
+                  router.push("/");
+                } catch (err) {
+                  console.error(err);
+                }
+              }
+            }}
+            className="px-6 py-3 bg-error text-on-error rounded-xl font-bold hover:bg-error/90 transition-colors"
+          >
+            Delete Account
+          </button>
+        </div>
       </div>
     </div>
   );

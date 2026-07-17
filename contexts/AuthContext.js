@@ -170,6 +170,26 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function deleteAccount() {
+    try {
+      authMutationVersion.current += 1;
+      await api.delete('/api/auth/me');
+      
+      if (typeof window !== 'undefined' && window.Clerk) {
+        await window.Clerk.signOut().catch(() => {});
+      }
+
+      setUser(null);
+      setRestaurant(null);
+      setError(null);
+      toast.success('Account deleted successfully');
+    } catch (error) {
+      const message = error.response?.data?.error || 'Failed to delete account';
+      toast.error(message);
+      throw new Error(message);
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -186,6 +206,7 @@ export function AuthProvider({ children }) {
         logout,
         checkAuth,
         updateProfile,
+        deleteAccount,
       }}
     >
       {children}
