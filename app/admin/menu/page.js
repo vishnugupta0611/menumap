@@ -293,7 +293,6 @@ export default function ManageMenuPage() {
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-bold text-base text-on-surface flex items-center gap-2">
                 <MaterialIcon name={editDish ? "edit" : "add"} className="text-primary" />
-                {editDish ? "Edit Menu Item" : "Add Menu Item"}
               </h3>
               <div className="flex items-center gap-3">
                 <button
