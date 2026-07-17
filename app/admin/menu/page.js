@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Fuse from "fuse.js";
-import { galleryData } from "@/lib/galleryData";
+import { useEffect, useState } from "react";
+import GlobalImageLibrary from "@/components/modals/GlobalImageLibrary";
 import SearchBar from "@/components/forms/SearchBar";
 import Button from "@/components/buttons/Button";
 import MenuItemCard from "@/components/cards/MenuItemCard";
@@ -37,43 +36,8 @@ export default function ManageMenuPage() {
   const [isUploading, setIsUploading] = useState(false);
 
   const [showGallery, setShowGallery] = useState(false);
-  const [galleryQuery, setGalleryQuery] = useState("");
-  const [galleryResults, setGalleryResults] = useState([]);
-  const [selectedGalleryCategory, setSelectedGalleryCategory] = useState(null);
-
-  const fuse = useMemo(() => new Fuse(galleryData, {
-    keys: ['termName'],
-    threshold: 0.6,
-    ignoreLocation: true,
-    includeScore: true
-  }), []);
-
-  const defaultGalleryImages = useMemo(() => {
-    const allImgs = [];
-    galleryData.forEach(cat => cat.imageUrls.forEach(url => allImgs.push({ term: cat.termName, url })));
-    return allImgs.sort(() => 0.5 - Math.random()).slice(0, 12);
-  }, []);
-
-  const handleGallerySearch = (query) => {
-    setGalleryQuery(query);
-    if (!query.trim()) {
-      setGalleryResults([]);
-      setSelectedGalleryCategory(null);
-      return;
-    }
-    const results = fuse.search(query).map(r => r.item);
-    setGalleryResults(results);
-    if (results.length > 0) {
-      setSelectedGalleryCategory(results[0]);
-    }
-  };
 
   const openGallery = () => {
-    if (formData.name) {
-      handleGallerySearch(formData.name);
-    } else {
-      handleGallerySearch("");
-    }
     setShowGallery(true);
   };
   
@@ -537,86 +501,13 @@ export default function ManageMenuPage() {
           </div>
         </div>
       )}
-      {showGallery && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setShowGallery(false)}>
-          <div 
-            className="w-full h-[90vh] bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] animate-slide-up flex flex-col overflow-hidden"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="p-4 md:p-6 border-b border-outline-variant/30 flex flex-col gap-4 bg-surface-container-lowest shrink-0">
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-xl text-on-surface flex items-center gap-2">
-                  <MaterialIcon name="image_search" className="text-primary" /> Inspiration Gallery
-                </h3>
-                <button
-                  onClick={() => setShowGallery(false)}
-                  className="material-symbols-outlined text-on-surface-variant bg-transparent border-none hover:scale-110 cursor-pointer"
-                >
-                  close
-                </button>
-              </div>
-              <div className="relative">
-                <MaterialIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-                <input 
-                  type="text" 
-                  placeholder="Search for burger, pizza, momos..."
-                  className="w-full h-12 pl-12 pr-4 rounded-full border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary text-body-lg shadow-sm"
-                  value={galleryQuery}
-                  onChange={e => handleGallerySearch(e.target.value)}
-                />
-              </div>
-              
-              {galleryResults.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                  {galleryResults.slice(0, 8).map((match, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedGalleryCategory(match)}
-                      className={`px-4 py-2 rounded-full border text-sm font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${selectedGalleryCategory?.termName === match.termName ? "bg-primary text-white border-primary" : "bg-surface-container-lowest text-on-surface hover:bg-surface-container-low border-outline-variant"}`}
-                    >
-                      <MaterialIcon name="search" className="text-[16px]" /> {match.termName}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
 
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-surface-container-lowest custom-scrollbar">
-              {!galleryQuery && !selectedGalleryCategory && (
-                <div className="mb-4 text-on-surface-variant font-medium">Daily Inspiration</div>
-              )}
-              {selectedGalleryCategory && (
-                <div className="mb-4 text-on-surface-variant font-medium">Results for &quot;{selectedGalleryCategory.termName}&quot;</div>
-              )}
-
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-                {(selectedGalleryCategory 
-                  ? selectedGalleryCategory.imageUrls.map(url => ({ term: selectedGalleryCategory.termName, url }))
-                  : defaultGalleryImages
-                ).map((img, idx) => (
-                  <div 
-                    key={idx} 
-                    className="relative aspect-[4/3] rounded-2xl overflow-hidden group cursor-pointer border border-outline-variant/30 shadow-sm hover:shadow-md transition-all hover:-translate-y-1"
-                    onClick={() => handleSelectGalleryImage(img.url)}
-                  >
-                    <img src={img.url} alt={img.term} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="text-white text-xs font-bold truncate">{img.term}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {galleryQuery && galleryResults.length === 0 && (
-                <div className="text-center py-10 text-on-surface-variant flex flex-col items-center">
-                  <MaterialIcon name="image_not_supported" className="text-4xl mb-2 opacity-50" />
-                  <p>No images found for &quot;{galleryQuery}&quot;</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <GlobalImageLibrary 
+        isOpen={showGallery} 
+        onClose={() => setShowGallery(false)} 
+        onSelectImage={handleSelectGalleryImage}
+        defaultQuery={formData.name}
+      />
     </>
   );
 }

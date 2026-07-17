@@ -2,23 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import GlobalImageLibrary from "@/components/modals/GlobalImageLibrary";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { useAuth } from "@/contexts/AuthContext";
-
-const IMAGE_LIBRARY = [
-  { id: 1, url: 'https://images.unsplash.com/photo-1589302168068-96516f1964f5?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'indian thali curry traditional desi food' },
-  { id: 2, url: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'dosa idli south indian chutney sambar' },
-  { id: 3, url: 'https://images.unsplash.com/photo-1606491956689-2ea866880c8e?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'paneer curry gravy spicy masala' },
-  { id: 4, url: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=1600&auto=format&fit=crop', category: 'Indian', tags: 'paratha aloo bread punjabi breakfast' },
-  { id: 5, url: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1600&auto=format&fit=crop', category: 'Restaurant', tags: 'restaurant interior dining table fine' },
-  { id: 6, url: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1600&auto=format&fit=crop', category: 'Restaurant', tags: 'bar lounge restro pub drink alcohol' },
-  { id: 7, url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1600&auto=format&fit=crop', category: 'Fast Food', tags: 'burger fries fast food american' },
-  { id: 8, url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1600&auto=format&fit=crop', category: 'Fast Food', tags: 'pizza italian cheese slice' },
-  { id: 9, url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1600&auto=format&fit=crop', category: 'Cafe', tags: 'cafe coffee espresso pastry breakfast' },
-  { id: 10, url: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1600&auto=format&fit=crop', category: 'Cafe', tags: 'coffee latte cup table mug' },
-  { id: 11, url: 'https://images.unsplash.com/photo-1495195134817-a165b63bc2e9?q=80&w=1600&auto=format&fit=crop', category: 'Abstract', tags: 'simple abstract ingredients dark moody' },
-  { id: 12, url: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=1600&auto=format&fit=crop', category: 'Abstract', tags: 'simple minimal table setting light' },
-];
 
 export default function GalleryPage() {
   const { user } = useAuth();
@@ -35,10 +21,6 @@ export default function GalleryPage() {
   
   // Library State for general pool
   const [showLibrary, setShowLibrary] = useState(false);
-  const [libraryTab, setLibraryTab] = useState("my-images");
-  const [myImages, setMyImages] = useState([]);
-  const [imageSearchQuery, setImageSearchQuery] = useState("");
-  const [activeImageCategory, setActiveImageCategory] = useState("All");
 
   // Selection Modal State
   const [showSelectionModal, setShowSelectionModal] = useState(false);
@@ -67,18 +49,7 @@ export default function GalleryPage() {
       const rest = restRes.data.data;
       setGalleryStyle(rest?.menuUiSettings?.galleryLayout || "simple");
       setFeaturedGalleryIds(rest?.menuUiSettings?.featuredGalleryIds || []);
-      
-      // Extract unique images for library vault
-      const menuItems = menuRes.data.data || [];
-      const urls = new Set();
-      if (rest.heroImage) urls.add(rest.heroImage);
-      if (rest.logoImage) urls.add(rest.logoImage);
-      menuItems.forEach(item => {
-        if (item.image) urls.add(item.image);
-      });
-      fetchedGallery.forEach(g => urls.add(g.url));
-      
-      setMyImages(Array.from(urls));
+      // We no longer extract myImages here since GlobalImageLibrary handles it
     } catch (err) {
       console.error(err);
     } finally {
@@ -387,113 +358,11 @@ export default function GalleryPage() {
       </div>
 
       {/* Pool Library Modal (from top upload section) */}
-      {showLibrary && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowLibrary(false)}></div>
-          <div className="relative bg-surface-container-lowest w-full max-w-4xl h-[85vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-reveal">
-            
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-surface-container flex items-center justify-between bg-white z-10 shrink-0">
-              <h2 className="text-2xl font-bold text-on-surface flex items-center gap-2">
-                <MaterialIcon name="photo_library" className="text-primary" />
-                Image Library Vault
-              </h2>
-              <button 
-                onClick={() => setShowLibrary(false)}
-                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-variant/50 transition-colors text-on-surface-variant"
-              >
-                <MaterialIcon name="close" className="text-2xl" />
-              </button>
-            </div>
-
-            {/* Main Tabs */}
-            <div className="flex border-b border-surface-container bg-white shrink-0">
-              <button 
-                onClick={() => setLibraryTab("my-images")}
-                className={`flex-1 py-4 text-sm font-bold transition-colors border-b-2 ${libraryTab === "my-images" ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:bg-surface-variant/20"}`}
-              >
-                My Uploaded Images
-              </button>
-              <button 
-                onClick={() => setLibraryTab("theme-images")}
-                className={`flex-1 py-4 text-sm font-bold transition-colors border-b-2 ${libraryTab === "theme-images" ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:bg-surface-variant/20"}`}
-              >
-                Theme Images
-              </button>
-            </div>
-
-            {libraryTab === "theme-images" && (
-              <>
-                <div className="p-4 border-b border-surface-container bg-surface-container-lowest/50 shrink-0">
-                  <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
-                    {['All', 'Indian', 'Fast Food', 'Restaurant', 'Cafe', 'Abstract'].map(cat => (
-                      <button 
-                        key={cat}
-                        onClick={() => setActiveImageCategory(cat)}
-                        className={`px-3 py-1.5 rounded-full font-bold text-xs whitespace-nowrap transition-colors border ${activeImageCategory === cat ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-on-surface border-outline-variant hover:bg-surface-container-low'}`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-surface-container-lowest">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {IMAGE_LIBRARY.filter(img => {
-                      const matchCat = activeImageCategory === 'All' || img.category === activeImageCategory;
-                      return matchCat;
-                    }).map(img => (
-                      <div 
-                        key={img.id} 
-                        className="relative group rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer shadow-sm border border-outline-variant/30 hover:shadow-lg transition-all"
-                        onClick={() => handleAddFromLibraryUrl(img.url)}
-                      >
-                        <img src={img.url} alt={img.tags} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                          <div className="bg-white text-on-surface px-4 py-2 rounded-full font-bold text-sm opacity-0 group-hover:opacity-100 transition-all shadow-lg flex items-center gap-2">
-                            <MaterialIcon name="add_circle" className="text-primary text-[18px]" />
-                            Add to Pool
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {libraryTab === "my-images" && (
-              <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-surface-container-lowest">
-                {myImages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-on-surface-variant">
-                    <MaterialIcon name="image_not_supported" className="text-5xl mb-4 opacity-50" />
-                    <p className="font-bold">No uploaded images found.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {myImages.map((url, idx) => (
-                      <div 
-                        key={idx} 
-                        className="relative group rounded-2xl overflow-hidden aspect-square cursor-pointer shadow-sm border border-outline-variant/30 hover:shadow-lg transition-all"
-                        onClick={() => handleAddFromLibraryUrl(url)}
-                      >
-                        <img src={url} alt="My Image" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                          <div className="bg-white text-on-surface px-3 py-1.5 rounded-full font-bold text-xs opacity-0 group-hover:opacity-100 transition-all shadow-lg flex items-center gap-1.5">
-                            <MaterialIcon name="add_circle" className="text-primary text-[16px]" />
-                            Add to Pool
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <GlobalImageLibrary 
+        isOpen={showLibrary} 
+        onClose={() => setShowLibrary(false)} 
+        onSelectImage={handleAddFromLibraryUrl} 
+      />
 
       {/* Featured Selection Modal (Bottom section) */}
       {showSelectionModal && (
