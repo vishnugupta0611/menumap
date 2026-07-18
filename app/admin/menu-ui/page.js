@@ -88,7 +88,7 @@ export default function MenuUIPage() {
   }
 
   return (
-    <div className="space-y-8 pb-16 max-w-full overflow-hidden">
+    <div className="space-y-8 pb-24 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <p className="font-label-sm text-label-sm uppercase text-secondary">Restaurant OS</p>
