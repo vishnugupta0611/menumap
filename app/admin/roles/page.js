@@ -8,13 +8,15 @@ import MaterialIcon from "@/components/stitch/MaterialIcon";
 const PERMISSIONS_LIST = [
   { id: "Dashboard", label: "Dashboard", defaultChecked: true },
   { id: "Live Orders", label: "Live Orders", defaultChecked: false },
+  { id: "Order History", label: "Order History", defaultChecked: false },
+  { id: "Local Orders", label: "Local Orders", defaultChecked: false },
   { id: "Manage Menu", label: "Manage Menu", defaultChecked: false },
   { id: "AI Menu OCR", label: "AI Menu OCR", defaultChecked: false },
-  { id: "Gallery", label: "Gallery", defaultChecked: false },
   { id: "Offers", label: "Offers", defaultChecked: false },
   { id: "Menu UI", label: "Menu UI", defaultChecked: false },
   { id: "Settings", label: "Settings", defaultChecked: false },
   { id: "QR Code", label: "QR Code", defaultChecked: false },
+  { id: "Reviews", label: "Reviews", defaultChecked: false },
 ];
 
 export default function RolesPage() {
