@@ -51,21 +51,25 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
     .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
     .slice(0, 5);
   const heroLayout = restaurant.menuUiSettings?.heroImageLayout || "rounded";
-  const galleryStyle = restaurant?.menuUiSettings?.galleryLayout || "simple";
+  const galleryStyle = restaurant?.menuUiSettings?.galleryLayout || "unlimited";
   
   // Calculate displayGallery based on explicit featuredGalleryIds or fallback to pool slice
   const featuredIds = restaurant?.menuUiSettings?.featuredGalleryIds || [];
   let displayGallery = [];
   if (featuredIds.length > 0) {
     displayGallery = featuredIds
-      .map(id => gallery.find(g => g._id === id))
+      .map(id => {
+         if (id && id.startsWith('http')) return { url: id, alt: 'Gallery Image' };
+         return gallery.find(g => g._id === id);
+      })
       .filter(Boolean);
   }
   
   if (displayGallery.length === 0) {
     if (galleryStyle === "aesthetic") displayGallery = gallery.slice(0, 5);
     else if (galleryStyle === "decent") displayGallery = gallery.slice(0, 4);
-    else displayGallery = gallery.slice(0, 3);
+    else if (galleryStyle === "simple") displayGallery = gallery.slice(0, 3);
+    else displayGallery = gallery.slice(0, 10);
   }
 
   const formatTime = (t) => {
@@ -432,9 +436,27 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
       {/* Gallery Section */}
       {displayGallery && displayGallery.length > 0 && (
         <section className="px-margin-mobile mb-20 max-w-5xl mx-auto overflow-hidden">
-          <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface mb-8 text-center sm:text-left max-w-4xl mx-auto">Gallery</h2>
-          
-          {/* Style 1: Aesthetic (Dynamic Accordion, max 5) */}
+        <div className="mb-12 animate-fadeInUp delay-300">
+          <div className="flex items-center gap-2 mb-2 px-margin-mobile md:px-margin-desktop">
+            <h2 className="font-heading-md text-heading-md sm:font-heading-lg sm:text-heading-lg font-bold text-on-surface">Moments & Vibe</h2>
+            <MaterialIcon name="photo_camera" className="text-secondary" />
+          </div>
+
+          {/* Style 0: Unlimited (Marquee) */}
+          {galleryStyle === "unlimited" && displayGallery.length > 0 && (
+            <div className="w-full mt-4 overflow-hidden py-4 -mx-4 px-4 sm:mx-0 sm:px-0 bg-surface-container-low/30 backdrop-blur-sm">
+               <div className="flex w-max animate-marquee gap-4">
+                 {/* Repeat array multiple times to ensure enough width for seamless scrolling */}
+                 {[...displayGallery, ...displayGallery, ...displayGallery, ...displayGallery].map((img, idx) => (
+                    <div key={`${img.url || img._id}-${idx}`} className="w-[180px] h-[240px] sm:w-[260px] sm:h-[320px] rounded-[24px] overflow-hidden shrink-0 shadow-sm border border-outline-variant/30 hover:scale-[1.02] transition-transform duration-300">
+                       <img src={img.url} alt={img.alt || 'Gallery image'} className="w-full h-full object-cover pointer-events-none" />
+                    </div>
+                 ))}
+               </div>
+            </div>
+          )}
+
+          {/* Style 1: Aesthetic (Dynamic Flex Layout, max 5) */}
           {galleryStyle === "aesthetic" && (
             <div className="flex items-center gap-2 sm:gap-3 h-[300px] sm:h-[450px] w-full max-w-5xl mx-auto mt-4 px-2">
               {displayGallery.map((img, idx) => (
@@ -524,6 +546,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
               })}
             </div>
           )}
+        </div>
         </section>
       )}
 

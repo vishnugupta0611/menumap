@@ -50,7 +50,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
 
   const handleAddItem = (item) => {
     if (isOwner) return;
-    addItem(item);
+    addItem({ ...item, restaurantId: restaurant._id });
   };
 
   const handleRemoveItem = (itemId) => {
@@ -305,7 +305,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
                             {item.image ? (
                               <img alt={item.name} className="w-full h-full object-cover" src={item.image} />
                             ) : (
-                              <MaterialIcon name="restaurant" className="text-on-surface-variant/30 text-4xl h-full flex items-center justify-center" />
+                              <img alt={item.name} className="w-full h-full object-contain p-4 opacity-30" src="/images/notfound.png" />
                             )}
                           </div>
                           

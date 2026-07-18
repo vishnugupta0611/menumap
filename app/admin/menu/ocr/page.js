@@ -7,6 +7,10 @@ import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import GlobalImageLibrary from "@/components/modals/GlobalImageLibrary";
+import { galleryData } from "@/lib/galleryData";
+import Fuse from "fuse.js";
+import { uploadImageToCloudinary } from "@/app/actions/upload-actions";
 
 export default function MenuOcrPage() {
   const [preview, setPreview] = useState("");
@@ -19,6 +23,11 @@ export default function MenuOcrPage() {
   const [editableItems, setEditableItems] = useState([]);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
+  
+  // Gallery state
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [activeItemIndex, setActiveItemIndex] = useState(null);
+  const [galleryQuery, setGalleryQuery] = useState("");
 
   // When OCR succeeds, populate editable items
   useEffect(() => {
@@ -48,6 +57,65 @@ export default function MenuOcrPage() {
     setEditableItems(newItems);
   }
 
+  function handleOpenGallery(index, itemName) {
+    setActiveItemIndex(index);
+    setGalleryQuery(itemName || "");
+    setIsGalleryOpen(true);
+  }
+
+  function handleSelectGalleryImage(url) {
+    if (activeItemIndex !== null) {
+      handleItemChange(activeItemIndex, 'image', url);
+    }
+    setIsGalleryOpen(false);
+    setActiveItemIndex(null);
+  }
+
+  async function handleFileUpload(index, event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Convert to base64 and upload immediately
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result;
+        // Optimistically set to base64 for immediate preview
+        handleItemChange(index, 'image', base64);
+        
+        const uploadRes = await uploadImageToCloudinary(base64);
+        if (uploadRes?.url) {
+          handleItemChange(index, 'image', uploadRes.url);
+        }
+      } catch (err) {
+        console.error("Failed to upload image", err);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleAutoAssignImages() {
+    const fuse = new Fuse(galleryData, {
+      keys: ['termName'],
+      threshold: 0.5,
+      ignoreLocation: true
+    });
+
+    setEditableItems(prev => prev.map(item => {
+      if (item.image) return item; // skip if already has image
+      const results = fuse.search(item.name || "");
+      if (results.length > 0 && results[0].item.imageUrls.length > 0) {
+        // pick a random image from the matched term's URLs to add variety
+        const urls = results[0].item.imageUrls;
+        const randomUrl = urls[Math.floor(Math.random() * urls.length)];
+        return { ...item, image: randomUrl };
+      }
+      
+      // If no image match is found, leave it as is
+      return item;
+    }));
+  }
+
   async function handleApproveAndSave() {
     if (!user?.restaurantId) return;
     setSaving(true);
@@ -58,14 +126,20 @@ export default function MenuOcrPage() {
       
       for (const item of itemsToSave) {
         try {
-          await api.post(`/api/restaurants/id/${user.restaurantId}/menu-items`, {
+          const payload = {
             name: item.name,
             description: item.description || "",
             price: Number(item.price) || 0,
             veg: Boolean(item.veg),
             category: item.category || "Uncategorized",
             available: true,
-          });
+          };
+          
+          if (item.image && item.image !== "/images/notfound.png") {
+            payload.image = item.image;
+          }
+
+          await api.post(`/api/restaurants/id/${user.restaurantId}/menu-items`, payload);
           successCount++;
         } catch (e) {
           console.error("Failed to save item:", item.name, e);
@@ -92,11 +166,23 @@ export default function MenuOcrPage() {
         <h1 className="font-display-lg-mobile text-display-lg-mobile text-primary md:font-display-lg md:text-display-lg">Photo to Menu OCR</h1>
       </div>
       
-      <AdminPanel title="Upload or Capture Menu" eyebrow="AI assisted" icon="document_scanner">
+      <div>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-fixed text-primary">
+              <MaterialIcon name="document_scanner" />
+            </div>
+            <div>
+              <p className="font-label-sm text-label-sm uppercase text-secondary">AI assisted</p>
+              <h2 className="font-headline-md text-headline-md text-on-surface">Upload or Capture Menu</h2>
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-          <label className="flex min-h-[360px] cursor-pointer flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-outline-variant bg-surface-container-low p-8 text-center transition hover:border-primary">
+          <label className="flex min-h-[360px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-outline-variant p-8 text-center transition hover:border-primary">
             {preview ? (
-              <img src={preview} alt="Menu upload preview" className="h-full max-h-[420px] w-full rounded-3xl object-contain bg-surface-container-lowest" />
+              <img src={preview} alt="Menu upload preview" className="h-full max-h-[420px] w-full rounded-xl object-contain" />
             ) : (
               <>
                 <MaterialIcon name="add_a_photo" className="mb-4 text-5xl text-primary" />
@@ -107,7 +193,7 @@ export default function MenuOcrPage() {
             <input className="sr-only" type="file" accept="image/*" onChange={handleFile} />
           </label>
           
-          <div className="rounded-[32px] bg-surface-container-low p-6 flex flex-col max-h-[80vh]">
+          <div className="flex flex-col">
             <button
               disabled={!file || ocr.isPending}
               onClick={() => ocr.mutate(file)}
@@ -130,103 +216,125 @@ export default function MenuOcrPage() {
             )}
 
             {editableItems.length > 0 ? (
-              <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
-                <div className="flex items-center justify-between sticky top-0 bg-surface-container-low pb-2 z-10">
-                  <p className="font-bold text-sm text-primary flex items-center gap-2">
-                    <MaterialIcon name="check_circle" className="text-primary" />
+              <div className="w-full space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between sticky top-0 bg-surface-container-lowest/90 backdrop-blur-md pb-4 pt-2 z-10 border-b border-surface-container gap-3 sm:gap-0">
+                  <p className="font-bold text-xs sm:text-sm text-primary flex items-center gap-1 sm:gap-2">
+                    <MaterialIcon name="check_circle" className="text-primary text-[14px] sm:text-base" />
                     Found {editableItems.length} items
                   </p>
-                  <p className="text-xs text-on-surface-variant font-bold bg-surface-container-highest px-3 py-1 rounded-full">
-                    Confidence: {Math.round((ocr.data?.confidence || 0) * 100)}%
-                  </p>
+                  
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <button 
+                      onClick={handleAutoAssignImages}
+                      className="text-[10px] sm:text-xs font-bold bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-colors px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-full flex items-center gap-1"
+                    >
+                      <MaterialIcon name="auto_awesome" className="text-[12px] sm:text-[14px]" /> Auto-Assign
+                    </button>
+                    <p className="text-[10px] sm:text-xs text-on-surface-variant font-bold bg-surface-container-highest px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-full">
+                      Confidence: {Math.round((ocr.data?.confidence || 0) * 100)}%
+                    </p>
+                  </div>
                 </div>
                 
                 {editableItems.map((item, index) => (
-                  <div key={index} className="rounded-2xl bg-white p-4 shadow-sm border border-surface-container space-y-3 relative group transition-all hover:border-primary/30">
-                    <button 
-                      onClick={() => handleRemoveItem(index)}
-                      className="absolute top-2 right-2 p-2 rounded-full bg-error-container/50 text-error opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error hover:text-white"
-                      title="Remove item"
-                    >
-                      <MaterialIcon name="close" className="text-[18px]" />
-                    </button>
+                  <div key={index} className="p-3 mb-3 rounded-xl border border-surface-container/80 bg-surface-container-lowest shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] relative group transition-all hover:border-primary/30 flex gap-3 sm:gap-4">
                     
-                    <div className="grid grid-cols-[1fr_100px] gap-3 pr-8">
+                    {/* Image Preview Column */}
+                    <div className="w-20 sm:w-24 shrink-0 flex flex-col gap-2">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-surface-variant/30 border border-outline-variant/30 flex items-center justify-center overflow-hidden relative">
+                        <img 
+                          src={item.image || "/images/notfound.png"} 
+                          alt={item.name} 
+                          className={`w-full h-full ${!item.image ? 'object-contain p-2 opacity-50' : 'object-cover'}`} 
+                        />
+                      </div>
+                      <div className="flex gap-1">
+                        <label className="flex-1 h-6 sm:h-7 bg-surface-container hover:bg-surface-container-high rounded cursor-pointer flex items-center justify-center text-on-surface-variant transition-colors" title="Upload Image">
+                          <MaterialIcon name="upload" className="text-[12px] sm:text-[14px]" />
+                          <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload(index, e)} />
+                        </label>
+                        <button 
+                          onClick={() => handleOpenGallery(index, item.name)}
+                          className="flex-1 h-6 sm:h-7 bg-surface-container hover:bg-surface-container-high rounded flex items-center justify-center text-on-surface-variant transition-colors" title="Choose from Gallery"
+                        >
+                          <MaterialIcon name="photo_library" className="text-[12px] sm:text-[14px]" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Data Column */}
+                    <div className="flex-1 space-y-2 sm:space-y-3 pr-6 relative">
+                      <button 
+                        onClick={() => handleRemoveItem(index)}
+                        className="absolute -top-1 -right-4 sm:-right-2 p-1.5 sm:p-2 rounded-full bg-error-container/50 text-error opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error hover:text-white"
+                        title="Remove item"
+                      >
+                        <MaterialIcon name="close" className="text-[16px] sm:text-[18px]" />
+                      </button>
+                    
+                    <div className="grid grid-cols-[1fr_70px] sm:grid-cols-[1fr_90px] gap-2 sm:gap-3 pr-2 sm:pr-8">
                       <div>
-                        <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Item Name</label>
+                        <label className="text-[9px] sm:text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Item Name</label>
                         <input 
                           type="text" 
                           value={item.name} 
                           onChange={(e) => handleItemChange(index, 'name', e.target.value)}
-                          className="w-full bg-transparent font-bold text-on-surface border-b border-transparent focus:border-primary outline-none transition-colors"
+                          className="w-full bg-transparent font-bold text-sm sm:text-base text-on-surface border-b border-transparent focus:border-primary outline-none transition-colors"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Price (₹)</label>
+                        <label className="text-[9px] sm:text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Price (₹)</label>
                         <input 
                           type="number" 
                           value={item.price} 
                           onChange={(e) => handleItemChange(index, 'price', e.target.value)}
-                          className="w-full bg-transparent font-bold text-primary border-b border-transparent focus:border-primary outline-none transition-colors"
+                          className="w-full bg-transparent font-bold text-sm sm:text-base text-primary border-b border-transparent focus:border-primary outline-none transition-colors"
                         />
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-[1.5fr_1fr] sm:grid-cols-2 gap-2 sm:gap-3">
                       <div>
-                        <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Category</label>
+                        <label className="text-[9px] sm:text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Category</label>
                         <input 
                           type="text" 
                           value={item.category || ""} 
                           onChange={(e) => handleItemChange(index, 'category', e.target.value)}
-                          className="w-full text-sm bg-surface-container-lowest px-3 py-1.5 rounded-lg border border-outline-variant focus:border-primary outline-none"
+                          className="w-full text-[11px] sm:text-sm bg-surface-container-low px-2 py-1 sm:px-3 sm:py-1.5 rounded border border-outline-variant/40 focus:border-primary outline-none"
                           placeholder="e.g. Starters"
                         />
                       </div>
-                      <div className="flex items-end pb-1">
-                        <label className="flex items-center gap-2 cursor-pointer">
+                      <div className="flex items-end pb-0.5 sm:pb-1">
+                        <label className="flex items-center gap-1.5 cursor-pointer">
                           <input 
                             type="checkbox" 
                             checked={item.veg} 
                             onChange={(e) => handleItemChange(index, 'veg', e.target.checked)}
-                            className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary"
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-outline-variant text-primary focus:ring-primary"
                           />
-                          <span className="text-sm font-bold text-on-surface flex items-center gap-1">
-                            <span className={`w-3 h-3 rounded-full border-2 p-[1px] flex items-center justify-center ${item.veg ? 'border-green-600' : 'border-red-600'}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${item.veg ? 'bg-green-600' : 'bg-red-600'}`}></span>
+                          <span className="text-[11px] sm:text-sm font-bold text-on-surface flex items-center gap-1">
+                            <span className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-[1.5px] p-[1px] flex items-center justify-center ${item.veg ? 'border-green-600' : 'border-red-600'}`}>
+                              <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${item.veg ? 'bg-green-600' : 'bg-red-600'}`}></span>
                             </span>
-                            {item.veg ? 'Veg' : 'Non-Veg'}
+                            {item.veg ? 'Veg' : 'Non'}
                           </span>
                         </label>
                       </div>
                     </div>
                     
                     <div>
-                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Description</label>
                       <textarea 
                         value={item.description || ""} 
                         onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                        className="w-full text-sm bg-transparent border-b border-transparent focus:border-primary outline-none resize-none overflow-hidden h-6 focus:h-12 transition-all placeholder:text-on-surface-variant/50"
-                        placeholder="Add a short description..."
-                      />
+                        className="w-full text-[11px] sm:text-xs bg-transparent border-b border-transparent focus:border-primary outline-none resize-none overflow-hidden h-4 sm:h-6 focus:h-12 transition-all placeholder:text-on-surface-variant/50 leading-tight"
+                        placeholder="Description..."  />
                     </div>
                   </div>
+                </div>
                 ))}
                 
-                <div className="pt-4 sticky bottom-0 bg-gradient-to-t from-surface-container-low via-surface-container-low to-transparent pb-2">
-                  <button 
-                    disabled={saving || editableItems.length === 0}
-                    onClick={handleApproveAndSave}
-                    className="w-full rounded-full bg-tertiary px-6 py-4 font-bold text-on-tertiary shadow-lg shadow-tertiary/20 flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
-                  >
-                    {saving ? (
-                      <><MaterialIcon name="hourglass_empty" className="animate-spin" /> Saving to database...</>
-                    ) : (
-                      <><MaterialIcon name="publish" /> Approve & Add {editableItems.length} items to Menu</>
-                    )}
-                  </button>
-                  {saveStatus && <p className="text-center text-sm font-bold text-primary mt-2">{saveStatus}</p>}
-                </div>
+                {/* Spacer so the last item isn't hidden behind the fixed button */}
+                <div className="h-24"></div>
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-on-surface-variant">
@@ -237,7 +345,38 @@ export default function MenuOcrPage() {
             )}
           </div>
         </div>
-      </AdminPanel>
+      </div>
+      
+      {/* Fixed Approve Button at the bottom */}
+      {editableItems.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-6 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest to-transparent z-40 pointer-events-none flex justify-center">
+          <div className="w-full max-w-4xl pointer-events-auto shadow-2xl rounded-full">
+            <button 
+              disabled={saving}
+              onClick={handleApproveAndSave}
+              className="w-full rounded-full bg-tertiary px-4 py-3 sm:px-6 sm:py-4 font-bold text-sm sm:text-base text-on-tertiary shadow-lg shadow-tertiary/30 flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
+            >
+              {saving ? (
+                <><MaterialIcon name="hourglass_empty" className="animate-spin text-lg" /> Saving...</>
+              ) : (
+                <><MaterialIcon name="publish" className="text-lg" /> Approve & Add {editableItems.length} items</>
+              )}
+            </button>
+            {saveStatus && <p className="text-center text-[11px] sm:text-sm font-bold text-primary mt-1.5 sm:mt-2 bg-surface-container-lowest/80 rounded-full">{saveStatus}</p>}
+          </div>
+        </div>
+      )}
+
+      {/* Global Image Library Modal */}
+      <GlobalImageLibrary 
+        isOpen={isGalleryOpen} 
+        onClose={() => {
+          setIsGalleryOpen(false);
+          setActiveItemIndex(null);
+        }}
+        onSelectImage={handleSelectGalleryImage}
+        defaultQuery={galleryQuery}
+      />
     </div>
   );
 }

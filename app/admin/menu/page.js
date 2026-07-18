@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import GlobalImageLibrary from "@/components/modals/GlobalImageLibrary";
 import SearchBar from "@/components/forms/SearchBar";
 import Button from "@/components/buttons/Button";
@@ -133,7 +133,7 @@ export default function ManageMenuPage() {
     
     try {
       setIsUploading(true);
-      let imageUrl = editDish ? editDish.image : "https://placehold.co/400x300?text=No+Image";
+      let imageUrl = editDish ? editDish.image : "";
       
       if (imageBase64) {
         if (imageBase64.startsWith('http')) {
@@ -152,9 +152,12 @@ export default function ManageMenuPage() {
         categoryId: formData.categoryId,
         category: selectedCat ? selectedCat.name : undefined,
         description: formData.description,
-        image: imageUrl,
         veg: formData.veg !== undefined ? formData.veg : true,
       };
+      
+      if (imageUrl) {
+        payload.image = imageUrl;
+      }
 
       if (editDish) {
         await api.patch(`/api/restaurants/menu-items/${editDish.id}`, payload);

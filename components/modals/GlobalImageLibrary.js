@@ -9,8 +9,25 @@ import { api } from "@/lib/api";
 
 const PAGE_SIZE = 24;
 
-export default function GlobalImageLibrary({ isOpen, onClose, onSelectImage, defaultQuery = "" }) {
+export default function GlobalImageLibrary({ 
+  isOpen, 
+  onClose, 
+  onSelectImage, 
+  onSelectImages,
+  multiSelect = false,
+  maxSelection = null,
+  initialSelection = [],
+  defaultQuery = "" 
+}) {
   const { user } = useAuth();
+  
+  const [selectedUrls, setSelectedUrls] = useState(initialSelection);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedUrls(initialSelection);
+    }
+  }, [isOpen, initialSelection]);
   
   // Tabs: 'my-images' or 'theme-images'
   const [libraryTab, setLibraryTab] = useState("theme-images");
@@ -66,6 +83,54 @@ export default function GlobalImageLibrary({ isOpen, onClose, onSelectImage, def
     fetchMyImages();
   }, [isOpen, user?.restaurantId]);
 
+  const [uploading, setUploading] = useState(false);
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise(resolve => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+      const { uploadImageToCloudinary } = await import("@/app/actions/upload-actions");
+      const uploadRes = await uploadImageToCloudinary(base64);
+      
+      setMyImages([uploadRes.url, ...myImages]);
+      
+      if (multiSelect) {
+        if (!maxSelection || selectedUrls.length < maxSelection) {
+           setSelectedUrls(prev => [...prev, uploadRes.url]);
+        }
+      } else {
+        if (onSelectImage) onSelectImage(uploadRes.url);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleToggleSelect = (url) => {
+    if (!multiSelect) {
+      if (onSelectImage) onSelectImage(url);
+      return;
+    }
+    
+    if (selectedUrls.includes(url)) {
+      setSelectedUrls(selectedUrls.filter(u => u !== url));
+    } else {
+      if (maxSelection && selectedUrls.length >= maxSelection) {
+        return alert(`You can only select up to ${maxSelection} images.`);
+      }
+      setSelectedUrls([...selectedUrls, url]);
+    }
+  };
+
   // Sync defaultQuery
   useEffect(() => {
     if (isOpen && defaultQuery) {
@@ -79,18 +144,43 @@ export default function GlobalImageLibrary({ isOpen, onClose, onSelectImage, def
   // Handle derived theme images
   const filteredThemeImages = useMemo(() => {
     let pool = [];
-    if (activeCategory === "All" || activeCategory === "Food") {
-       galleryData.forEach(cat => cat.imageUrls.forEach(url => pool.push({ term: cat.termName, url })));
-    }
 
     if (searchQuery.trim()) {
       const results = fuse.search(searchQuery.trim());
-      pool = [];
       results.forEach(res => {
          res.item.imageUrls.forEach(url => pool.push({ term: res.item.termName, url }));
       });
+      return pool;
     }
     
+    galleryData.forEach(cat => {
+      const termLower = cat.termName.toLowerCase();
+      const isTheme = termLower.includes('background') || termLower.includes('theme') || termLower.includes('aesthetic') || termLower.includes('restro');
+      
+      let shouldInclude = false;
+      if (activeCategory === "All") {
+        shouldInclude = true;
+      } else if (activeCategory === "Food" && !isTheme) {
+        shouldInclude = true;
+      } else if (activeCategory === "Theme" && isTheme) {
+        shouldInclude = true;
+      } else if (activeCategory === "Logo" && termLower.includes('logo')) {
+        shouldInclude = true;
+      }
+      
+      if (shouldInclude) {
+        cat.imageUrls.forEach(url => pool.push({ term: cat.termName, url }));
+      }
+    });
+
+    // Randomize the mix if 'All' is selected so it doesn't look grouped
+    if (activeCategory === "All") {
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+    }
+
     return pool;
   }, [activeCategory, searchQuery, fuse]);
 
@@ -134,14 +224,24 @@ export default function GlobalImageLibrary({ isOpen, onClose, onSelectImage, def
         <div className="px-6 py-4 border-b border-surface-container flex items-center justify-between bg-white z-10 shrink-0">
           <h2 className="text-xl font-bold text-on-surface flex items-center gap-2">
             <MaterialIcon name="photo_library" className="text-primary" />
-            Image Library Vault
+            Image Library
           </h2>
-          <button 
-            onClick={onClose}
-            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-variant/50 transition-colors text-on-surface-variant"
-          >
-            <MaterialIcon name="close" className="text-xl" />
-          </button>
+          <div className="flex items-center gap-3">
+            {multiSelect && (
+              <button 
+                onClick={() => onSelectImages?.(selectedUrls)}
+                className="px-6 py-2 bg-primary text-white rounded-full font-bold text-sm hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                Done ({selectedUrls.length}{maxSelection ? `/${maxSelection}` : ''})
+              </button>
+            )}
+            <button 
+              onClick={onClose}
+              className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-variant/50 transition-colors text-on-surface-variant"
+            >
+              <MaterialIcon name="close" className="text-xl" />
+            </button>
+          </div>
         </div>
 
         {/* Main Tabs */}
@@ -176,7 +276,7 @@ export default function GlobalImageLibrary({ isOpen, onClose, onSelectImage, def
                 />
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar hide-scrollbar">
-                {['All', 'Food', 'Theme', 'Logo', 'Background'].map(cat => (
+                {['All', 'Food', 'Theme', 'Logo'].map(cat => (
                   <button 
                     key={cat}
                     onClick={() => { setActiveCategory(cat); setSearchQuery(""); }}
@@ -200,16 +300,23 @@ export default function GlobalImageLibrary({ isOpen, onClose, onSelectImage, def
                   {filteredThemeImages.slice(0, displayedCount).map((img, idx) => (
                     <div 
                       key={idx} 
-                      className="relative group rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer shadow-sm border border-outline-variant/30 hover:shadow-lg transition-all hover:-translate-y-1"
-                      onClick={() => onSelectImage(img.url)}
+                      className={`relative group rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer shadow-sm transition-all hover:-translate-y-1 border-4 ${multiSelect && selectedUrls.includes(img.url) ? 'border-primary scale-[0.98]' : 'border-transparent hover:border-primary/30'}`}
+                      onClick={() => handleToggleSelect(img.url)}
                     >
                       <img src={img.url} alt={img.term} loading="lazy" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                        <div className="bg-white text-on-surface px-3 py-1.5 rounded-full font-bold text-xs opacity-0 group-hover:opacity-100 transition-all shadow-lg flex items-center gap-1">
-                          <MaterialIcon name="check_circle" className="text-primary text-[14px]" />
-                          Select
+                      
+                      {multiSelect && selectedUrls.includes(img.url) ? (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <MaterialIcon name="check_circle" className="text-white text-4xl shadow-lg rounded-full" />
                         </div>
-                      </div>
+                      ) : (
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                          <div className="bg-white text-on-surface px-3 py-1.5 rounded-full font-bold text-xs opacity-0 group-hover:opacity-100 transition-all shadow-lg flex items-center gap-1">
+                            <MaterialIcon name={multiSelect ? "add_circle" : "check_circle"} className="text-primary text-[14px]" />
+                            Select
+                          </div>
+                        </div>
+                      )}
                       <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="text-white text-[10px] font-bold truncate">{img.term}</div>
                       </div>
@@ -244,19 +351,39 @@ export default function GlobalImageLibrary({ isOpen, onClose, onSelectImage, def
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                {/* Upload Card */}
+                <label className="relative rounded-2xl overflow-hidden aspect-square cursor-pointer transition-all border-2 border-dashed border-outline-variant hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center text-on-surface-variant hover:text-primary">
+                  {uploading ? (
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <MaterialIcon name="add" className="text-4xl mb-2" />
+                      <span className="font-bold text-sm">Upload New</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" onChange={handleUpload} className="hidden" disabled={uploading} />
+                </label>
+
                 {myImages.map((url, idx) => (
                   <div 
                     key={idx} 
-                    className="relative group rounded-2xl overflow-hidden aspect-square cursor-pointer shadow-sm border border-outline-variant/30 hover:shadow-lg transition-all hover:-translate-y-1"
-                    onClick={() => onSelectImage(url)}
+                    className={`relative group rounded-2xl overflow-hidden aspect-square cursor-pointer shadow-sm transition-all hover:-translate-y-1 border-4 ${multiSelect && selectedUrls.includes(url) ? 'border-primary scale-[0.98]' : 'border-transparent hover:border-primary/30'}`}
+                    onClick={() => handleToggleSelect(url)}
                   >
                     <img src={url} alt="My Image" loading="lazy" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                      <div className="bg-white text-on-surface px-3 py-1.5 rounded-full font-bold text-xs opacity-0 group-hover:opacity-100 transition-all shadow-lg flex items-center gap-1">
-                        <MaterialIcon name="check_circle" className="text-primary text-[14px]" />
-                        Select
+                    
+                    {multiSelect && selectedUrls.includes(url) ? (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <MaterialIcon name="check_circle" className="text-white text-4xl shadow-lg rounded-full" />
                       </div>
-                    </div>
+                    ) : (
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                        <div className="bg-white text-on-surface px-3 py-1.5 rounded-full font-bold text-xs opacity-0 group-hover:opacity-100 transition-all shadow-lg flex items-center gap-1">
+                          <MaterialIcon name={multiSelect ? "add_circle" : "check_circle"} className="text-primary text-[14px]" />
+                          Select
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
