@@ -56,6 +56,7 @@ export default function SSOCallbackPage() {
           name: ownerName,
           email: primaryEmail,
           clerkId: clerkId,
+          photo: user.imageUrl || null,
           restaurantName,
           city: restaurantCity,
           cuisine: restaurantCuisines,
@@ -83,9 +84,16 @@ export default function SSOCallbackPage() {
         console.error(error);
         await signOut();
         const message = error.message || "Failed to create restaurant.";
-        sessionStorage.setItem("auth_error", message);
-        setStatus(message);
-        setTimeout(() => router.replace("/register/owner"), 2500);
+        const isAlreadyExists = message.toLowerCase().includes("already") || message.toLowerCase().includes("exists");
+        if (isAlreadyExists) {
+          sessionStorage.setItem("auth_error", "A restaurant account with this Google email already exists. Please login instead.");
+          setStatus("Account already exists. Redirecting to Login...");
+          setTimeout(() => router.replace("/login"), 2000);
+        } else {
+          sessionStorage.setItem("auth_error", message);
+          setStatus(message);
+          setTimeout(() => router.replace("/register/owner"), 2500);
+        }
       }
     };
 

@@ -314,8 +314,9 @@ export default function HomePage() {
                 <div key={i} className={`relative rounded-3xl bg-surface-variant animate-pulse ${i === 0 ? "sm:col-span-2 h-64" : "h-48"}`}></div>
               ))
             ) : trendingDishes.map((dish, index) => (
-              <div
+              <Link
                 key={dish._id || index}
+                href={dish.restaurant ? `/${dish.restaurant.city || 'kanpur'}/${dish.restaurant.slug}` : '/search?trending=true'}
                 className={`relative rounded-3xl overflow-hidden shadow-lg group cursor-pointer ${
                   index === 0 ? "sm:col-span-2 h-64" : "h-48"
                 }`}
@@ -323,7 +324,7 @@ export default function HomePage() {
                 <img
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   alt={dish.name}
-                  src={dish.image}
+                  src={dish.image || '/placeholder-food.jpg'}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                 <div className="absolute bottom-4 left-4 text-white">
@@ -335,7 +336,7 @@ export default function HomePage() {
                   <h4 className="font-headline-md text-headline-md text-white">{dish.name}</h4>
                   <p className="text-sm opacity-90">{dish.restaurant?.name || "Kitchen Studio"}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -364,13 +365,14 @@ export default function HomePage() {
               <Link
                 key={restaurant._id}
                 href={`/${restaurant.city}/${restaurant.slug}`}
+                prefetch={true}
                 className="flex-shrink-0 w-72 group block"
               >
                 <div className="relative h-44 w-full rounded-2xl overflow-hidden shadow-sm mb-3">
                   <img
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     alt={restaurant.name}
-                    src={restaurant.heroImage}
+                    src={restaurant.heroImage || restaurant.logoImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(restaurant.name)}&background=random&size=300`}
                   />
                   <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
                     <MaterialIcon name="star" className="text-sm text-primary fill" />
@@ -407,28 +409,29 @@ export default function HomePage() {
                 </div>
               ))
             ) : recommendedDishes.map((dish) => (
-              <div
+              <Link
                 key={dish._id}
-                className="flex gap-4 p-4 rounded-3xl bg-white shadow-[0px_10px_30px_rgba(0,0,0,0.02)] border border-surface-variant/30 hover:border-primary/20 transition-all"
+                href={dish.restaurant ? `/${dish.restaurant.city || 'kanpur'}/${dish.restaurant.slug}` : '/search'}
+                className="flex gap-4 p-4 rounded-3xl bg-white shadow-[0px_10px_30px_rgba(0,0,0,0.02)] border border-surface-variant/30 hover:border-primary/20 hover:shadow-md transition-all group"
               >
                 <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
-                  <img className="w-full h-full object-cover" alt={dish.name} src={dish.image} />
+                  <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={dish.name} src={dish.image || '/placeholder-food.jpg'} />
                 </div>
                 <div className="flex flex-col justify-between py-1 flex-1">
                   <div>
-                    <h4 className="font-bold text-on-surface">{dish.name}</h4>
+                    <h4 className="font-bold text-on-surface group-hover:text-primary transition-colors">{dish.name}</h4>
                     <p className="text-xs text-on-surface-variant mt-1">
                       {dish.veg ? "Vegetarian" : "Non-Vegetarian"} • {dish.restaurant?.name || "Kitchen Studio"}
                     </p>
                   </div>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-primary font-bold">Rs {dish.price}</span>
-                    <button className="w-8 h-8 flex items-center justify-center bg-primary text-white rounded-full hover:scale-110 active:scale-90 transition-transform cursor-pointer border-none">
-                      <MaterialIcon name="add" className="text-sm text-white" />
-                    </button>
+                    <span className="w-8 h-8 flex items-center justify-center bg-primary text-white rounded-full group-hover:scale-110 transition-transform">
+                      <MaterialIcon name="arrow_forward" className="text-sm text-white" />
+                    </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

@@ -4,16 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSignIn, useClerk } from "@clerk/nextjs";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, loginWithVerifiedEmail, logout, employeeLogin } = useAuth();
   
-  // Clerk is no longer used — all auth goes through custom JWT
-  const isLoaded = true;
-  const signIn = null;
-  const signOut = async () => {};
-  const session = null;
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const { signOut, session } = useClerk();
 
   const [activePortal, setActivePortal] = useState("owner");
   const [email, setEmail] = useState("");

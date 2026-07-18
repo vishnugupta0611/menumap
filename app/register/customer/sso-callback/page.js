@@ -49,6 +49,7 @@ export default function CustomerSSOCallbackPage() {
           name: customerName,
           email: primaryEmail,
           clerkId: clerkId,
+          photo: user.imageUrl || null,
         });
 
         // Clear session storage
@@ -62,10 +63,18 @@ export default function CustomerSSOCallbackPage() {
       } catch (error) {
         console.error(error);
         await signOut();
+        // If account already exists, redirect to login with clear message
         const message = error.message || "Failed to create account.";
-        sessionStorage.setItem("auth_error", message);
-        setStatus(message);
-        setTimeout(() => router.replace("/register/customer"), 2500);
+        const isAlreadyExists = message.toLowerCase().includes("already") || message.toLowerCase().includes("exists") || message.includes("409");
+        if (isAlreadyExists) {
+          sessionStorage.setItem("auth_error", "An account with this Google email already exists. Please login instead.");
+          setStatus("Account already exists. Redirecting to Login...");
+          setTimeout(() => router.replace("/login"), 2000);
+        } else {
+          sessionStorage.setItem("auth_error", message);
+          setStatus(message);
+          setTimeout(() => router.replace("/register/customer"), 2500);
+        }
       }
     };
 

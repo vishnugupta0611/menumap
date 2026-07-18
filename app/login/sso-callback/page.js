@@ -43,7 +43,8 @@ export default function LoginSSOCallbackPage() {
           email: primaryEmail,
           name: user.fullName || "Foodie",
           clerkId: clerkId,
-          role: role
+          role: role,
+          photo: user.imageUrl || null,
         });
 
         sessionStorage.removeItem("oauth_flow");
@@ -58,8 +59,9 @@ export default function LoginSSOCallbackPage() {
       } catch (error) {
         console.error(error);
         await signOut();
-        sessionStorage.setItem("auth_error", error.message || "Please create your account first.");
-        setStatus(error.message || "Please create your account first.");
+        const message = error.message || "Please create your account first.";
+        sessionStorage.setItem("auth_error", message);
+        setStatus(message);
         setTimeout(() => router.push("/login"), 2500);
       }
     };
