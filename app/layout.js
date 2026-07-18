@@ -1,4 +1,4 @@
-import { Plus_Jakarta_Sans, Inter } from "next/font/google";
+﻿import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import QueryProvider from "@/components/QueryProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -19,8 +19,8 @@ const inter = Inter({
 import { Toaster } from "react-hot-toast";
 
 export const metadata = {
-  title: "MenuMap | Restaurant OS and Food Discovery",
-  description: "Search food first, discover nearby restaurants, and manage QR menus with MenuMap.",
+  title: "HeyRestro | Restaurant OS and Food Discovery",
+  description: "Search food first, discover nearby restaurants, and manage QR menus with HeyRestro.",
 };
 
 function OptionalClerkProvider({ children }) {
@@ -54,3 +54,4 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+

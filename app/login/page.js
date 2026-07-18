@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -163,8 +163,8 @@ export default function LoginPage() {
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col font-body-md relative overflow-x-hidden">
       <header className="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-margin-mobile md:px-margin-desktop py-6">
-        <Link href="/" className="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary font-bold tracking-tight">
-          MenuMap
+        <Link href="/" className="flex items-center">
+          <img src="/images/logo.png" alt="HeyRestro" className="h-12 w-auto" />
         </Link>
         <div className="flex gap-2 md:gap-4 items-center">
           <Link href="/register/customer" className="text-xs md:text-sm font-bold text-on-surface-variant hover:text-primary whitespace-nowrap">
@@ -181,7 +181,7 @@ export default function LoginPage() {
           
           <div className="lg:col-span-5 flex flex-col gap-4 md:gap-6 text-center lg:text-left animate-fadeInUp">
             <h1 className="text-3xl md:text-5xl font-bold text-on-background leading-tight">
-              Welcome back to <br className="hidden lg:block"/> <span className="text-primary">MenuMap</span>.
+              Welcome back to <br className="hidden lg:block"/> <span className="text-primary">HeyRestro</span>.
             </h1>
             <p className="text-sm md:text-lg text-on-surface-variant max-w-md mx-auto lg:mx-0">
               Manage your restaurant or discover new places to eat.
@@ -233,7 +233,7 @@ export default function LoginPage() {
 
                     <div className="relative">
                       <label className="block text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-wide">Password</label>
-                      <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-body-md" type="password" placeholder="••••••••" required value={employeePassword} onChange={(e) => setEmployeePassword(e.target.value)} />
+                      <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-body-md" type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required value={employeePassword} onChange={(e) => setEmployeePassword(e.target.value)} />
                     </div>
 
                     <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-3 bg-primary py-4 px-6 rounded-xl text-on-primary shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200 active:scale-[0.98] cursor-pointer border-none outline-none font-bold">
@@ -310,3 +310,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

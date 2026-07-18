@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -34,12 +34,7 @@ export default function SideNavigation({ isOpen, onClose }) {
         )}
       >
         <Link href="/" className="flex items-center gap-3 px-8 mb-8 mt-2 cursor-pointer no-underline">
-          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-sm">
-            <MaterialIcon name="restaurant" className="text-xl" />
-          </div>
-          <h1 className="font-display-md text-display-md text-primary tracking-tight font-bold">
-            MenuMap
-          </h1>
+          <img src="/images/logo.png" alt="HeyRestro" className="h-12 w-auto" />
         </Link>
         
         <nav className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">
@@ -101,3 +96,4 @@ export default function SideNavigation({ isOpen, onClose }) {
     </>
   );
 }
+

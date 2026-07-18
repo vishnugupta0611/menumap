@@ -199,10 +199,9 @@ export default function HomePage() {
       >
         <div className="flex justify-between items-center w-full px-margin-mobile py-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-primary/10 text-primary">
-              <MaterialIcon name="restaurant_menu" className="text-[24px]" />
-            </div>
-            <h1 className="font-display-lg-mobile text-display-lg-mobile text-primary font-bold">MenuMap</h1>
+            <Link href="/" className="flex items-center gap-2">
+              <img src="/images/logo.png" alt="HeyRestro" className="h-12 w-auto" />
+            </Link>
           </div>
           
           <div className="flex items-center gap-2">
@@ -451,8 +450,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <h2 className="font-display-sm text-primary font-bold mb-4 flex items-center gap-2">
-              <MaterialIcon name="restaurant_menu" />
-              MenuMap
+              <img src="/images/logo.png" alt="HeyRestro" className="h-8 w-auto" />
             </h2>
             <p className="text-on-surface-variant max-w-sm mb-6">
               Connecting food lovers with local flavors. Build digital menus, discover nearby restaurants, and order seamlessly.
@@ -475,7 +473,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-outline-variant/30 text-center md:text-left text-sm text-on-surface-variant flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>© {new Date().getFullYear()} MenuMap. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} HeyRestro. All rights reserved.</p>
           <div className="flex gap-4">
             <a href="#" className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center hover:text-primary transition-colors">
               <MaterialIcon name="language" className="text-[20px]" />

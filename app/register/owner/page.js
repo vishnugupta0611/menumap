@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -215,8 +215,8 @@ export default function OwnerRegisterPage() {
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col font-body-md relative overflow-x-hidden">
       <header className="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-margin-mobile md:px-margin-desktop py-6">
-        <Link href="/" className="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary font-bold tracking-tight">
-          MenuMap
+        <Link href="/" className="flex items-center">
+          <img src="/images/logo.png" alt="HeyRestro" className="h-12 w-auto" />
         </Link>
         <Link href="/login" className="text-sm font-bold text-on-surface-variant hover:text-primary">
           Login
@@ -336,7 +336,7 @@ export default function OwnerRegisterPage() {
                 {signupStep === 4 && (
                   <div className="space-y-4 animate-reveal">
                     <h3 className="font-headline-md text-headline-md text-on-surface font-semibold">Secure your Account</h3>
-                    <p className="text-sm text-on-surface-variant">Choose how you want to sign in to your MenuMap dashboard.</p>
+                    <p className="text-sm text-on-surface-variant">Choose how you want to sign in to your HeyRestro dashboard.</p>
                     
                     <button onClick={handleGoogleSSO} disabled={isGoogleLoading} type="button" className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-outline-variant rounded-xl font-bold hover:bg-surface-container-lowest transition-all bg-white text-on-surface cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                       {isGoogleLoading ? (
@@ -411,3 +411,4 @@ export default function OwnerRegisterPage() {
     </div>
   );
 }
+

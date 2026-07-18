@@ -1,9 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import SimpleHeader from "@/components/SimpleHeader";
 
 export const metadata = {
-  title: 'Terms and Conditions - MenuMap',
-  description: 'Read the terms and conditions for using MenuMap.',
+  title: 'Terms and Conditions - HeyRestro',
+  description: 'Read the terms and conditions for using HeyRestro.',
 };
 
 export default function TermsPage() {
@@ -42,10 +42,10 @@ export default function TermsPage() {
               <h2 className="font-headline-md text-on-surface mb-4 font-bold">1. Acceptance of Terms</h2>
               <div className="space-y-4 text-on-surface-variant leading-relaxed text-base md:text-lg">
                 <p>
-                  By accessing or using the MenuMap platform ("Platform", "we", "us", or "our"), you agree to be bound by these Terms and Conditions ("Terms"). If you disagree with any part of the terms, then you do not have permission to access the Service.
+                  By accessing or using the HeyRestro platform ("Platform", "we", "us", or "our"), you agree to be bound by these Terms and Conditions ("Terms"). If you disagree with any part of the terms, then you do not have permission to access the Service.
                 </p>
                 <p>
-                  MenuMap acts as an intermediary technology platform connecting independent restaurant partners ("Restaurants") with diners ("Customers"). We do not prepare, sell, or deliver food ourselves.
+                  HeyRestro acts as an intermediary technology platform connecting independent restaurant partners ("Restaurants") with diners ("Customers"). We do not prepare, sell, or deliver food ourselves.
                 </p>
               </div>
             </section>
@@ -68,10 +68,10 @@ export default function TermsPage() {
               <h2 className="font-headline-md text-on-surface mb-4 font-bold">3. Restaurant Owners</h2>
               <div className="space-y-4 text-on-surface-variant leading-relaxed text-base md:text-lg">
                 <p>
-                  Restaurant owners who register on MenuMap ("Partners") agree to maintain accurate, up-to-date menus, pricing, and operational hours.
+                  Restaurant owners who register on HeyRestro ("Partners") agree to maintain accurate, up-to-date menus, pricing, and operational hours.
                 </p>
                 <p>
-                  Partners bear full legal and regulatory responsibility for the quality, safety, and hygiene of the food and beverages they list on the Platform. MenuMap is not liable for any health issues, allergic reactions, or foodborne illnesses resulting from orders placed through our Platform.
+                  Partners bear full legal and regulatory responsibility for the quality, safety, and hygiene of the food and beverages they list on the Platform. HeyRestro is not liable for any health issues, allergic reactions, or foodborne illnesses resulting from orders placed through our Platform.
                 </p>
               </div>
             </section>
@@ -80,10 +80,10 @@ export default function TermsPage() {
               <h2 className="font-headline-md text-on-surface mb-4 font-bold">4. Orders & Payments</h2>
               <div className="space-y-4 text-on-surface-variant leading-relaxed text-base md:text-lg">
                 <p>
-                  All prices listed on MenuMap are determined solely by the Restaurant Partners. Prices may change without prior notice. 
+                  All prices listed on HeyRestro are determined solely by the Restaurant Partners. Prices may change without prior notice. 
                 </p>
                 <p>
-                  MenuMap securely processes payments via encrypted third-party gateways. Once an order is confirmed by the Restaurant, refunds are only issued at the discretion of the Restaurant or under exceptional circumstances handled by our support team.
+                  HeyRestro securely processes payments via encrypted third-party gateways. Once an order is confirmed by the Restaurant, refunds are only issued at the discretion of the Restaurant or under exceptional circumstances handled by our support team.
                 </p>
               </div>
             </section>
@@ -92,7 +92,7 @@ export default function TermsPage() {
               <h2 className="font-headline-md text-on-surface mb-4 font-bold">5. Intellectual Property</h2>
               <div className="space-y-4 text-on-surface-variant leading-relaxed text-base md:text-lg">
                 <p>
-                  The Service and its original content (excluding Content provided by Restaurants), features, and functionality are and will remain the exclusive property of MenuMap and its licensors. The Service is protected by copyright, trademark, and other laws.
+                  The Service and its original content (excluding Content provided by Restaurants), features, and functionality are and will remain the exclusive property of HeyRestro and its licensors. The Service is protected by copyright, trademark, and other laws.
                 </p>
               </div>
             </section>
@@ -101,7 +101,7 @@ export default function TermsPage() {
               <h2 className="font-headline-md text-on-surface mb-4 font-bold">6. Limitation of Liability</h2>
               <div className="space-y-4 text-on-surface-variant leading-relaxed text-base md:text-lg">
                 <p>
-                  In no event shall MenuMap, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.
+                  In no event shall HeyRestro, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.
                 </p>
               </div>
             </section>
@@ -112,3 +112,4 @@ export default function TermsPage() {
     </div>
   );
 }
+

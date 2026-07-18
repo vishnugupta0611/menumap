@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -40,7 +40,7 @@ export default function CustomerRegisterPage() {
     }
   }, []);
 
-  // Google SSO — save name to session before redirect
+  // Google SSO â€” save name to session before redirect
   const handleGoogleSSO = async () => {
     if (!isSignUpLoaded || !signUp) return;
     if (!name.trim()) {
@@ -66,7 +66,7 @@ export default function CustomerRegisterPage() {
     }
   };
 
-  // Email/password submit → create Clerk account → send OTP
+  // Email/password submit â†’ create Clerk account â†’ send OTP
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     if (!isSignUpLoaded) return;
@@ -153,8 +153,8 @@ export default function CustomerRegisterPage() {
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col font-body-md relative overflow-x-hidden">
       <header className="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-margin-mobile md:px-margin-desktop py-6">
-        <Link href="/" className="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary font-bold tracking-tight">
-          MenuMap
+        <Link href="/" className="flex items-center">
+          <img src="/images/logo.png" alt="HeyRestro" className="h-12 w-auto" />
         </Link>
         <Link href="/login" className="text-sm font-bold text-on-surface-variant hover:text-primary">
           Login
@@ -313,3 +313,4 @@ export default function CustomerRegisterPage() {
     </div>
   );
 }
+

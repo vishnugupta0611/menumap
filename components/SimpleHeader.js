@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -21,7 +21,7 @@ export default function SimpleHeader() {
       }`}
     >
       <Link href="/" className="font-display-lg-mobile md:font-display-lg text-primary font-bold tracking-tight">
-        MenuMap
+        <img src="/images/logo.png" alt="HeyRestro" className="h-12 w-auto" />
       </Link>
       <div className="flex gap-4 md:gap-6 items-center">
         <Link href="/login" className="text-xs md:text-sm font-bold text-on-surface hover:text-primary transition-colors whitespace-nowrap">
@@ -34,3 +34,4 @@ export default function SimpleHeader() {
     </header>
   );
 }
+

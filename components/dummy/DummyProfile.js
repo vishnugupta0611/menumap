@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -157,7 +157,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                 </span>
                 {restaurant.priceForTwo && (
                   <span className="px-2.5 py-1 text-[11px] font-bold rounded-md bg-white/10 text-white/85 flex items-center gap-1">
-                    ₹{restaurant.priceForTwo} for two
+                    â‚¹{restaurant.priceForTwo} for two
                   </span>
                 )}
               </div>
@@ -321,7 +321,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                       {dish.name}
                     </h3>
                     <p className="text-white font-bold text-xs sm:text-sm bg-primary/90 backdrop-blur-md inline-block px-2.5 py-1 rounded-lg shadow-sm">
-                      ₹{dish.price}
+                      â‚¹{dish.price}
                     </p>
                   </div>
                 </Link>
@@ -621,7 +621,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
 
         {/* Existing Reviews List */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-          {/* MenuMap Default Review */}
+          {/* HeyRestro Default Review */}
           <div className="flex flex-col relative">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shrink-0 shadow-sm border border-primary/20">
@@ -629,7 +629,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
               </div>
               <div>
                 <h4 className="font-bold text-on-surface text-base flex items-center gap-1.5">
-                  MenuMap Team
+                  HeyRestro Team
                   <MaterialIcon name="check_circle" className="text-primary text-[14px]" fill />
                 </h4>
                 <div className="flex text-primary mt-0.5">
@@ -640,7 +640,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
               </div>
             </div>
             <p className="text-on-surface-variant font-medium text-base leading-relaxed pl-1">
-              "Welcome to MenuMap! We wish you immense success and hope your business grows beautifully with us. 🚀"
+              "Welcome to HeyRestro! We wish you immense success and hope your business grows beautifully with us. ðŸš€"
             </p>
           </div>
 
@@ -672,3 +672,4 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
     </>
   );
 }
+

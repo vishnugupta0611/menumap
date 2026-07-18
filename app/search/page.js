@@ -201,10 +201,7 @@ function SearchResultsContent() {
       <header className="bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl top-0 z-40 sticky border-b border-surface-container">
         <div className="flex justify-between items-center w-full px-margin-mobile py-4 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center gap-3 no-underline">
-            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-primary/10 text-primary">
-              <MaterialIcon name="restaurant_menu" className="text-[24px]" />
-            </div>
-            <h1 className="font-display-lg-mobile text-display-lg-mobile text-primary font-bold">MenuMap</h1>
+            <img src="/images/logo.png" alt="HeyRestro" className="h-12 w-auto" />
           </Link>
           
           <div className="flex items-center gap-2">

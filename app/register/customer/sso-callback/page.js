@@ -88,7 +88,7 @@ export default function CustomerSSOCallbackPage() {
         {status}
       </h2>
       <p className="mt-4 text-on-surface-variant max-w-sm text-center">
-        Setting up your MenuMap profile...
+        Setting up your HeyRestro profile...
       </p>
     </div>
   );
