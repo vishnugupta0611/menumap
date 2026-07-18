@@ -9,6 +9,7 @@ export const adminRoutes = [
   { href: "/admin/dashboard", icon: "dashboard", label: "Dashboard" },
   { href: "/admin/orders", icon: "notifications_active", label: "Live Orders" },
   { href: "/admin/history", icon: "history", label: "Order History" },
+  { href: "/admin/local-orders", icon: "menu_book", label: "Local Orders" },
   { href: "/admin/menu", icon: "restaurant_menu", label: "Manage Menu" },
   { href: "/admin/menu/ocr", icon: "document_scanner", label: "AI Menu OCR" },
 
