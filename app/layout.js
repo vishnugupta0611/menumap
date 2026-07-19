@@ -85,7 +85,7 @@ export const metadata = {
     siteName: "HeyRestro",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://heyrestro.com/og-image.png?v=1",
         width: 1200,
         height: 630,
         alt: "HeyRestro",
@@ -98,7 +98,7 @@ export const metadata = {
     title: "HeyRestro",
     description:
       "Discover nearby restaurants, explore menus, and create beautiful QR code digital menus with HeyRestro.",
-    images: ["/og-image.png"],
+    images: ["https://heyrestro.com/og-image.png"],
   },
 
   themeColor: "#ffffff",
