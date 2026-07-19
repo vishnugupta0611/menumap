@@ -19,8 +19,89 @@ const inter = Inter({
 import { Toaster } from "react-hot-toast";
 
 export const metadata = {
-  title: "HeyRestro | Restaurant OS and Food Discovery",
-  description: "Search food first, discover nearby restaurants, and manage QR menus with HeyRestro.",
+  metadataBase: new URL("https://heyrestro.com"),
+
+  title: {
+    default: "HeyRestro",
+    template: "%s | HeyRestro",
+  },
+
+  description:
+    "Discover nearby restaurants, explore menus, and create beautiful QR code digital menus with HeyRestro.",
+
+  keywords: [
+    "HeyRestro",
+    "Restaurant",
+    "Restaurant Menu",
+    "Digital Menu",
+    "QR Menu",
+    "Food Discovery",
+    "Restaurant Website",
+    "Restaurant QR Code",
+    "Online Menu",
+    "Restaurant Management",
+  ],
+
+  authors: [{ name: "HeyRestro" }],
+
+  creator: "HeyRestro",
+
+  publisher: "HeyRestro",
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+      "max-snippet": -1,
+    },
+  },
+
+  alternates: {
+    canonical: "/",
+  },
+
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: "/apple-icon-180x180.png",
+  },
+
+  manifest: "/manifest.json",
+
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "https://heyrestro.com",
+    title: "HeyRestro",
+    description:
+      "Discover nearby restaurants, explore menus, and create beautiful QR code digital menus with HeyRestro.",
+    siteName: "HeyRestro",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "HeyRestro",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "HeyRestro",
+    description:
+      "Discover nearby restaurants, explore menus, and create beautiful QR code digital menus with HeyRestro.",
+    images: ["/og-image.png"],
+  },
+
+  themeColor: "#ffffff",
 };
 
 function OptionalClerkProvider({ children }) {
