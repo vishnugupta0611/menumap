@@ -53,8 +53,9 @@ export default function DummyHeader({ restaurant }) {
     </Link>
 
     {/* CTA */}
+    
     <Link
-      href="/"
+      href="/register/owner"
       className="ml-4 inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-md transition-all duration-200 hover:scale-[1.03] hover:bg-primary/90 active:scale-95"
     >
       <MaterialIcon name="add_business" className="text-[18px]" />
