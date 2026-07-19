@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import DummyHeader from "@/components/dummy/DummyHeader";
 import DummyProfile from "@/components/dummy/DummyProfile";
+import DummyPromoPopup from "@/components/dummy/DummyPromoPopup";
 
 // Direct import of dummy data
 import dummyRestaurants from "@/app/api/data.json";
@@ -76,6 +77,7 @@ function DummyContent() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPromo, setShowPromo] = useState(false);
 
   useEffect(() => {
     if (!number) {
@@ -111,6 +113,14 @@ function DummyContent() {
     setLoading(false);
   }, [number]);
 
+  // Show promo popup 5 seconds after the page has loaded successfully
+  useEffect(() => {
+    if (!loading && data) {
+      const timer = setTimeout(() => setShowPromo(true), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, data]);
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center font-bold text-primary">Loading Preview...</div>;
   }
@@ -128,6 +138,7 @@ function DummyContent() {
       <div className="pt-[65px]">
         <DummyProfile restaurant={restaurant} menu={menu} reviews={reviews} gallery={gallery} />
       </div>
+      <DummyPromoPopup show={showPromo} onClose={() => setShowPromo(false)} />
     </div>
   );
 }
