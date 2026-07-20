@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -14,6 +14,9 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
   const [reviewText, setReviewText] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState(null);
+  const [loadingQr, setLoadingQr] = useState(false);
   const isOwner = user?.role === "owner";
 
   const submitReview = async (e) => {
@@ -42,6 +45,25 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
       setSubmittingReview(false);
     }
   };
+
+  const fetchQrAndShow = async () => {
+    if (qrDataUrl) {
+      setShowQrModal(true);
+      return;
+    }
+    setLoadingQr(true);
+    try {
+      const res = await api.get(`/api/qr/restaurants/${restaurant._id}`);
+      setQrDataUrl(res.data.data.dataUrl);
+      setShowQrModal(true);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load QR code.");
+    } finally {
+      setLoadingQr(false);
+    }
+  };
+
   const menuPath = `/${restaurant.city}/${restaurant.slug}/menu`;
   const validFacilities = (restaurant.facilities || []).filter((facility) => {
     return typeof facility === "string" && facility.trim().length > 0;
@@ -150,8 +172,22 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
                       : "bg-red-500/20 text-red-300 border-red-500/30"
                   }`}
                 >
-                  {restaurant.openNow ? "OPEN NOW" : "CLOSED"}
+                  {restaurant.openNow ? "Open Now" : "Closed"}
                 </span>
+                
+                <button
+                  onClick={fetchQrAndShow}
+                  disabled={loadingQr}
+                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold tracking-wide uppercase rounded-full border border-white/30 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors cursor-pointer"
+                >
+                  {loadingQr ? (
+                    <div className="w-3 h-3 border-2 border-white/60 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <MaterialIcon name="qr_code_2" className="text-[14px]" />
+                  )}
+                  View QR
+                </button>
+
                 {restaurant.priceForTwo && (
                   <span className="px-2.5 py-1 text-[11px] font-bold rounded-md bg-white/10 text-white/85 flex items-center gap-1">
                     â‚¹{restaurant.priceForTwo} for two

@@ -13,7 +13,6 @@ export const adminRoutes = [
   { href: "/admin/menu", icon: "restaurant_menu", label: "Manage Menu" },
   { href: "/admin/menu/ocr", icon: "document_scanner", label: "AI Menu OCR" },
   { href: "/admin/offers", icon: "local_offer", label: "Offers" },
-  { href: "/admin/reviews", icon: "rate_review", label: "Reviews" },
   { href: "/admin/menu-ui", icon: "palette", label: "Menu UI" },
   { href: "/admin/settings", icon: "tune", label: "Settings" },
   { href: "/admin/qr", icon: "qr_code_2", label: "QR Code" },

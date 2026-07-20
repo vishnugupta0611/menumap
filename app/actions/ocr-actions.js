@@ -10,8 +10,8 @@ export async function processMenuImage(base64Image, mimeType) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use gemini-2.5-flash which is widely supported and very fast for OCR
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // Use the latest gemini-3.5-flash for 2026
+    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     const prompt = `
       You are an expert OCR and menu parser.
