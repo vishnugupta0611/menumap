@@ -6,7 +6,7 @@ export async function generateMetadata({ params }) {
   const restaurant = await findRestaurant(city, slug);
   const title = `${restaurant.name} Menu, Reviews and Profile | MenuMap`;
   const description = `${restaurant.name} in ${restaurant.city}. View QR menu, dishes, facilities, photos and reviews.`;
-  const image = restaurant.heroImage || restaurant.logoImage || "https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1600&auto=format&fit=crop";
+  const image = restaurant.logoImage || restaurant.heroImage || "https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1600&auto=format&fit=crop";
 
   return {
     title,
