@@ -1,4 +1,4 @@
-﻿import { Plus_Jakarta_Sans, Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import QueryProvider from "@/components/QueryProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -58,10 +58,6 @@ export const metadata = {
       "max-video-preview": -1,
       "max-snippet": -1,
     },
-  },
-
-  alternates: {
-    canonical: "/",
   },
 
   icons: {
@@ -152,4 +148,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-
