@@ -1,34 +1,81 @@
 import RestaurantProfile from "@/components/public/RestaurantProfile";
-import { findRestaurant, findRestaurantMenu, listReviews, listGallery } from "@/services/restaurant-service";
+import {
+  findRestaurant,
+  findRestaurantMenu,
+  listReviews,
+  listGallery,
+} from "@/services/restaurant-service";
 
 export async function generateMetadata({ params }) {
   const { city, restaurant: slug } = await params;
+
   const restaurant = await findRestaurant(city, slug);
-  const title = `${restaurant.name} Menu, Reviews and Profile | MenuMap`;
-  const description = `${restaurant.name} in ${restaurant.city}. View QR menu, dishes, facilities, photos and reviews.`;
-  const image = restaurant.logoImage || restaurant.heroImage || "https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1600&auto=format&fit=crop";
+
+  const title = `${restaurant.name} | Best Restaurant in ${restaurant.city} | HeyRestro`;
+
+  const description = `Explore ${restaurant.name} located in ${restaurant.city}. View menu, address, contact details, photos, reviews, opening hours and discover the best dining experience with HeyRestro.`;
+
+  const image =
+    restaurant.logoImage ||
+    restaurant.heroImage ||
+    "https://heyrestro.com/og-image.png";
+
+  const canonical = `https://heyrestro.com/${city}/${slug}`;
+
+  const keywords = [
+    restaurant.name,
+    `${restaurant.name} menu`,
+    `${restaurant.name} restaurant`,
+    `${restaurant.name} ${restaurant.city}`,
+    `${restaurant.city} restaurants`,
+    `Restaurants in ${restaurant.city}`,
+    "Restaurant Menu",
+    "Digital Menu",
+    "QR Menu",
+    "Food Near Me",
+    "HeyRestro",
+  ];
 
   return {
     title,
     description,
+    keywords,
+
+    alternates: {
+      canonical,
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-video-preview": -1,
+        "max-snippet": -1,
+      },
+    },
+
     openGraph: {
       title,
       description,
-      url: `https://heyrestro.com/${city}/${slug}`,
-      siteName: 'MenuMap',
+      url: canonical,
+      siteName: "HeyRestro",
+      locale: "en_IN",
+      type: "website",
       images: [
         {
           url: image,
           width: 1200,
           height: 630,
-          alt: `${restaurant.name} banner`,
+          alt: restaurant.name,
         },
       ],
-      locale: 'en_IN',
-      type: 'website',
     },
+
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       title,
       description,
       images: [image],
@@ -38,10 +85,18 @@ export async function generateMetadata({ params }) {
 
 export default async function RestaurantPage({ params }) {
   const { city, restaurant: slug } = await params;
+
   const restaurant = await findRestaurant(city, slug);
   const menu = await findRestaurantMenu(city, slug);
   const reviews = await listReviews(city, slug);
   const gallery = await listGallery(city, slug);
 
-  return <RestaurantProfile restaurant={restaurant} menu={menu} reviews={reviews} gallery={gallery} />;
+  return (
+    <RestaurantProfile
+      restaurant={restaurant}
+      menu={menu}
+      reviews={reviews}
+      gallery={gallery}
+    />
+  );
 }
