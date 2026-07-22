@@ -190,7 +190,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
                 </span>
                 
                 <button
-                  onClick={fetchQrAndShow}
+                  onClick={handleQrClick}
                   disabled={loadingQr}
                   className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold tracking-wide uppercase rounded-full border border-white/30 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors cursor-pointer"
                 >
