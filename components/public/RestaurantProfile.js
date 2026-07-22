@@ -729,7 +729,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
             {/* Desktop Close Button (Absolute) */}
             <button 
               onClick={() => setShowQrModal(false)}
-              className="hidden sm:flex absolute -top-12 -right-12 w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 items-center justify-center transition-all backdrop-blur-md z-10"
+              className="hidden sm:flex absolute top-[-18px] -right-12 w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 items-center justify-center transition-all backdrop-blur-md z-10"
               aria-label="Close QR"
             >
               <MaterialIcon name="close" className="text-[24px]" />
