@@ -594,59 +594,63 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
 
         {/* Add Review Form */}
         <div className="mb-16">
-          <h3 className="font-bold text-2xl text-on-surface mb-8">Rate your experience</h3>
           {user ? (
-            <form onSubmit={submitReview} className="w-full">
-              <div className="flex mb-6 relative">
-                <div className="flex items-center gap-3">
-                  {[1, 2, 3, 4, 5].map((star) => {
-                    return (
-                      <button
-                        key={star}
-                        type="button"
-                        className={`transition-all hover:scale-110 focus:outline-none`}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        onClick={() => setRating(star)}
-                      >
-                        <MaterialIcon 
-                          name="star" 
-                          fill={(hoverRating || rating) >= star} 
-                          className={`text-4xl transition-colors drop-shadow-sm ${
-                            (hoverRating || rating) >= star ? "text-primary" : "text-on-surface-variant/30"
-                          }`} 
-                        />
-                      </button>
-                    );
-                  })}
+            <>
+              <h3 className="font-bold text-2xl text-on-surface mb-8">Rate your experience</h3>
+              <form onSubmit={submitReview} className="w-full">
+                <div className="flex mb-6 relative">
+                  <div className="flex items-center gap-3">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      return (
+                        <button
+                          key={star}
+                          type="button"
+                          className={`transition-all hover:scale-110 focus:outline-none`}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => setRating(star)}
+                        >
+                          <MaterialIcon 
+                            name="star" 
+                            fill={(hoverRating || rating) >= star} 
+                            className={`text-4xl transition-colors drop-shadow-sm ${
+                              (hoverRating || rating) >= star ? "text-primary" : "text-on-surface-variant/30"
+                            }`} 
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-              <div className="mb-6">
-                <textarea
-                  className="w-full h-36 p-6 rounded-[24px] border border-outline-variant/50 bg-surface-container-lowest/50 focus:bg-transparent focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all resize-none text-body-lg shadow-sm"
-                  placeholder="What was your experience like? Share the details..."
-                  value={reviewText}
-                  onChange={(e) => setReviewText(e.target.value)}
-                  required
-                ></textarea>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-bold text-primary">{reviewSuccess ? "Review submitted! Reloading..." : ""}</span>
-                <button
-                  type="submit"
-                  disabled={submittingReview || !reviewText.trim()}
-                  className="px-8 h-14 rounded-full bg-primary text-white font-bold transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center gap-2 text-base"
-                >
-                  <MaterialIcon name="send" className="text-[20px]" />
-                  {submittingReview ? "Submitting..." : "Post Review"}
-                </button>
-              </div>
-            </form>
+                <div className="mb-6">
+                  <textarea
+                    className="w-full h-36 p-6 rounded-[24px] border border-outline-variant/50 bg-surface-container-lowest/50 focus:bg-transparent focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all resize-none text-body-lg shadow-sm"
+                    placeholder="What was your experience like? Share the details..."
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    required
+                  ></textarea>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-bold text-primary">{reviewSuccess ? "Review submitted! Reloading..." : ""}</span>
+                  <button
+                    type="submit"
+                    disabled={submittingReview || !reviewText.trim()}
+                    className="px-8 h-14 rounded-full bg-primary text-white font-bold transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center gap-2 text-base"
+                  >
+                    <MaterialIcon name="send" className="text-[20px]" />
+                    {submittingReview ? "Submitting..." : "Post Review"}
+                  </button>
+                </div>
+              </form>
+            </>
           ) : (
-            <div className="py-8 text-left">
-              <p className="font-bold text-on-surface-variant text-lg mb-6">You must be logged in to leave a review.</p>
-              <Link href="/login" className="inline-flex items-center justify-center h-12 gap-2 px-8 bg-primary text-white font-bold rounded-full hover:brightness-110 transition-all shadow-sm">
-                Log In or Sign Up
+            <div className="bg-surface-container-low p-8 sm:p-10 rounded-3xl text-center border border-outline-variant/30 mt-6 shadow-sm">
+              <h3 className="font-bold text-xl sm:text-2xl text-on-surface mb-3">Share your experience</h3>
+              <p className="text-on-surface-variant text-sm sm:text-base mb-8 max-w-md mx-auto">Your feedback helps others make better dining decisions. Log in to write a review and rate this restaurant.</p>
+              <Link href="/login" className="inline-flex items-center justify-center h-12 sm:h-14 gap-2 px-8 bg-primary text-white font-bold rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_4px_16px_rgba(var(--primary-rgb),0.3)]">
+                <MaterialIcon name="login" className="text-[20px]" />
+                Log In to Review
               </Link>
             </div>
           )}
