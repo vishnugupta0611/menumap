@@ -267,24 +267,25 @@ export default async function RestaurantPage({ params }) {
         />
       </article>
 
-      {/* SEO Optimized Hidden / Minimal Bottom Section */}
+      {/* SEO Optimized Minimal Bottom Section */}
       <section className="max-w-4xl mx-auto px-6 py-12 border-t border-surface-container-highest/20 mt-12 bg-surface text-on-surface-variant">
         
-        {/* About Section */}
+        {/* FAQs - Accordion Style */}
         <div className="mb-10">
-          <h2 className="text-2xl font-bold text-on-surface mb-4">About {restaurant.name}</h2>
-          <p className="leading-relaxed text-sm">{aboutText}</p>
-        </div>
-
-        {/* FAQs */}
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold text-on-surface mb-4">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold text-on-surface mb-6">Frequently Asked Questions</h2>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
-              <div key={index} className="bg-surface-container-low p-4 rounded-xl">
-                <h3 className="font-semibold text-on-surface mb-2">{faq.question}</h3>
-                <p className="text-sm">{faq.answer}</p>
-              </div>
+              <details key={index} className="bg-surface-container-low p-4 rounded-xl group cursor-pointer border border-surface-container-highest/20">
+                <summary className="font-semibold text-on-surface list-none flex justify-between items-center outline-none">
+                  {faq.question}
+                  <span className="material-symbols-outlined text-primary transition-transform duration-300 group-open:-rotate-180">
+                    expand_more
+                  </span>
+                </summary>
+                <p className="text-sm mt-4 text-on-surface-variant leading-relaxed border-t border-surface-container-highest/20 pt-4">
+                  {faq.answer}
+                </p>
+              </details>
             ))}
           </div>
         </div>
