@@ -22,6 +22,7 @@ export default function MenuUIPage() {
     showBadges: true,
     showImage: true,
     galleryLayout: "simple",
+    qrCharacter: "img1",
   });
 
   const [saveStatus, setSaveStatus] = useState("All changes synced");
@@ -51,6 +52,7 @@ export default function MenuUIPage() {
               showImage: rest.menuUiSettings?.showImage ?? true,
               showTabs: rest.menuUiSettings?.showTabs ?? true,
               galleryLayout: rest.menuUiSettings?.galleryLayout || "simple",
+              qrCharacter: rest.menuUiSettings?.qrCharacter || "img1",
             });
           }
         }
@@ -250,6 +252,39 @@ export default function MenuUIPage() {
                       <span className={`font-bold text-xs sm:text-sm ${isActive ? 'text-primary' : 'text-on-surface'}`}>{layout.label}</span>
                       <span className="text-[10px] sm:text-xs text-on-surface-variant">{layout.desc}</span>
                     </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* QR Customization */}
+        <div className="bg-white p-6 md:p-8 rounded-[32px] border border-surface-container-highest/20 shadow-[0_8px_30px_rgb(0,0,0,0.08)] space-y-6">
+          <h3 className="font-bold text-lg text-on-surface flex items-center gap-3">
+            <MaterialIcon name="qr_code_scanner" className="text-primary text-2xl" />
+            QR Code Mascot
+          </h3>
+          
+          <div>
+            <label className="block text-sm font-bold text-on-surface mb-1">Mascot Character</label>
+            <p className="text-xs text-on-surface-variant mb-4">Choose the character to hold your QR code when users scan</p>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              {[
+                { id: 'img1', label: 'Classic Waiter', src: '/images/img1.png' },
+                { id: 'img2', label: 'Modern Waiter', src: '/images/img2.png' }
+              ].map(char => {
+                const isActive = settings.qrCharacter === char.id;
+                return (
+                  <div 
+                    key={char.id}
+                    onClick={() => setSettings({ ...settings, qrCharacter: char.id })}
+                    className={`p-3 sm:p-4 rounded-[20px] border-2 cursor-pointer transition-all flex flex-col items-center gap-2 ${isActive ? 'border-primary bg-primary/5' : 'border-outline-variant hover:border-primary/30'}`}
+                  >
+                    <div className={`w-full aspect-[4/3] rounded-lg mb-2 overflow-hidden bg-surface-container flex items-center justify-center ${isActive ? 'border-2 border-primary' : ''}`}>
+                      <img src={char.src} alt={char.label} className="w-full h-full object-cover object-top" />
+                    </div>
+                    <span className={`font-bold text-xs sm:text-sm ${isActive ? 'text-primary' : 'text-on-surface'}`}>{char.label}</span>
                   </div>
                 )
               })}

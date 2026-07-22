@@ -5,6 +5,7 @@ import Link from "next/link";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
+import { QR_CHARACTERS } from "@/lib/qrCharacters";
 
 export default function RestaurantProfile({ restaurant, menu, reviews = [], gallery = [] }) {
   const { user } = useAuth();
@@ -18,6 +19,9 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
   const [qrDataUrl, setQrDataUrl] = useState(null);
   const [loadingQr, setLoadingQr] = useState(false);
   const isOwner = user?.role === "owner";
+
+  const qrCharacterId = restaurant?.menuUiSettings?.qrCharacter || "img1";
+  const activeQrConfig = QR_CHARACTERS[qrCharacterId] || QR_CHARACTERS["img1"];
 
   const submitReview = async (e) => {
     e.preventDefault();
@@ -735,9 +739,9 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
               <MaterialIcon name="close" className="text-[24px]" />
             </button>
             
-            <div className="relative inline-block w-full sm:w-auto sm:max-w-full max-h-[85vh] scale-[1.7] sm:scale-100 origin-[34%_65%] sm:origin-center transition-transform">
+            <div className={`relative inline-block w-full sm:w-auto sm:max-w-full max-h-[85vh] scale-[1.7] sm:scale-100 ${activeQrConfig.mobileOriginClass} sm:origin-center transition-transform`}>
               <img 
-                src="/images/img1.png" 
+                src={activeQrConfig.src} 
                 alt="Scan QR" 
                 className="w-full sm:w-auto h-auto sm:max-h-[85vh] object-contain drop-shadow-2xl" 
                 style={{ borderRadius: '24px' }}
@@ -746,12 +750,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
               {/* QR Code Container overlaying the white box */}
               <div 
                 className="absolute flex items-center justify-center bg-white rounded-md overflow-hidden"
-                style={{
-                  left: "25.9%",
-                  top: "52.5%",
-                  width: "16.93%",
-                  height: "24.71%"
-                }}
+                style={activeQrConfig.style}
               >
                 {qrDataUrl ? (
                   <img src={qrDataUrl} alt="Restaurant QR" className="w-[92%] h-[92%] object-contain mix-blend-multiply" />
