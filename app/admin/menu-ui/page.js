@@ -272,7 +272,8 @@ export default function MenuUIPage() {
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               {[
                 { id: 'img1', label: 'Classic Waiter', src: '/images/img1.png' },
-                { id: 'img2', label: 'Modern Waiter', src: '/images/img2.png' }
+                { id: 'img2', label: 'Modern Waiter', src: '/images/img2.png' },
+                { id: 'img3', label: 'Casual Waiter', src: '/images/img3.png' }
               ].map(char => {
                 const isActive = settings.qrCharacter === char.id;
                 return (
