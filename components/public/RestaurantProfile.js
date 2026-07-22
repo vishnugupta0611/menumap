@@ -50,11 +50,21 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
     }
   };
 
-  const fetchQrAndShow = async () => {
+  const handleQrClick = async () => {
+    // If the permanent Cloudinary QR URL is already available, use it instantly!
+    if (restaurant?.qrCodeUrl) {
+      setQrDataUrl(restaurant.qrCodeUrl);
+      setShowQrModal(true);
+      return;
+    }
+
+    // Fallback: If not generated yet but fetched this session
     if (qrDataUrl) {
       setShowQrModal(true);
       return;
     }
+
+    // Legacy dynamic generation fallback (will be hit if owner hasn't clicked Generate yet)
     setLoadingQr(true);
     try {
       const res = await api.get(`/api/qr/restaurants/${restaurant._id}`);

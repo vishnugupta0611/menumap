@@ -7,6 +7,7 @@ import { AdminPanel } from "@/components/admin/AdminPanel";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
+import { uploadImageToCloudinary } from "@/app/actions/upload-actions";
 
 export default function QrCodePage() {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ export default function QrCodePage() {
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isGeneratingPermanentQr, setIsGeneratingPermanentQr] = useState(false);
   
   const [activeDesignIndex, setActiveDesignIndex] = useState(0);
   const [bgColor, setBgColor] = useState("#ffffff");
@@ -54,6 +56,37 @@ export default function QrCodePage() {
       cacheBust: true,
       backgroundColor: bgColor,
     });
+  };
+
+  const handleGeneratePermanentQr = async () => {
+    if (!qrData?.dataUrl) return;
+    setIsGeneratingPermanentQr(true);
+    try {
+      const { url } = await uploadImageToCloudinary(qrData.dataUrl);
+      await api.patch(`/api/restaurants/id/${restaurant._id}`, { qrCodeUrl: url });
+      setRestaurant(prev => ({ ...prev, qrCodeUrl: url }));
+      alert("Permanent QR Code generated and saved to Cloudinary!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate permanent QR");
+    } finally {
+      setIsGeneratingPermanentQr(false);
+    }
+  };
+
+  const handleMascotSelect = async (charId) => {
+    setRestaurant(prev => ({
+      ...prev,
+      menuUiSettings: { ...prev.menuUiSettings, qrCharacter: charId }
+    }));
+    try {
+      await api.patch(`/api/restaurants/id/${restaurant._id}`, {
+        menuUiSettings: { ...restaurant.menuUiSettings, qrCharacter: charId }
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save Mascot character");
+    }
   };
 
   const handleDownloadPng = async () => {
@@ -164,6 +197,64 @@ export default function QrCodePage() {
           </div>
         ) : qrData && restaurant ? (
           <div className="space-y-10">
+
+            {/* Permanent QR Generator & Mascot Setup */}
+            <div className="bg-white p-6 md:p-8 rounded-[32px] border border-surface-container-highest/20 shadow-[0_8px_30px_rgb(0,0,0,0.08)] space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/30 pb-6">
+                <div>
+                  <h3 className="font-bold text-lg text-on-surface flex items-center gap-3">
+                    <MaterialIcon name="qr_code" className="text-primary text-2xl" />
+                    Permanent Public QR Code
+                  </h3>
+                  <p className="text-xs text-on-surface-variant mt-1">Generate your QR code once and save it to Cloudinary for faster loading on your public profile.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {restaurant.qrCodeUrl ? (
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-full flex items-center gap-1">
+                      <MaterialIcon name="check_circle" className="text-[16px]" /> Active
+                    </span>
+                  ) : (
+                    <span className="text-xs font-bold text-error bg-error/10 px-3 py-1.5 rounded-full flex items-center gap-1">
+                      <MaterialIcon name="warning" className="text-[16px]" /> Not Generated
+                    </span>
+                  )}
+                  <button 
+                    onClick={handleGeneratePermanentQr}
+                    disabled={isGeneratingPermanentQr}
+                    className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl shadow-md hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center gap-2"
+                  >
+                    {isGeneratingPermanentQr ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <MaterialIcon name="cloud_upload" className="text-[18px]" />}
+                    {restaurant.qrCodeUrl ? "Regenerate QR" : "Generate My QR"}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-on-surface mb-1">Mascot Character</label>
+                <p className="text-xs text-on-surface-variant mb-4">Choose the character to hold your QR code when users click "View QR" on your public menu.</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                  {[
+                    { id: 'img1', label: 'Classic Waiter', src: '/images/img1.png' },
+                    { id: 'img2', label: 'Modern Waiter', src: '/images/img2.png' },
+                    { id: 'img3', label: 'Casual Waiter', src: '/images/img3.png' }
+                  ].map(char => {
+                    const isActive = (restaurant?.menuUiSettings?.qrCharacter || 'img1') === char.id;
+                    return (
+                      <div 
+                        key={char.id}
+                        onClick={() => handleMascotSelect(char.id)}
+                        className={`p-3 sm:p-4 rounded-[20px] border-2 cursor-pointer transition-all flex flex-col items-center gap-2 ${isActive ? 'border-primary bg-primary/5' : 'border-outline-variant hover:border-primary/30'}`}
+                      >
+                        <div className={`w-full aspect-[4/3] rounded-lg mb-2 overflow-hidden bg-surface-container flex items-center justify-center ${isActive ? 'border-2 border-primary' : ''}`}>
+                          <img src={char.src} alt={char.label} className="w-full h-full object-cover object-top" />
+                        </div>
+                        <span className={`font-bold text-xs sm:text-sm ${isActive ? 'text-primary' : 'text-on-surface'}`}>{char.label}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
 
             {/* Top Bar (Download Button) */}
             <div className="flex flex-wrap justify-between items-center bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/30 shadow-sm relative gap-4">
