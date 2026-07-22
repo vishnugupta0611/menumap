@@ -706,6 +706,63 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
           ))}
         </div>
       </section>
+
+      {/* Custom QR Modal Overlay */}
+      {showQrModal && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-6 bg-black/90 backdrop-blur-sm animate-in fade-in duration-300 overflow-hidden"
+          onClick={() => setShowQrModal(false)}
+        >
+          {/* Mobile Close Button (Fixed) */}
+          <button 
+            onClick={() => setShowQrModal(false)}
+            className="fixed sm:hidden top-6 right-6 w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 flex items-center justify-center transition-all backdrop-blur-md z-[110]"
+            aria-label="Close QR"
+          >
+            <MaterialIcon name="close" className="text-[24px]" />
+          </button>
+
+          <div 
+            className="relative inline-flex flex-col items-center justify-center w-full max-w-full sm:w-auto max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Desktop Close Button (Absolute) */}
+            <button 
+              onClick={() => setShowQrModal(false)}
+              className="hidden sm:flex absolute -top-12 -right-12 w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 items-center justify-center transition-all backdrop-blur-md z-10"
+              aria-label="Close QR"
+            >
+              <MaterialIcon name="close" className="text-[24px]" />
+            </button>
+            
+            <div className="relative inline-block w-full sm:w-auto sm:max-w-full max-h-[85vh] scale-[1.7] sm:scale-100 origin-[34%_65%] sm:origin-center transition-transform">
+              <img 
+                src="/images/img1.png" 
+                alt="Scan QR" 
+                className="w-full sm:w-auto h-auto sm:max-h-[85vh] object-contain drop-shadow-2xl" 
+                style={{ borderRadius: '24px' }}
+              />
+              
+              {/* QR Code Container overlaying the white box */}
+              <div 
+                className="absolute flex items-center justify-center bg-white rounded-md overflow-hidden"
+                style={{
+                  left: "25.9%",
+                  top: "52.5%",
+                  width: "16.93%",
+                  height: "24.71%"
+                }}
+              >
+                {qrDataUrl ? (
+                  <img src={qrDataUrl} alt="Restaurant QR" className="w-[92%] h-[92%] object-contain mix-blend-multiply" />
+                ) : (
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
