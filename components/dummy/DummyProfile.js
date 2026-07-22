@@ -157,7 +157,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                 </span>
                 {restaurant.priceForTwo && (
                   <span className="px-2.5 py-1 text-[11px] font-bold rounded-md bg-white/10 text-white/85 flex items-center gap-1">
-                    â‚¹{restaurant.priceForTwo} for two
+                    ₹{restaurant.priceForTwo} for two
                   </span>
                 )}
               </div>
@@ -321,7 +321,7 @@ export default function DummyProfile({ restaurant, menu, reviews = [], gallery =
                       {dish.name}
                     </h3>
                     <p className="text-white font-bold text-xs sm:text-sm bg-primary/90 backdrop-blur-md inline-block px-2.5 py-1 rounded-lg shadow-sm">
-                      â‚¹{dish.price}
+                      ₹{dish.price}
                     </p>
                   </div>
                 </Link>
