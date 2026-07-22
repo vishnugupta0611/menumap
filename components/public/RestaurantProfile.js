@@ -85,7 +85,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
   const featuredItems = [...menu]
     .filter((item) => item && item.name && item.price !== undefined)
     .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
-    .slice(0, 5);
+    .slice(0, 4);
   const heroLayout = restaurant.menuUiSettings?.heroImageLayout || "rounded";
   const galleryStyle = restaurant?.menuUiSettings?.galleryLayout || "unlimited";
   
