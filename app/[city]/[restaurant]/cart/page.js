@@ -23,6 +23,7 @@ export default function CartPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [orderSuccess, setOrderSuccess] = useState(false);
   const [restaurant, setRestaurant] = useState(null);
   const [loadingRestaurant, setLoadingRestaurant] = useState(true);
 
@@ -98,7 +99,11 @@ export default function CartPage() {
       await api.post(`/api/orders`, orderPayload);
 
       clearCart();
-      router.push(`/${city}/${slug}/profile`);
+      if (user) {
+        router.push(`/${city}/${slug}/profile`);
+      } else {
+        setOrderSuccess(true);
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to place order. Please try again.");
@@ -110,6 +115,23 @@ export default function CartPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (orderSuccess) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center animate-fadeInUp">
+        <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-6 shadow-inner border-4 border-green-100">
+          <MaterialIcon name="check_circle" className="text-6xl" />
+        </div>
+        <h1 className="font-headline-lg text-headline-lg mb-3 text-on-surface">Order Placed Successfully!</h1>
+        <p className="text-on-surface-variant mb-8 max-w-sm text-base">
+          Thank you, <span className="font-bold text-on-surface">{formData.name}</span>! Your order has been sent to the kitchen and is being prepared.
+        </p>
+        <Link href={`/${city}/${slug}/menu`} className="bg-primary text-on-primary px-8 py-3.5 rounded-full font-bold shadow-lg hover:shadow-xl active:scale-95 transition-all text-sm uppercase tracking-wide">
+          Back to Menu
+        </Link>
       </div>
     );
   }
