@@ -96,12 +96,20 @@ export default function CartPage() {
         })),
       };
 
-      await api.post(`/api/orders`, orderPayload);
+      const res = await api.post(`/api/orders`, orderPayload);
+      const newOrder = res.data.data;
 
       clearCart();
       if (user) {
         router.push(`/${city}/${slug}/profile`);
       } else {
+        // Track guest order
+        if (newOrder && newOrder._id) {
+          const storageKey = `guestOrders_${restaurant._id}`;
+          const existing = JSON.parse(localStorage.getItem(storageKey) || "[]");
+          existing.push(newOrder._id);
+          localStorage.setItem(storageKey, JSON.stringify(existing));
+        }
         setOrderSuccess(true);
       }
     } catch (err) {
@@ -129,9 +137,14 @@ export default function CartPage() {
         <p className="text-on-surface-variant mb-8 max-w-sm text-base">
           Thank you, <span className="font-bold text-on-surface">{formData.name}</span>! Your order has been sent to the kitchen and is being prepared.
         </p>
-        <Link href={`/${city}/${slug}/menu`} className="bg-primary text-on-primary px-8 py-3.5 rounded-full font-bold shadow-lg hover:shadow-xl active:scale-95 transition-all text-sm uppercase tracking-wide">
-          Back to Menu
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+          <Link href={`/${city}/${slug}/profile`} className="flex-1 bg-surface-variant text-on-surface-variant px-6 py-3.5 rounded-full font-bold shadow-sm hover:shadow-md active:scale-95 transition-all text-sm uppercase tracking-wide">
+            Track Order
+          </Link>
+          <Link href={`/${city}/${slug}/menu`} className="flex-1 bg-primary text-on-primary px-6 py-3.5 rounded-full font-bold shadow-lg hover:shadow-xl active:scale-95 transition-all text-sm uppercase tracking-wide">
+            Back to Menu
+          </Link>
+        </div>
       </div>
     );
   }

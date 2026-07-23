@@ -23,38 +23,73 @@ export default function ProfilePage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [hasGuestOrders, setHasGuestOrders] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
 
   useEffect(() => {
-    if (displayEmail) {
-      api.get(`/api/orders/customer?email=${encodeURIComponent(displayEmail)}`)
-        .then(res => {
+    let isMounted = true;
+    const loadData = async () => {
+      try {
+        if (displayEmail) {
+          const res = await api.get(`/api/orders/customer?email=${encodeURIComponent(displayEmail)}`);
+          if (!isMounted) return;
           const fetchedOrders = res.data.data || [];
           setOrders(fetchedOrders);
-          setLoading(false);
-
+          
           if (!socket.connected) socket.connect();
           
           // Join rooms for all restaurants the user has orders in
           const uniqueRestaurantIds = [...new Set(fetchedOrders.map(o => o.restaurantId?._id).filter(Boolean))];
           uniqueRestaurantIds.forEach(id => socket.emit("restaurant:join", id));
-        })
-        .catch(err => {
-          console.error(err);
-          setError("Could not load your orders.");
-          setLoading(false);
-        });
+        } else {
+          // Guest tracking logic
+          const restRes = await api.get(`/api/restaurants/${city}/${slug}`);
+          const restaurantId = restRes.data.data._id;
+          const guestIds = JSON.parse(localStorage.getItem(`guestOrders_${restaurantId}`) || "[]");
+          
+          if (guestIds.length > 0) {
+            if (isMounted) {
+              setHasGuestOrders(true);
+              setGuestName(localStorage.getItem("guestName") || "Guest");
+              setGuestPhone(localStorage.getItem("guestPhone") || "");
+            }
+            
+            const ordersRes = await api.post('/api/orders/guest', { orderIds: guestIds });
+            if (!isMounted) return;
+            const fetchedOrders = ordersRes.data.data || [];
+            // Ensure we only show orders for this restaurant
+            setOrders(fetchedOrders.filter(o => o.restaurantId?.slug === slug));
+            
+            if (!socket.connected) socket.connect();
+            socket.emit("restaurant:join", restaurantId);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        if (isMounted) setError("Could not load your orders.");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
 
-      socket.on("orders:status", (updatedOrder) => {
-        setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
-      });
+    loadData();
 
-      return () => {
-        socket.off("orders:status");
-      };
-    } else {
-      setLoading(false);
-    }
-  }, [displayEmail]);
+    const handleStatusUpdate = (updatedOrder) => {
+      setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
+    };
+
+    socket.on("orders:status", handleStatusUpdate);
+
+    return () => {
+      isMounted = false;
+      socket.off("orders:status", handleStatusUpdate);
+    };
+  }, [displayEmail, city, slug]);
+
+  const actualDisplayName = displayName || guestName || "Guest";
+  const actualDisplayEmail = displayEmail || "Guest Account";
+  const actualDisplayPhone = customerInfo?.phone || guestPhone;
 
   if (isOwner) {
     return (
@@ -71,7 +106,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (!displayEmail) {
+  if (!displayEmail && !hasGuestOrders) {
     return (
       <div className="bg-background min-h-screen text-on-background flex flex-col items-center justify-center p-6 text-center">
         <MaterialIcon name="account_circle" className="text-6xl text-outline mb-4" />
@@ -96,15 +131,20 @@ export default function ProfilePage() {
         <section className="bg-white p-6 md:p-8 rounded-[32px] shadow-sm border border-surface-container flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
           <div className="w-24 h-24 bg-primary text-on-primary rounded-full flex items-center justify-center text-4xl font-bold uppercase shadow-inner overflow-hidden shrink-0">
             {displayPhoto ? (
-              <img src={displayPhoto} alt={displayName} className="w-full h-full object-cover" />
+              <img src={displayPhoto} alt={actualDisplayName} className="w-full h-full object-cover" />
             ) : (
-              displayName?.charAt(0) || "U"
+              actualDisplayName.charAt(0) || "U"
             )}
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl md:text-3xl font-bold text-on-surface mb-2">{displayName}</h2>
-            <p className="text-on-surface-variant font-body-md bg-surface-container-low inline-block px-3 py-1 rounded-full text-sm mb-1">{displayEmail}</p>
-            {customerInfo?.phone && <p className="text-on-surface-variant font-body-md text-sm mt-2">{customerInfo.phone}</p>}
+            <div className="flex items-center gap-3 justify-center md:justify-start mb-2">
+              <h2 className="text-2xl md:text-3xl font-bold text-on-surface">{actualDisplayName}</h2>
+              {!displayEmail && hasGuestOrders && (
+                <span className="bg-secondary/10 text-secondary text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wide">Guest</span>
+              )}
+            </div>
+            <p className="text-on-surface-variant font-body-md bg-surface-container-low inline-block px-3 py-1 rounded-full text-sm mb-1">{actualDisplayEmail}</p>
+            {actualDisplayPhone && <p className="text-on-surface-variant font-body-md text-sm mt-2">{actualDisplayPhone}</p>}
           </div>
           {user && (
             <Link href="/customer/profile" className="px-5 py-2.5 bg-surface-variant text-on-surface-variant rounded-xl font-bold hover:bg-surface-variant/80 transition-colors whitespace-nowrap mt-4 md:mt-0">
@@ -164,9 +204,6 @@ export default function ProfilePage() {
           )}
         </section>
       </main>
-      <div>
-       
-      </div>
     </div>
   );
 }
