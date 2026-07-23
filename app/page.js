@@ -360,33 +360,46 @@ export default function HomePage() {
                   <div className="h-4 w-1/2 bg-surface-variant animate-pulse rounded"></div>
                 </div>
               ))
-            ) : nearbyRestaurants.map((restaurant) => (
-              <Link
-                key={restaurant._id}
-                href={`/${restaurant.city}/${restaurant.slug}`}
-                prefetch={true}
-                className="flex-shrink-0 w-72 group block"
-              >
-                <div className="relative h-44 w-full rounded-2xl overflow-hidden shadow-sm mb-3">
-                  <img
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    alt={restaurant.name}
-                    src={restaurant.heroImage || restaurant.logoImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(restaurant.name)}&background=random&size=300`}
-                  />
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
-                    <MaterialIcon name="star" className="text-sm text-primary fill" />
-                    <span className="text-xs font-bold text-on-surface">{restaurant.rating}</span>
+            ) : (
+              <>
+                {nearbyRestaurants.map((restaurant) => (
+                  <Link
+                    key={restaurant._id}
+                    href={`/${restaurant.city}/${restaurant.slug}`}
+                    prefetch={true}
+                    className="flex-shrink-0 w-72 group block"
+                  >
+                    <div className="relative h-44 w-full rounded-2xl overflow-hidden shadow-sm mb-3">
+                      <img
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        alt={restaurant.name}
+                        src={restaurant.heroImage || restaurant.logoImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(restaurant.name)}&background=random&size=300`}
+                      />
+                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+                        <MaterialIcon name="star" className="text-sm text-primary fill" />
+                        <span className="text-xs font-bold text-on-surface">{restaurant.rating}</span>
+                      </div>
+                    </div>
+                    <h4 className="font-headline-md text-[18px] text-on-surface group-hover:text-primary transition-colors">
+                      {restaurant.name}
+                    </h4>
+                    <p className="text-on-surface-variant text-sm flex items-center gap-1 mt-1">
+                      <MaterialIcon name="location_on" className="text-xs" />
+                      {restaurant.cuisine?.split(", ")[0]} • <span className="font-bold">{formatDistance(restaurant.distanceKm)}</span> away
+                    </p>
+                  </Link>
+                ))}
+                <Link
+                  href="/search"
+                  className="flex-shrink-0 w-72 group block h-full min-h-[240px] rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary bg-primary/5 hover:bg-primary/10 transition-all flex flex-col items-center justify-center gap-3"
+                >
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <MaterialIcon name="arrow_forward" className="text-primary text-2xl" />
                   </div>
-                </div>
-                <h4 className="font-headline-md text-[18px] text-on-surface group-hover:text-primary transition-colors">
-                  {restaurant.name}
-                </h4>
-                <p className="text-on-surface-variant text-sm flex items-center gap-1 mt-1">
-                  <MaterialIcon name="location_on" className="text-xs" />
-                  {restaurant.cuisine?.split(", ")[0]} • <span className="font-bold">{formatDistance(restaurant.distanceKm)}</span> away
-                </p>
-              </Link>
-            ))}
+                  <h4 className="font-headline-md text-[18px] text-primary">See all restro</h4>
+                </Link>
+              </>
+            )}
           </div>
         </section>
 

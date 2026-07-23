@@ -23,6 +23,7 @@ export default function MenuUIPage() {
     showImage: true,
     galleryLayout: "simple",
     qrCharacter: "img1",
+    allowGuestOrders: false,
   });
 
   const [saveStatus, setSaveStatus] = useState("All changes synced");
@@ -53,6 +54,7 @@ export default function MenuUIPage() {
               showTabs: rest.menuUiSettings?.showTabs ?? true,
               galleryLayout: rest.menuUiSettings?.galleryLayout || "simple",
               qrCharacter: rest.menuUiSettings?.qrCharacter || "img1",
+              allowGuestOrders: rest.menuUiSettings?.allowGuestOrders ?? false,
             });
           }
         }
@@ -315,6 +317,19 @@ export default function MenuUIPage() {
               <input type="checkbox" className="sr-only" checked={settings.showImage} onChange={(e) => setSettings({ ...settings, showImage: !settings.showImage })} />
               <div className={`w-14 h-8 rounded-full transition-colors duration-200 ${settings.showImage ? "bg-primary" : "bg-surface-variant"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full transition-transform duration-200 mt-1 ml-1 ${settings.showImage ? "translate-x-6" : "translate-x-0"}`}></div>
+              </div>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-outline-variant/30 pt-4">
+            <div className="space-y-1">
+              <h3 className="font-bold text-sm text-on-surface">Allow Guest Orders</h3>
+              <p className="text-xs text-on-surface-variant">Allow customers to place orders without creating an account (Login not required).</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer select-none">
+              <input type="checkbox" className="sr-only" checked={settings.allowGuestOrders} onChange={(e) => setSettings({ ...settings, allowGuestOrders: !settings.allowGuestOrders })} />
+              <div className={`w-14 h-8 rounded-full transition-colors duration-200 ${settings.allowGuestOrders ? "bg-primary" : "bg-surface-variant"}`}>
+                <div className={`w-6 h-6 bg-white rounded-full transition-transform duration-200 mt-1 ml-1 ${settings.allowGuestOrders ? "translate-x-6" : "translate-x-0"}`}></div>
               </div>
             </label>
           </div>

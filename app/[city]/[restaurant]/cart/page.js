@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
@@ -13,24 +12,46 @@ export default function CartPage() {
   const router = useRouter();
   const params = useParams();
   const { city, restaurant: slug } = params;
-  const { cart, addItem, removeItem, getTotalAmount, customerInfo, setCustomerInfo, clearCart } = useCartStore();
+  const { cart, addItem, removeItem, getTotalAmount, clearCart } = useCartStore();
   const { user, loading: authLoading } = useAuth();
   const isOwner = user?.role === "owner";
   
   const [formData, setFormData] = useState({
-    name: customerInfo?.name || "",
-    email: customerInfo?.email || "",
-    phone: customerInfo?.phone || "",
+    name: "",
+    phone: "",
     tableNumber: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [restaurant, setRestaurant] = useState(null);
+  const [loadingRestaurant, setLoadingRestaurant] = useState(true);
+
+  // Load restaurant settings and guest details from localStorage
+  useEffect(() => {
+    async function init() {
+      try {
+        const resData = await api.get(`/api/restaurants/${city}/${slug}`);
+        setRestaurant(resData.data.data);
+      } catch (err) {
+        console.error("Failed to load restaurant", err);
+      } finally {
+        setLoadingRestaurant(false);
+      }
+      
+      const guestName = localStorage.getItem("guestName") || "";
+      const guestPhone = localStorage.getItem("guestPhone") || "";
+      setFormData(prev => ({ ...prev, name: guestName, phone: guestPhone }));
+    }
+    init();
+  }, [city, slug]);
 
   useEffect(() => {
     if (!authLoading && isOwner) {
       clearCart();
     }
   }, [authLoading, isOwner, clearCart]);
+
+  const allowGuestOrders = restaurant?.menuUiSettings?.allowGuestOrders === true;
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -39,8 +60,13 @@ export default function CartPage() {
       return;
     }
     
-    if (!user) {
+    if (!user && !allowGuestOrders) {
       router.push("/login");
+      return;
+    }
+    
+    if (!user && allowGuestOrders && !formData.name.trim()) {
+      setError("Please enter your name to place the order.");
       return;
     }
 
@@ -50,13 +76,15 @@ export default function CartPage() {
     setError("");
 
     try {
-      const resData = await api.get(`/api/restaurants/${city}/${slug}`);
-      const restaurantId = resData.data.data._id;
+      if (!user && allowGuestOrders) {
+        localStorage.setItem("guestName", formData.name);
+        localStorage.setItem("guestPhone", formData.phone);
+      }
 
       const orderPayload = {
-        restaurantId,
-        customerName: user.name,
-        customerEmail: user.email,
+        restaurantId: restaurant._id,
+        customerName: user ? user.name : formData.name,
+        customerEmail: user ? user.email : undefined,
         customerPhone: formData.phone,
         tableNumber: formData.tableNumber,
         items: cart.map(item => ({
@@ -78,7 +106,7 @@ export default function CartPage() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || loadingRestaurant) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -157,15 +185,33 @@ export default function CartPage() {
               <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-4">
                 
                 {user ? (
-                  <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/30 flex items-center gap-3 shadow-inner">
+                  <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/30 flex items-center gap-3 shadow-inner mb-4">
                     <MaterialIcon name="check_circle" className="text-primary text-[24px]" />
                     <div>
                       <p className="font-bold text-on-surface text-sm">Ordering as {user.name}</p>
                       <p className="text-xs text-on-surface-variant">{user.email}</p>
                     </div>
                   </div>
+                ) : allowGuestOrders ? (
+                  <>
+                    <div className="bg-primary/10 text-primary p-4 rounded-xl mb-4 flex items-start gap-3">
+                      <MaterialIcon name="info" className="mt-0.5" />
+                      <p className="text-sm font-medium">You are ordering as a guest. Your name will be remembered for your next visit.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-on-surface-variant mb-1">Name (Required)</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                        placeholder="Enter your name"
+                      />
+                    </div>
+                  </>
                 ) : (
-                  <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/30 text-center">
+                  <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/30 text-center mb-4">
                     <MaterialIcon name="account_circle" className="text-outline text-3xl mb-2" />
                     <p className="font-bold text-on-surface text-sm mb-1">Login Required</p>
                     <p className="text-xs text-on-surface-variant mb-4">Please login to securely place your order.</p>
@@ -208,7 +254,7 @@ export default function CartPage() {
               <span className="text-xs text-on-surface-variant uppercase tracking-wider font-bold">Total to Pay</span>
               <span className="font-display-sm text-on-surface">Rs {getTotalAmount()}</span>
             </div>
-            {user ? (
+            {user || allowGuestOrders ? (
               <button
                 type="submit"
                 form="checkout-form"
