@@ -76,7 +76,7 @@ export default function ProfilePage() {
     loadData();
 
     const handleStatusUpdate = (updatedOrder) => {
-      setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
+      setOrders(prev => prev.map(o => o._id === updatedOrder._id ? { ...o, status: updatedOrder.status } : o));
     };
 
     socket.on("orders:status", handleStatusUpdate);
