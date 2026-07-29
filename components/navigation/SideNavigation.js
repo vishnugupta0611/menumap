@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -34,7 +34,7 @@ export default function SideNavigation({ isOpen, onClose }) {
         )}
       >
         <Link href="/" className="flex items-center gap-3 px-8 mb-8 mt-2 cursor-pointer no-underline">
-          <img src="/images/logo.png" alt="HeyRestro" className="h-12 w-auto" />
+          <img src="/images/logo.png?v=2" alt="HeyRestro" className="h-12 w-auto" />
         </Link>
         
         <nav className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">

@@ -34,6 +34,7 @@ function SearchResultsContent() {
   const [loadError, setLoadError] = useState("");
   const [page, setPage] = useState(searchPageLoaded ? searchPage : 1);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const observer = useRef();
 
   const TRENDING_KEYWORDS = "Idli Chowmein Dosa Sambhar Pasta Chhole Bhature Pizza Burger Momos";
@@ -96,6 +97,7 @@ function SearchResultsContent() {
       
       try {
         if (page > 1) setLoadingMore(true);
+        else setIsSearching(true);
         
         let resultsRes;
         
@@ -132,6 +134,7 @@ function SearchResultsContent() {
         setLoadError("Search is temporarily unavailable.");
       } finally {
         setLoadingMore(false);
+        setIsSearching(false);
       }
     }
 
@@ -291,7 +294,18 @@ function SearchResultsContent() {
             {loadError}
           </div>
         )}
-        {displayData.length > 0 ? (
+        {isSearching ? (
+          [...Array(6)].map((_, i) => (
+             <div key={`skel-${i}`} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-surface-container animate-pulse flex flex-col h-[300px]">
+               <div className="h-40 w-full bg-surface-variant"></div>
+               <div className="p-3.5 space-y-3 flex-1 flex flex-col">
+                 <div className="h-5 bg-surface-variant rounded w-3/4"></div>
+                 <div className="h-3 bg-surface-variant rounded w-1/2"></div>
+                 <div className="mt-auto h-3 bg-surface-variant rounded w-full"></div>
+               </div>
+             </div>
+          ))
+        ) : displayData.length > 0 ? (
           displayData.map((item, index) => {
             const isLast = index === displayData.length - 1;
             return (
@@ -365,8 +379,10 @@ function SearchResultsContent() {
             );
           })
         ) : (
-          <div className="col-span-full py-16 text-center text-on-surface-variant font-body-lg">
-            No dishes found.
+          <div className="col-span-full py-16 flex flex-col items-center justify-center text-on-surface-variant opacity-80">
+            <MaterialIcon name="search_off" className="text-6xl mb-4 text-primary" />
+            <p className="text-lg font-bold">No dishes found</p>
+            <p className="text-sm">Try searching for something else.</p>
           </div>
         )}
         </div>

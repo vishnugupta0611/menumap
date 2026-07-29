@@ -224,7 +224,7 @@ export default function HomePage() {
         <div className="flex justify-between items-center w-full px-margin-mobile py-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/images/logo.png" alt="HeyRestro" className="h-12 w-auto" />
+              <img src="/images/logo.png?v=2" alt="HeyRestro" className="h-12 w-auto" />
             </Link>
           </div>
           
@@ -292,26 +292,36 @@ export default function HomePage() {
 
         {/* Quick Search Chips */}
         <section className="mb-10 -mx-margin-mobile overflow-x-auto hide-scrollbar flex gap-3 px-margin-mobile">
-          {categories.map((cat) => (
-            <button
-              key={cat.label}
-              onClick={() => {
-                setActiveCategory(cat.label);
-                if (cat.label !== "All") {
-                  setSearchQuery(cat.label);
-                } else {
-                  setSearchQuery("");
-                }
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-on-surface whitespace-nowrap transition-all active:scale-95 cursor-pointer border-none ${
-                activeCategory === cat.label
-                  ? "bg-primary-container/15 border border-primary/20"
-                  : "bg-surface-container-high border border-transparent hover:bg-surface-variant"
-              }`}
-            >
-              <span>{cat.emoji}</span>
-              <span className="font-label-sm text-label-sm">{cat.label}</span>
-            </button>
+          {categories.map((cat, index) => (
+            <div key={cat.label} className="flex gap-3">
+              <button
+                onClick={() => {
+                  setActiveCategory(cat.label);
+                  if (cat.label !== "All") {
+                    router.push(`/search?q=${encodeURIComponent(cat.label)}`);
+                  }
+                }}
+                className={`whitespace-nowrap px-5 py-2.5 rounded-full font-bold text-sm shadow-sm transition-all duration-300 flex items-center gap-2 cursor-pointer border ${
+                  activeCategory === cat.label
+                    ? "bg-primary text-on-primary border-transparent scale-105"
+                    : "bg-surface text-on-surface border-outline-variant/30 hover:bg-surface-variant hover:border-primary/40 active:scale-95"
+                }`}
+              >
+                <span>{cat.emoji}</span>
+                {cat.label}
+              </button>
+              
+              {/* Inject All Restros button right after All */}
+              {index === 0 && (
+                <Link
+                  href="/registered-restro"
+                  className="whitespace-nowrap px-5 py-2.5 rounded-full font-bold text-sm shadow-sm transition-all duration-300 flex items-center gap-2 cursor-pointer border bg-secondary text-on-secondary border-transparent hover:brightness-110 active:scale-95 no-underline"
+                >
+                  <MaterialIcon name="storefront" className="text-[18px]" />
+                  All Restros
+                </Link>
+              )}
+            </div>
           ))}
         </section>
 
