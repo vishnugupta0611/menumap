@@ -60,6 +60,15 @@ export default function HomePage() {
           findDishResults("", { limit: 20 })
         ]);
         
+        const shuffleArray = (array) => {
+          const arr = [...array];
+          for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+          }
+          return arr;
+        };
+        
         const broadRestaurants = restaurantsList.length ? restaurantsList : await listNearbyRestaurants({});
         
         let dishes = dishesRes.data || [];
@@ -86,9 +95,10 @@ export default function HomePage() {
           }
         }
         
+        dishes = shuffleArray(dishes);
         const finalTrending = dishes.slice(0, 3);
         
-        const rawRecDishes = (recRes.data?.length ? recRes.data : ultimateFallbackRes.data) || [];
+        const rawRecDishes = shuffleArray((recRes.data?.length ? recRes.data : ultimateFallbackRes.data) || []);
         const finalRecDishes = [];
         const seenRecRestros = new Set();
         
@@ -385,7 +395,8 @@ export default function HomePage() {
               Map View
             </button>
           </div>
-          <div className="flex -mx-margin-mobile overflow-x-auto hide-scrollbar gap-6 px-margin-mobile">
+          {/* Added pb-4 so shadows/cards don't clip, removed -mx-margin-mobile which causes white overlay issues on some mobile layouts, using full width padding instead */}
+          <div className="flex overflow-x-auto hide-scrollbar gap-6 pb-6 pt-2 w-[100vw] relative left-1/2 -translate-x-1/2 px-margin-mobile md:w-auto md:left-auto md:translate-x-0 md:px-0">
             {loading ? (
               Array(3).fill(0).map((_, i) => (
                 <div key={i} className="flex-shrink-0 w-72">
