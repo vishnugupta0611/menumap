@@ -46,18 +46,11 @@ export async function processMenuImage(base64Image, mimeType) {
     ];
 
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+      const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
       result = await model.generateContent(reqPayload);
     } catch (e1) {
-      console.warn("Failed with gemini-1.5-flash-latest, trying gemini-1.5-pro-latest...", e1.message);
-      try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
-        result = await model.generateContent(reqPayload);
-      } catch (e2) {
-        console.warn("Failed with gemini-1.5-pro-latest, trying gemini-pro-vision...", e2.message);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
-        result = await model.generateContent(reqPayload);
-      }
+      console.warn("Failed with gemini-3.5-flash:", e1.message);
+      return { error: e1.message };
     }
 
     const response = await result.response;
