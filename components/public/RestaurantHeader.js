@@ -25,19 +25,7 @@ export default function RestaurantHeader({ restaurant }) {
         </span>
       </Link>
       <div className="flex items-center gap-1 md:gap-3 shrink-0">
-        {/* Navigation Links */}
-        <div className="flex items-center">
-          {isMenuPage ? (
-            <Link href={`/${restaurant.city}/${restaurant.slug}`} className="px-2.5 py-1.5 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-variant transition-colors whitespace-nowrap">
-              Home
-            </Link>
-          ) : (
-            <Link href={`/${restaurant.city}/${restaurant.slug}/menu`} className="px-2.5 py-1.5 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-variant transition-colors whitespace-nowrap">
-              Menu
-            </Link>
-          )}
-        </div>
-
+        {/* Navigation Links Removed per user request */}
         {!isAdmin && (
           <Link
             href={`/${restaurant.city}/${restaurant.slug}/cart`}

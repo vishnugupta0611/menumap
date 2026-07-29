@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { useCartStore } from "@/stores/cart-store";
@@ -10,10 +10,11 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [foodFilter, setFoodFilter] = useState("all"); // "all" | "veg" | "non-veg"
   const [activeCategory, setActiveCategory] = useState("");
+  const [hasGuestOrders, setHasGuestOrders] = useState(false);
 
   const activeOffer = offers && offers.length > 0 ? offers[0] : null;
 
-  const { cart, addItem, removeItem, getTotalAmount, getTotalItems } = useCartStore();
+  const { cart, restaurantId, addItem, removeItem, getTotalAmount, getTotalItems } = useCartStore();
   const { user } = useAuth();
   const isOwner = user?.role === "owner";
 
@@ -27,6 +28,15 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
     showBadges: true,
     showImage: true,
   };
+
+  useEffect(() => {
+    if (!isOwner && restaurant?._id) {
+      const guestIds = JSON.parse(localStorage.getItem(`guestOrders_${restaurant._id}`) || "[]");
+      if (guestIds.length > 0) {
+        setHasGuestOrders(true);
+      }
+    }
+  }, [isOwner, restaurant?._id]);
 
   // Filtering logic
   const filteredMenu = menu.filter((item) => {
@@ -351,7 +361,7 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
       </main>
 
       {/* Floating Order Summary */}
-      {!isOwner && getTotalItems() > 0 && (
+      {!isOwner && getTotalItems() > 0 && (!restaurantId || restaurantId === restaurant._id) && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-50 transform transition-transform duration-500 translate-y-0 animate-reveal">
           <div className="bg-on-surface text-surface p-3 md:p-4 rounded-[20px] md:rounded-3xl flex justify-between items-center shadow-2xl backdrop-blur-xl border border-white/10">
             <div className="flex items-center gap-3">
@@ -366,6 +376,15 @@ export default function RestaurantMenuList({ restaurant, menu, offers = [] }) {
               <span className="material-symbols-outlined text-[14px] md:text-[18px]">arrow_forward</span>
             </Link>
           </div>
+        </div>
+      )}
+
+      {/* Floating Track Order Button for Guests */}
+      {!isOwner && hasGuestOrders && (
+        <div className={`fixed z-40 transition-all duration-500 animate-reveal ${getTotalItems() > 0 && (!restaurantId || restaurantId === restaurant._id) ? "bottom-28 right-5 md:right-8" : "bottom-8 right-5 md:right-8"}`}>
+           <Link href={`/${restaurant.city.toLowerCase()}/${restaurant.slug.toLowerCase()}/profile`} className="w-14 h-14 bg-secondary text-white rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.2)] flex items-center justify-center font-bold active:scale-95 transition-transform hover:scale-105 border-2 border-white/20">
+             <MaterialIcon name="receipt_long" className="text-[24px]" />
+           </Link>
         </div>
       )}
     </div>

@@ -12,7 +12,7 @@ export default function CartPage() {
   const router = useRouter();
   const params = useParams();
   const { city, restaurant: slug } = params;
-  const { cart, addItem, removeItem, getTotalAmount, clearCart } = useCartStore();
+  const { cart, restaurantId, addItem, removeItem, getTotalAmount, clearCart } = useCartStore();
   const { user, loading: authLoading } = useAuth();
   const isOwner = user?.role === "owner";
   
@@ -166,6 +166,28 @@ export default function CartPage() {
             <Link href="/admin/dashboard" className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 font-bold text-on-primary">
               Go to Admin Panel
             </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (cart.length > 0 && restaurantId && restaurant?._id && restaurantId !== restaurant._id) {
+    return (
+      <div className="pb-32">
+        <main className="max-w-2xl mx-auto space-y-8 animate-fadeInUp px-margin-mobile pt-16 text-center">
+          <MaterialIcon name="error_outline" className="text-6xl text-error mb-4" />
+          <h1 className="font-headline-lg text-headline-lg mb-4 text-on-surface">Different Restaurant</h1>
+          <p className="text-on-surface-variant mb-8 max-w-md mx-auto">
+            You have items in your cart from another restaurant. Please clear your cart if you'd like to order from <strong className="text-on-surface">{restaurant.name}</strong>.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link href={`/${city}/${slug}/menu`} className="bg-surface-variant text-on-surface-variant px-6 py-3.5 rounded-full font-bold active:scale-95 transition-transform uppercase tracking-wide text-sm">
+              Go Back
+            </Link>
+            <button onClick={clearCart} className="bg-error text-white px-6 py-3.5 rounded-full font-bold shadow-lg hover:shadow-xl active:scale-95 transition-all uppercase tracking-wide text-sm">
+              Clear Cart
+            </button>
           </div>
         </main>
       </div>

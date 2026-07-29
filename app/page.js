@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
-import { listNearbyRestaurants, findDishResults, getApproxLocationFromIp } from "@/services/restaurant-service";
+import { listNearbyRestaurants, findDishResults, getApproxLocationFromIp, listGallery } from "@/services/restaurant-service";
+import Fuse from "fuse.js";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGlobalStore } from "@/stores/global-store";
 
@@ -122,6 +123,41 @@ export default function HomePage() {
           }
         }
         
+        const fallbackProcessDishes = async (dishesArray) => {
+          const missingImageDishes = dishesArray.filter(d => !d.image && d.restaurant?.city && d.restaurant?.slug);
+          if (missingImageDishes.length === 0) return;
+
+          const restroMap = new Map();
+          missingImageDishes.forEach(d => {
+            const key = `${d.restaurant.city}/${d.restaurant.slug}`;
+            if (!restroMap.has(key)) restroMap.set(key, { city: d.restaurant.city, slug: d.restaurant.slug, dishes: [] });
+            restroMap.get(key).dishes.push(d);
+          });
+
+          await Promise.all(Array.from(restroMap.values()).map(async (restro) => {
+            try {
+              const gallery = await listGallery(restro.city, restro.slug);
+              if (gallery && gallery.length > 0) {
+                const fuse = new Fuse(gallery, {
+                  keys: ["name", "tags", "title", "description"],
+                  threshold: 0.4
+                });
+                
+                restro.dishes.forEach(dish => {
+                  const results = fuse.search(dish.name);
+                  if (results.length > 0 && results[0].item.url) {
+                    dish.image = results[0].item.url;
+                  }
+                });
+              }
+            } catch (e) {
+              console.error("Gallery fallback failed", e);
+            }
+          }));
+        };
+
+        await fallbackProcessDishes([...finalTrending, ...finalRecDishes]);
+
         setHomeData({
           nearbyRestaurants: broadRestaurants,
           trendingDishes: finalTrending,

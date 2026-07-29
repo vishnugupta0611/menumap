@@ -91,6 +91,16 @@ export default function ProfilePage() {
   const actualDisplayEmail = displayEmail || "Guest Account";
   const actualDisplayPhone = customerInfo?.phone || guestPhone;
 
+  if (loading) {
+    return (
+      <div className="bg-background min-h-screen flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-6" />
+        <h2 className="font-headline-sm text-on-surface mb-2">Loading your orders...</h2>
+        <p className="text-on-surface-variant max-w-sm mx-auto">We're checking the kitchen for your latest updates.</p>
+      </div>
+    );
+  }
+
   if (isOwner) {
     return (
       <div className="bg-background min-h-screen text-on-background flex flex-col items-center justify-center p-6 text-center">
