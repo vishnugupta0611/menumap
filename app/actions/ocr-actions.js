@@ -10,7 +10,6 @@ export async function processMenuImage(base64Image, mimeType) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       You are an expert OCR and menu parser.
@@ -34,7 +33,9 @@ export async function processMenuImage(base64Image, mimeType) {
     `;
 
     console.log("OCR Action: Calling Gemini API...", { mimeType, imageLength: base64Image?.length });
-    const result = await model.generateContent([
+    
+    let result;
+    const reqPayload = [
       prompt,
       {
         inlineData: {
@@ -42,7 +43,22 @@ export async function processMenuImage(base64Image, mimeType) {
           mimeType: mimeType,
         },
       },
-    ]);
+    ];
+
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+      result = await model.generateContent(reqPayload);
+    } catch (e1) {
+      console.warn("Failed with gemini-1.5-flash-latest, trying gemini-1.5-pro-latest...", e1.message);
+      try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+        result = await model.generateContent(reqPayload);
+      } catch (e2) {
+        console.warn("Failed with gemini-1.5-pro-latest, trying gemini-pro-vision...", e2.message);
+        const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+        result = await model.generateContent(reqPayload);
+      }
+    }
 
     const response = await result.response;
     let text = response.text();
