@@ -29,10 +29,18 @@ export default function MenuOcrPage() {
   const [activeItemIndex, setActiveItemIndex] = useState(null);
   const [galleryQuery, setGalleryQuery] = useState("");
 
-  // When OCR succeeds, populate editable items
+  // When OCR succeeds, populate editable items and auto-assign images
+  const [isAssigning, setIsAssigning] = useState(false);
   useEffect(() => {
     if (ocr.data?.items) {
       setEditableItems(ocr.data.items.map(item => ({ ...item, selected: true })));
+      
+      // Automatically trigger auto-assign with a loading state
+      setIsAssigning(true);
+      setTimeout(() => {
+        handleAutoAssignImages(ocr.data.items.map(item => ({ ...item, selected: true })));
+        setIsAssigning(false);
+      }, 1500);
     }
   }, [ocr.data]);
 
@@ -94,26 +102,39 @@ export default function MenuOcrPage() {
     reader.readAsDataURL(file);
   }
 
-  function handleAutoAssignImages() {
+  function handleAutoAssignImages(initialItems = null) {
     const fuse = new Fuse(galleryData, {
       keys: ['termName'],
       threshold: 0.5,
+      includeScore: true,
       ignoreLocation: true
     });
 
-    setEditableItems(prev => prev.map(item => {
-      if (item.image) return item; // skip if already has image
-      const results = fuse.search(item.name || "");
-      if (results.length > 0 && results[0].item.imageUrls.length > 0) {
-        // pick a random image from the matched term's URLs to add variety
-        const urls = results[0].item.imageUrls;
-        const randomUrl = urls[Math.floor(Math.random() * urls.length)];
-        return { ...item, image: randomUrl };
-      }
-      
-      // If no image match is found, leave it as is
-      return item;
-    }));
+    setEditableItems(prev => {
+      const itemsToProcess = initialItems || prev;
+      return itemsToProcess.map(item => {
+        if (item.image) return item; // skip if already has image
+        const results = fuse.search(item.name || "");
+        if (results.length > 0) {
+          // get decent matches up to 0.4 distance
+          const decentMatches = results.filter(r => r.score !== undefined && r.score <= 0.4);
+          const candidates = decentMatches.length > 0 ? decentMatches : [results[0]];
+          
+          // pick a random candidate among the decent ones
+          const randomCandidate = candidates[Math.floor(Math.random() * candidates.length)].item;
+          
+          // pick a random image from that candidate's URLs to add variety
+          if (randomCandidate.imageUrls.length > 0) {
+            const urls = randomCandidate.imageUrls;
+            const randomUrl = urls[Math.floor(Math.random() * urls.length)];
+            return { ...item, image: randomUrl };
+          }
+        }
+        
+        // If no image match is found, leave it as is
+        return item;
+      });
+    });
   }
 
   async function handleApproveAndSave() {
@@ -224,9 +245,15 @@ export default function MenuOcrPage() {
                   </p>
                   
                   <div className="flex items-center gap-2 sm:gap-3">
+                    {isAssigning && (
+                      <span className="text-[10px] sm:text-xs text-primary font-bold flex items-center gap-1 animate-pulse">
+                        <MaterialIcon name="sync" className="animate-spin text-[12px] sm:text-[14px]" /> Assigning images...
+                      </span>
+                    )}
                     <button 
-                      onClick={handleAutoAssignImages}
-                      className="text-[10px] sm:text-xs font-bold bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-colors px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-full flex items-center gap-1"
+                      onClick={() => handleAutoAssignImages()}
+                      disabled={isAssigning}
+                      className="text-[10px] sm:text-xs font-bold bg-primary/10 text-primary hover:bg-primary hover:text-on-primary disabled:opacity-50 transition-colors px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-full flex items-center gap-1"
                     >
                       <MaterialIcon name="auto_awesome" className="text-[12px] sm:text-[14px]" /> Auto-Assign
                     </button>
@@ -279,7 +306,7 @@ export default function MenuOcrPage() {
                           type="text" 
                           value={item.name} 
                           onChange={(e) => handleItemChange(index, 'name', e.target.value)}
-                          className="w-full bg-transparent font-bold text-sm sm:text-base text-on-surface border-b border-transparent focus:border-primary outline-none transition-colors"
+                          className="w-full bg-transparent font-bold text-xs sm:text-sm text-on-surface border-b border-transparent focus:border-primary outline-none transition-colors"
                         />
                       </div>
                       <div>
