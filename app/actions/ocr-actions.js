@@ -45,12 +45,29 @@ export async function processMenuImage(base64Image, mimeType) {
       },
     ];
 
-    try {
-      const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
-      result = await model.generateContent(reqPayload);
-    } catch (e1) {
-      console.warn("Failed with gemini-3.5-flash:", e1.message);
-      return { error: e1.message };
+    let retries = 3;
+    let delayMs = 1500;
+    
+    while (retries > 0) {
+      try {
+        const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+        result = await model.generateContent(reqPayload);
+        break; // Success
+      } catch (e1) {
+        if (e1.message && (e1.message.includes("503") || e1.message.includes("429") || e1.message.includes("quota"))) {
+          retries--;
+          if (retries === 0) {
+            console.warn("Failed with gemini-3.5-flash after retries:", e1.message);
+            return { error: "AI is currently experiencing high demand. Please try again in a moment." };
+          }
+          console.log(`Gemini API busy (${e1.message.substring(0, 40)}...). Retrying in ${delayMs}ms...`);
+          await new Promise(r => setTimeout(r, delayMs));
+          delayMs *= 2; // Exponential backoff
+        } else {
+          console.warn("Failed with gemini-3.5-flash (unrecoverable error):", e1.message);
+          return { error: e1.message };
+        }
+      }
     }
 
     const response = await result.response;
