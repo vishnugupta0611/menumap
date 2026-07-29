@@ -50,7 +50,7 @@ async function test() {
       },
     ];
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
     
     // Implement retry logic
     let retries = 3;
