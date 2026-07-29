@@ -55,9 +55,9 @@ export default function HomePage() {
         const [restaurantsList, dishesRes, recRes, fallbackRes, ultimateFallbackRes] = await Promise.all([
           listNearbyRestaurants(locationFilters),
           findDishResults(TRENDING_KEYWORDS, { ...locationFilters, limit: 10 }),
-          findDishResults("", { ...locationFilters, limit: 4 }),
+          findDishResults("", { ...locationFilters, limit: 20 }),
           findDishResults(TRENDING_KEYWORDS, { limit: 10 }),
-          findDishResults("", { limit: 10 })
+          findDishResults("", { limit: 20 })
         ]);
         
         const broadRestaurants = restaurantsList.length ? restaurantsList : await listNearbyRestaurants({});
@@ -88,10 +88,34 @@ export default function HomePage() {
         
         const finalTrending = dishes.slice(0, 3);
         
+        const rawRecDishes = (recRes.data?.length ? recRes.data : ultimateFallbackRes.data) || [];
+        const finalRecDishes = [];
+        const seenRecRestros = new Set();
+        
+        // First try to get up to 5 items from distinct restaurants
+        for (const dish of rawRecDishes) {
+          const restroId = String(dish.restaurantId?._id || dish.restaurantId || "unknown");
+          if (!seenRecRestros.has(restroId)) {
+            finalRecDishes.push(dish);
+            seenRecRestros.add(restroId);
+            if (finalRecDishes.length >= 5) break;
+          }
+        }
+        
+        // If we still need more to reach 5, pad with remaining items
+        if (finalRecDishes.length < 5) {
+          for (const dish of rawRecDishes) {
+            if (!finalRecDishes.find(d => d._id === dish._id)) {
+              finalRecDishes.push(dish);
+              if (finalRecDishes.length >= 5) break;
+            }
+          }
+        }
+        
         setHomeData({
           nearbyRestaurants: broadRestaurants,
           trendingDishes: finalTrending,
-          recommendedDishes: (recRes.data?.length ? recRes.data : ultimateFallbackRes.data) || []
+          recommendedDishes: finalRecDishes
         });
       } catch {
         setLoadError("Food discovery is temporarily unavailable. Please try again in a moment.");
