@@ -178,9 +178,9 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
                   {restaurant.cuisine}
                 </p>
               )}
-              <div className={`flex flex-wrap gap-3 items-center ${heroLayout === "full-width" ? "justify-center mb-10" : ""}`}>
+              <div className={`flex flex-nowrap gap-2 sm:gap-3 items-center overflow-x-auto hide-scrollbar w-full ${heroLayout === "full-width" ? "justify-center mb-10" : ""}`}>
                 <span
-                  className={`shrink-0 px-3 py-1 text-xs font-bold tracking-wide uppercase rounded-full border ${
+                  className={`shrink-0 px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold tracking-wide uppercase rounded-full border ${
                     restaurant.openNow
                       ? "bg-green-500/20 text-green-300 border-green-500/30"
                       : "bg-red-500/20 text-red-300 border-red-500/30"
@@ -192,7 +192,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
                 <button
                   onClick={handleQrClick}
                   disabled={loadingQr}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-xs font-bold tracking-wide uppercase rounded-full border border-white/30 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors cursor-pointer"
+                  className="shrink-0 flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold tracking-wide uppercase rounded-full border border-white/30 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors cursor-pointer"
                 >
                   {loadingQr ? (
                     <div className="w-3 h-3 border-2 border-white/60 border-t-transparent rounded-full animate-spin"></div>
@@ -203,7 +203,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
                 </button>
 
                 {restaurant.priceForTwo && (
-                  <span className="shrink-0 px-2.5 py-1 text-[11px] font-bold rounded-md bg-white/10 text-white/85 flex items-center gap-1">
+                  <span className="shrink-0 px-2 sm:px-2.5 py-1 text-[9px] sm:text-[11px] font-bold rounded-md bg-white/10 text-white/85 flex items-center gap-1">
                     ₹{restaurant.priceForTwo} for two
                   </span>
                 )}
