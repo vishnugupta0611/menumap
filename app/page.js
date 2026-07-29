@@ -124,7 +124,10 @@ export default function HomePage() {
         }
         
         const fallbackProcessDishes = async (dishesArray) => {
-          const missingImageDishes = dishesArray.filter(d => !d.image && d.restaurant?.city && d.restaurant?.slug);
+          const missingImageDishes = dishesArray.filter(d => {
+            const hasNoImg = !d.image || typeof d.image !== 'string' || d.image.trim() === '' || d.image.includes('placeholder');
+            return hasNoImg && d.restaurant?.city && d.restaurant?.slug;
+          });
           if (missingImageDishes.length === 0) return;
 
           const restroMap = new Map();
@@ -140,13 +143,20 @@ export default function HomePage() {
               if (gallery && gallery.length > 0) {
                 const fuse = new Fuse(gallery, {
                   keys: ["name", "tags", "title", "description"],
-                  threshold: 0.4
+                  threshold: 0.6,
+                  ignoreLocation: true
                 });
                 
-                restro.dishes.forEach(dish => {
+                restro.dishes.forEach((dish, i) => {
                   const results = fuse.search(dish.name);
                   if (results.length > 0 && results[0].item.url) {
                     dish.image = results[0].item.url;
+                  } else {
+                    // Fallback to ANY gallery image if fuse doesn't find a specific match
+                    const randomGalleryImg = gallery[i % gallery.length];
+                    if (randomGalleryImg?.url) {
+                      dish.image = randomGalleryImg.url;
+                    }
                   }
                 });
               }
