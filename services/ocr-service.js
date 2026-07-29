@@ -18,6 +18,11 @@ export async function extractMenuFromImage(file) {
   try {
     const result = await processMenuImage(base64Image, mimeType);
     console.log("OCR Service: Server action returned result:", result);
+    
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    
     return {
       sourceName: file.name,
       confidence: result.confidence || 0.9,

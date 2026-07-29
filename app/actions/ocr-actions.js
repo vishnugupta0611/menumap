@@ -10,8 +10,7 @@ export async function processMenuImage(base64Image, mimeType) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use the latest gemini-3.5-flash for 2026
-    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       You are an expert OCR and menu parser.
@@ -57,6 +56,6 @@ export async function processMenuImage(base64Image, mimeType) {
     return parsedJson;
   } catch (error) {
     console.error("OCR Action Critical Error:", error);
-    throw new Error("Failed to process menu image: " + error.message);
+    return { error: error.message || "Failed to process image with AI" };
   }
 }
