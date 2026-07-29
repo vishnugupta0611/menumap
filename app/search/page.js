@@ -201,13 +201,30 @@ function SearchResultsContent() {
 
   return (
     <div className="bg-background text-on-background min-h-screen pb-16">
-      <header className="bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl top-0 z-40 sticky border-b border-surface-container">
-        <div className="flex justify-between items-center w-full px-margin-mobile py-4 max-w-7xl mx-auto">
-          <Link href="/" className="flex items-center gap-3 no-underline">
-            <img src="/images/logo.png" alt="HeyRestro" className="h-12 w-auto" />
-          </Link>
+      <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md shadow-sm border-b border-outline-variant/30">
+        <div className="flex items-center justify-between px-margin-mobile py-4 max-w-7xl mx-auto gap-3 md:gap-6">
+          <button 
+            onClick={() => router.back()}
+            className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-surface-variant/50 text-on-surface hover:bg-surface-variant transition-colors active:scale-95 border-none cursor-pointer"
+          >
+            <MaterialIcon name="arrow_back" />
+          </button>
           
-          <div className="flex items-center gap-2">
+          <form onSubmit={handleSearchSubmit} className="flex-1 relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant flex items-center">
+              <MaterialIcon name="search" className="text-[20px]" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search dishes, restaurants..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-surface border border-outline-variant/50 rounded-full text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow text-sm"
+            />
+            <button type="submit" className="hidden">Search</button>
+          </form>
+          
+          <div className="flex items-center gap-2 shrink-0">
             {(!user || (user.role !== "owner" && user.role !== "employee" && !user.isEmployee)) && (
               <Link href="/customer/profile#orders" className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent no-underline">
                 <MaterialIcon name="shopping_cart" />
@@ -240,43 +257,28 @@ function SearchResultsContent() {
             )}
           </div>
         </div>
-      </header>
 
-      <section className="px-margin-mobile pt-4 space-y-4 max-w-4xl mx-auto">
-        <form onSubmit={handleSearchSubmit} className="flex flex-col gap-2">
-          <div className="flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant/30 w-full">
-            <MaterialIcon name="search" className="text-on-surface-variant" />
-            <input
-              type="text"
-              className="font-body-md text-on-surface font-semibold bg-transparent border-none outline-none focus:ring-0 w-full p-0"
-              placeholder="Search dishes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button type="submit" className="bg-primary text-on-primary px-3 py-1 rounded-lg text-sm font-bold flex items-center justify-center cursor-pointer border-none shadow-sm shrink-0 hover:opacity-90">
-              Search
-            </button>
+        {/* Filter Tabs Header extension */}
+        <div className="bg-surface/90 backdrop-blur-md pt-2 pb-3 border-t border-outline-variant/10">
+          <div className="flex gap-2.5 overflow-x-auto no-scrollbar px-margin-mobile max-w-7xl mx-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabClick(tab)}
+                className={`whitespace-nowrap px-6 py-2 rounded-full font-bold text-sm cursor-pointer transition-all active:scale-95 flex items-center gap-1.5 border ${
+                  activeTab === tab
+                    ? "bg-primary text-on-primary border-primary shadow-md"
+                    : "bg-surface text-on-surface-variant border-outline-variant/40 hover:bg-surface-variant hover:border-outline-variant"
+                }`}
+              >
+                {tab === "Trending" && <MaterialIcon name="trending_up" className={`text-[18px] ${activeTab === tab ? "text-on-primary" : "text-primary"}`} />}
+                {tab === "Veg" && <div className={`w-3 h-3 rounded-sm border ${activeTab === tab ? 'border-white' : 'border-green-600'} flex items-center justify-center mr-0.5`}><div className={`w-1.5 h-1.5 ${activeTab === tab ? 'bg-white' : 'bg-green-600'} rounded-full`}></div></div>}
+                {tab}
+              </button>
+            ))}
           </div>
-        </form>
-
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-margin-mobile px-margin-mobile">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabClick(tab)}
-              className={`whitespace-nowrap px-6 py-2 rounded-full font-bold text-sm cursor-pointer transition-all active:scale-95 flex items-center gap-1 ${
-                activeTab === tab
-                  ? "bg-primary text-on-primary shadow-md"
-                  : "bg-surface border border-outline-variant text-on-surface-variant hover:bg-surface-variant/30"
-              }`}
-            >
-              {tab === "Trending" && <MaterialIcon name="trending_up" className={`text-[18px] ${activeTab === tab ? "text-on-primary" : "text-primary"}`} />}
-              {tab === "Veg" && <div className="w-3 h-3 rounded-sm border border-green-600 flex items-center justify-center mr-1"><div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div></div>}
-              {tab}
-            </button>
-          ))}
         </div>
-      </section>
+      </header>
 
       <main className="px-margin-mobile mt-6 max-w-7xl mx-auto">
         {activeTab === "Trending" && (
