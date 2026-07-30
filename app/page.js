@@ -370,7 +370,7 @@ export default function HomePage() {
               {/* Inject All Restros button right after All */}
               {index === 0 && (
                 <Link
-                  href="/registered-restro"
+                  href="/restaurants"
                   className="whitespace-nowrap px-5 py-2.5 rounded-full font-bold text-sm shadow-sm transition-all duration-300 flex items-center gap-2 cursor-pointer border bg-secondary text-on-secondary border-transparent hover:brightness-110 active:scale-95 no-underline"
                 >
                   <MaterialIcon name="storefront" className="text-[18px]" />

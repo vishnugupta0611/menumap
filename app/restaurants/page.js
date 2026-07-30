@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
 import { api } from "@/lib/api";
 
-export default function RegisteredRestroPage() {
+export default function RestaurantsPage() {
   const router = useRouter();
   const [restaurants, setRestaurants] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
