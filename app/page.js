@@ -319,45 +319,35 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="pb-16">
-        {/* Dynamic Premium Hero Section */}
-        <section className="relative pt-28 pb-12 px-margin-mobile bg-gradient-to-br from-primary/10 via-surface to-secondary/10 overflow-hidden">
-          {/* Decorative glowing blobs */}
-          <div className="absolute top-0 left-0 w-64 h-64 bg-primary/20 rounded-full mix-blend-multiply filter blur-[80px] animate-blob"></div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000"></div>
-          
-          <div className="relative z-10 max-w-4xl mx-auto">
-            <h2 className="font-display-md text-5xl md:text-6xl font-extrabold text-on-surface mb-3 tracking-tight">
-              {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Foodie!</span>
-            </h2>
-            <p className="font-body-lg text-lg text-on-surface-variant opacity-90 mb-8 max-w-lg">
-              Ready to discover your next favorite meal? Explore the best local flavors delivered hot and fresh.
-            </p>
-
-            {/* Premium Glassmorphic Search Bar */}
-            <form
-              onSubmit={handleSearchSubmit}
-              className="relative flex items-center shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 rounded-[2rem] overflow-hidden bg-white/70 backdrop-blur-xl border border-white/50 focus-within:bg-white focus-within:border-primary/50 pr-2 pl-5 py-2"
-            >
-              <MaterialIcon name="search" className="text-primary text-[24px]" />
-              <input
-                className="w-full py-3 px-3 bg-transparent border-none focus:ring-0 text-on-surface font-semibold placeholder:text-on-surface-variant/60 outline-none text-base md:text-lg"
-                placeholder="Search for restaurants, cuisines, or dishes..."
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button type="submit" className="bg-gradient-to-r from-primary to-primary/90 text-white px-6 py-3 rounded-full text-base font-bold flex items-center justify-center cursor-pointer border-none shadow-md shrink-0 hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
-                Search
-              </button>
-            </form>
-          </div>
+      <main className="pt-24 px-margin-mobile max-w-4xl mx-auto pb-16">
+        {/* Hero Greeting */}
+        <section className="mb-8">
+          <h2 className="font-headline-md text-headline-md text-on-surface mb-2">{greeting}, Foodie!</h2>
+          <p className="font-body-md text-on-surface-variant opacity-80">Ready to discover your next favorite meal?</p>
         </section>
 
-        <div className="px-margin-mobile max-w-4xl mx-auto mt-8">
+        {/* Search Bar */}
+        <section className="relative z-30 mb-8">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="relative flex items-center shadow-md hover:shadow-lg transition-shadow duration-300 rounded-full overflow-hidden bg-surface border-2 border-primary/20 focus-within:border-primary/60 pr-2 pl-4 py-1"
+          >
+            <MaterialIcon name="search" className="text-primary text-[22px]" />
+            <input
+              className="w-full py-3 px-3 bg-transparent border-none focus:ring-0 text-on-surface font-semibold placeholder:text-on-surface-variant/70 outline-none"
+              placeholder="Search dishes, restaurants..."
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button type="submit" className="bg-primary text-on-primary px-4 py-2 rounded-full text-sm font-bold flex items-center justify-center cursor-pointer border-none shadow-sm shrink-0 hover:scale-105 active:scale-95 transition-transform">
+              Search
+            </button>
+          </form>
+        </section>
 
-        {/* Premium Quick Search Chips */}
-        <section className="mb-12 -mx-margin-mobile overflow-x-auto hide-scrollbar flex gap-3 px-margin-mobile py-2">
+        {/* Quick Search Chips */}
+        <section className="mb-10 -mx-margin-mobile overflow-x-auto hide-scrollbar flex gap-3 px-margin-mobile">
           {categories.map((cat, index) => (
             <div key={cat.label} className="flex gap-3">
               <button
@@ -367,13 +357,13 @@ export default function HomePage() {
                     router.push(`/search?q=${encodeURIComponent(cat.label)}`);
                   }
                 }}
-                className={`whitespace-nowrap px-6 py-3 rounded-[1.25rem] font-bold text-sm transition-all duration-300 flex items-center gap-2 cursor-pointer border-2 ${
+                className={`whitespace-nowrap px-5 py-2.5 rounded-full font-bold text-sm shadow-sm transition-all duration-300 flex items-center gap-2 cursor-pointer border ${
                   activeCategory === cat.label
-                    ? "bg-primary text-white border-primary shadow-[0_4px_14px_rgba(0,0,0,0.15)] scale-[1.02]"
-                    : "bg-white text-on-surface border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:border-primary/20 active:scale-95"
+                    ? "bg-primary text-on-primary border-transparent scale-105"
+                    : "bg-surface text-on-surface border-outline-variant/30 hover:bg-surface-variant hover:border-primary/40 active:scale-95"
                 }`}
               >
-                <span className="text-lg">{cat.emoji}</span>
+                <span>{cat.emoji}</span>
                 {cat.label}
               </button>
               
@@ -381,10 +371,10 @@ export default function HomePage() {
               {index === 0 && (
                 <Link
                   href="/restaurants"
-                  className="whitespace-nowrap px-6 py-3 rounded-[1.25rem] font-bold text-sm shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 flex items-center gap-2 cursor-pointer border-2 bg-gradient-to-r from-secondary/10 to-secondary/5 text-secondary border-secondary/20 hover:border-secondary/40 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-95 no-underline"
+                  className="whitespace-nowrap px-5 py-2.5 rounded-full font-bold text-sm shadow-sm transition-all duration-300 flex items-center gap-2 cursor-pointer border bg-secondary text-on-secondary border-transparent hover:brightness-110 active:scale-95 no-underline"
                 >
-                  <MaterialIcon name="storefront" className="text-[20px]" />
-                  Explore Restros
+                  <MaterialIcon name="storefront" className="text-[18px]" />
+                  All Restros
                 </Link>
               )}
             </div>
@@ -435,9 +425,9 @@ export default function HomePage() {
                       Trending Hot
                     </span>
                   )}
-                  <h4 className="font-display-sm text-2xl sm:text-3xl font-bold text-white mb-1 drop-shadow-md">{dish.name}</h4>
-                  <p className="text-sm sm:text-base text-white/90 font-medium flex items-center gap-1.5">
-                    <MaterialIcon name="restaurant_menu" className="text-[16px]" />
+                  <h4 className="font-headline-md text-[18px] sm:text-xl font-bold text-white mb-0.5 drop-shadow-md">{dish.name}</h4>
+                  <p className="text-xs sm:text-sm text-white/90 font-medium flex items-center gap-1">
+                    <MaterialIcon name="restaurant_menu" className="text-[14px]" />
                     {dish.restaurant?.name || "Kitchen Studio"}
                   </p>
                 </div>
@@ -447,22 +437,22 @@ export default function HomePage() {
         </section>
 
         {/* Premium Nearby Restaurants */}
-        <section className="mb-14">
+        <section className="mb-12">
           <div className="flex justify-between items-end mb-6">
-            <h3 className="font-headline-lg text-2xl sm:text-3xl font-bold text-on-surface">Nearby Spots</h3>
+            <h3 className="font-headline-md text-headline-md text-on-surface">Nearby Spots</h3>
             <button
               onClick={openMapExplore}
               className="text-primary font-bold text-sm uppercase tracking-wider cursor-pointer border-none bg-transparent hover:underline flex items-center gap-1"
             >
-              Map View <MaterialIcon name="arrow_forward" className="text-[16px]" />
+              Map View
             </button>
           </div>
           <div className="flex overflow-x-auto hide-scrollbar gap-5 pb-8 pt-2 w-[100vw] relative left-1/2 -translate-x-1/2 px-margin-mobile md:w-auto md:left-auto md:translate-x-0 md:px-0">
             {loading ? (
               Array(3).fill(0).map((_, i) => (
-                <div key={i} className="flex-shrink-0 w-[280px]">
-                  <div className="h-56 w-full rounded-[2rem] bg-surface-variant animate-pulse mb-4"></div>
-                  <div className="h-6 w-3/4 bg-surface-variant animate-pulse rounded mb-2"></div>
+                <div key={i} className="flex-shrink-0 w-[240px]">
+                  <div className="h-44 w-full rounded-2xl bg-surface-variant animate-pulse mb-3"></div>
+                  <div className="h-5 w-3/4 bg-surface-variant animate-pulse rounded mb-2"></div>
                   <div className="h-4 w-1/2 bg-surface-variant animate-pulse rounded"></div>
                 </div>
               ))
@@ -473,42 +463,39 @@ export default function HomePage() {
                     key={restaurant._id}
                     href={`/${restaurant.city}/${restaurant.slug}`}
                     prefetch={true}
-                    className="flex-shrink-0 w-[280px] group block"
+                    className="flex-shrink-0 w-[240px] group block"
                   >
-                    <div className="relative h-56 w-full rounded-[2rem] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 mb-4 transition-all duration-300 group-hover:shadow-[0_12px_28px_rgba(0,0,0,0.12)] group-hover:border-primary/30">
+                    <div className="relative h-44 w-full rounded-2xl overflow-hidden shadow-sm border border-outline-variant/20 mb-3 transition-all duration-300 group-hover:shadow-md group-hover:border-primary/30">
                       <img
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         alt={restaurant.name}
                         src={restaurant.heroImage || restaurant.logoImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(restaurant.name)}&background=random&size=300`}
                       />
-                      {/* Gradient overlay to make badges pop */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/10 pointer-events-none"></div>
-                      
                       {/* Vibrant Rating Pill */}
-                      <div className="absolute top-4 right-4 bg-white shadow-md px-2.5 py-1.5 rounded-full flex items-center gap-1 z-10">
-                        <MaterialIcon name="star" className="text-sm text-yellow-500 fill" />
-                        <span className="text-sm font-extrabold text-on-surface leading-none">{restaurant.rating || "4.5"}</span>
+                      <div className="absolute top-3 right-3 bg-white shadow-sm px-2 py-1 rounded-full flex items-center gap-1 z-10">
+                        <MaterialIcon name="star" className="text-xs text-yellow-500 fill" />
+                        <span className="text-xs font-extrabold text-on-surface leading-none">{restaurant.rating || "4.5"}</span>
                       </div>
                     </div>
                     <div className="px-1">
-                      <h4 className="font-headline-md text-xl font-bold text-on-surface group-hover:text-primary transition-colors truncate">
+                      <h4 className="font-headline-md text-[16px] font-bold text-on-surface group-hover:text-primary transition-colors truncate">
                         {restaurant.name}
                       </h4>
-                      <p className="text-on-surface-variant text-sm flex items-center gap-1.5 mt-1.5 font-medium truncate">
-                        <MaterialIcon name="storefront" className="text-[16px] text-primary/70" />
-                        {restaurant.cuisine?.split(", ")[0]} • <span className="text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-md">{formatDistance(restaurant.distanceKm)}</span>
+                      <p className="text-on-surface-variant text-xs flex items-center gap-1 mt-1 font-medium truncate">
+                        <MaterialIcon name="storefront" className="text-[14px] text-primary/70" />
+                        {restaurant.cuisine?.split(", ")[0]} • <span className="text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded-md">{formatDistance(restaurant.distanceKm)}</span>
                       </p>
                     </div>
                   </Link>
                 ))}
                 <Link
                   href="/restaurants"
-                  className="flex-shrink-0 w-[280px] group block h-auto min-h-[280px] rounded-[2rem] border-2 border-dashed border-primary/30 hover:border-primary bg-primary/5 hover:bg-primary/10 transition-all flex flex-col items-center justify-center gap-4 shadow-sm"
+                  className="flex-shrink-0 w-[240px] group block h-auto min-h-[220px] rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary bg-primary/5 hover:bg-primary/10 transition-all flex flex-col items-center justify-center gap-3 shadow-sm"
                 >
-                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.08)] group-hover:scale-110 group-hover:bg-primary transition-all duration-300 text-primary group-hover:text-white">
-                    <MaterialIcon name="arrow_forward" className="text-2xl" />
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-primary transition-all duration-300 text-primary group-hover:text-white">
+                    <MaterialIcon name="arrow_forward" className="text-xl" />
                   </div>
-                  <h4 className="font-headline-md text-xl font-bold text-primary">View All Restros</h4>
+                  <h4 className="font-headline-md text-[16px] font-bold text-primary">View All</h4>
                 </Link>
               </>
             )}
@@ -516,19 +503,19 @@ export default function HomePage() {
         </section>
 
         {/* Premium Recommended Dishes */}
-        <section className="mb-16">
-          <h3 className="font-headline-lg text-2xl sm:text-3xl font-bold text-on-surface mb-6">Handpicked for You</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <section className="mb-12">
+          <h3 className="font-headline-md text-headline-md text-on-surface mb-6">Recommended</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {loading ? (
               Array(4).fill(0).map((_, i) => (
-                <div key={i} className="flex gap-4 p-4 rounded-[1.5rem] bg-white shadow-sm border border-outline-variant/10">
-                  <div className="w-28 h-28 rounded-2xl bg-surface-variant animate-pulse flex-shrink-0"></div>
-                  <div className="flex flex-col justify-between py-2 flex-1">
+                <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-outline-variant/10">
+                  <div className="w-24 h-24 rounded-xl bg-surface-variant animate-pulse flex-shrink-0"></div>
+                  <div className="flex flex-col justify-between py-1 flex-1">
                     <div>
                       <div className="h-5 w-3/4 bg-surface-variant animate-pulse rounded mb-2"></div>
                       <div className="h-3 w-1/2 bg-surface-variant animate-pulse rounded"></div>
                     </div>
-                    <div className="h-6 w-1/4 bg-surface-variant animate-pulse rounded mt-2"></div>
+                    <div className="h-5 w-1/4 bg-surface-variant animate-pulse rounded mt-2"></div>
                   </div>
                 </div>
               ))
@@ -536,29 +523,28 @@ export default function HomePage() {
               <Link
                 key={dish._id}
                 href={dish.restaurant ? `/${dish.restaurant.city || 'kanpur'}/${dish.restaurant.slug}` : '/search'}
-                className="flex gap-4 sm:gap-5 p-4 rounded-[1.5rem] bg-white shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-outline-variant/10 hover:border-primary/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 group"
+                className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-outline-variant/10 hover:border-primary/30 hover:shadow-md transition-all duration-300 group"
               >
-                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden flex-shrink-0 relative">
-                  <img className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={dish.name} src={dish.image || '/placeholder-food.jpg'} />
+                <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
+                  <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={dish.name} src={dish.image || '/placeholder-food.jpg'} />
                   {/* Veg/Non-Veg Indicator embedded in image */}
-                  <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm p-1 rounded-md shadow-sm">
-                    <div className={`w-3 h-3 border-2 flex items-center justify-center ${dish.veg ? 'border-green-600' : 'border-red-600'}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${dish.veg ? 'bg-green-600' : 'bg-red-600'}`}></div>
+                  <div className="absolute top-1.5 left-1.5 bg-white/90 backdrop-blur-sm p-0.5 rounded shadow-sm">
+                    <div className={`w-2.5 h-2.5 border flex items-center justify-center ${dish.veg ? 'border-green-600' : 'border-red-600'}`}>
+                      <div className={`w-1 h-1 rounded-full ${dish.veg ? 'bg-green-600' : 'bg-red-600'}`}></div>
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col justify-between py-1 flex-1 min-w-0">
+                <div className="flex flex-col justify-between py-0.5 flex-1 min-w-0">
                   <div>
-                    <h4 className="font-bold text-lg text-on-surface group-hover:text-primary transition-colors truncate">{dish.name}</h4>
-                    <p className="text-sm text-on-surface-variant mt-1 font-medium truncate flex items-center gap-1">
-                      <MaterialIcon name="restaurant" className="text-[14px]" />
+                    <h4 className="font-bold text-[16px] text-on-surface group-hover:text-primary transition-colors truncate">{dish.name}</h4>
+                    <p className="text-xs text-on-surface-variant mt-0.5 font-medium truncate">
                       {dish.restaurant?.name || "Kitchen Studio"}
                     </p>
                   </div>
-                  <div className="flex items-center justify-between mt-3">
-                    <span className="font-display-sm text-lg font-extrabold text-on-surface">₹{dish.price}</span>
-                    <span className="bg-primary/10 text-primary font-bold text-sm px-4 py-1.5 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300 flex items-center gap-1">
-                      View <MaterialIcon name="arrow_forward" className="text-[14px]" />
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="font-bold text-[15px] text-on-surface">₹{dish.price}</span>
+                    <span className="bg-primary/10 text-primary font-bold text-xs px-3 py-1 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300 flex items-center gap-1">
+                      View
                     </span>
                   </div>
                 </div>
@@ -566,7 +552,6 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-      </div> {/* Closes the max-w-4xl inner container */}
       </main>
 
       {/* Floating Map Button */}
