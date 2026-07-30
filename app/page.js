@@ -381,8 +381,8 @@ export default function HomePage() {
           ))}
         </section>
 
-        {/* Premium Trending Dishes */}
-        <section className="mb-14">
+        {/* Clean, Professional Trending Dishes */}
+        <section className="mb-12">
           {loadError && (
             <div className="mb-6 rounded-2xl border border-error-container bg-error-container/40 p-4 text-sm text-on-error-container">
               {loadError}
@@ -390,43 +390,44 @@ export default function HomePage() {
           )}
           <div className="flex justify-between items-end mb-6">
             <div>
-              <h2 className="font-headline-sm text-headline-sm text-on-surface mb-1">Trending Near You</h2>
+              <h2 className="font-headline-md text-headline-md text-on-surface mb-1">Trending Near You</h2>
               <p className="font-body-sm text-on-surface-variant opacity-80">Most loved dishes in your area</p>
             </div>
-            <Link href="/search?trending=true" className="font-label-md text-primary font-bold hover:underline">
+            <Link href="/search?trending=true" className="font-label-sm text-primary font-bold hover:underline">
               See all
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="flex overflow-x-auto hide-scrollbar gap-4 pb-6 pt-2 w-[100vw] relative left-1/2 -translate-x-1/2 px-margin-mobile md:w-auto md:left-auto md:translate-x-0 md:px-0">
             {loading ? (
-              Array(2).fill(0).map((_, i) => (
-                <div key={i} className={`relative rounded-[2rem] bg-surface-variant animate-pulse ${i === 0 ? "sm:col-span-2 h-72" : "h-56"}`}></div>
+              Array(4).fill(0).map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-44 sm:w-52">
+                  <div className="h-56 sm:h-64 w-full rounded-2xl bg-surface-variant animate-pulse"></div>
+                </div>
               ))
             ) : trendingDishes.map((dish, index) => (
               <Link
                 key={dish._id || index}
                 href={dish.restaurant ? `/${dish.restaurant.city || 'kanpur'}/${dish.restaurant.slug}` : '/search?trending=true'}
-                className={`relative rounded-[2rem] overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.06)] group cursor-pointer border border-white/50 block ${
-                  index === 0 ? "sm:col-span-2 h-72" : "h-56"
-                }`}
+                className="flex-shrink-0 w-44 sm:w-52 group block relative rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-outline-variant/20 h-56 sm:h-64"
               >
                 <img
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   alt={dish.name}
                   src={dish.image || '/placeholder-food.jpg'}
                 />
-                {/* Richer gradient overlay for premium look */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                 
-                <div className="absolute bottom-5 left-5 right-5 text-white">
-                  {index === 0 && (
-                    <span className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full text-[10px] sm:text-xs font-bold mb-3 inline-flex items-center gap-1 shadow-lg uppercase tracking-wider">
-                      <MaterialIcon name="local_fire_department" className="text-[14px]" />
-                      Trending Hot
+                <div className="absolute top-3 left-3">
+                  {index < 2 && (
+                    <span className="px-2 py-1 bg-primary text-white rounded text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                      Top Pick
                     </span>
                   )}
-                  <h4 className="font-headline-md text-[18px] sm:text-xl font-bold text-white mb-0.5 drop-shadow-md">{dish.name}</h4>
-                  <p className="text-xs sm:text-sm text-white/90 font-medium flex items-center gap-1">
+                </div>
+                
+                <div className="absolute bottom-4 left-4 right-4 text-white">
+                  <h4 className="font-bold text-[16px] sm:text-lg text-white mb-1 leading-tight line-clamp-2">{dish.name}</h4>
+                  <p className="text-xs sm:text-sm text-white/80 font-medium flex items-center gap-1 truncate">
                     <MaterialIcon name="restaurant_menu" className="text-[14px]" />
                     {dish.restaurant?.name || "Kitchen Studio"}
                   </p>
@@ -502,13 +503,13 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Premium Recommended Dishes */}
+        {/* Professional Recommended Dishes */}
         <section className="mb-12">
           <h3 className="font-headline-md text-headline-md text-on-surface mb-6">Recommended</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
             {loading ? (
               Array(4).fill(0).map((_, i) => (
-                <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-outline-variant/10">
+                <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-outline-variant/20">
                   <div className="w-24 h-24 rounded-xl bg-surface-variant animate-pulse flex-shrink-0"></div>
                   <div className="flex flex-col justify-between py-1 flex-1">
                     <div>
@@ -523,7 +524,7 @@ export default function HomePage() {
               <Link
                 key={dish._id}
                 href={dish.restaurant ? `/${dish.restaurant.city || 'kanpur'}/${dish.restaurant.slug}` : '/search'}
-                className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-outline-variant/10 hover:border-primary/30 hover:shadow-md transition-all duration-300 group"
+                className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-outline-variant/20 hover:shadow-md transition-shadow duration-300 group"
               >
                 <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
                   <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={dish.name} src={dish.image || '/placeholder-food.jpg'} />
@@ -543,8 +544,8 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center justify-between mt-2">
                     <span className="font-bold text-[15px] text-on-surface">₹{dish.price}</span>
-                    <span className="bg-primary/10 text-primary font-bold text-xs px-3 py-1 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300 flex items-center gap-1">
-                      View
+                    <span className="text-primary font-bold text-sm hover:underline flex items-center gap-1">
+                      View <MaterialIcon name="arrow_forward" className="text-[16px]" />
                     </span>
                   </div>
                 </div>
