@@ -160,7 +160,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
           }`}>
             <img
               src={restaurant.heroImage}
-              alt={restaurant.name}
+              alt={`${restaurant.name} in ${restaurant.city} - Restaurant Cover`}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
             <div className={`absolute inset-0 ${heroLayout === "full-width" ? "bg-black/60" : "bg-gradient-to-t from-black/80 via-black/20 to-transparent"}`} />
@@ -332,9 +332,9 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
                   {/* Background Image */}
                   {dish.image ? (
                     <img
-                      alt={dish.name}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       src={dish.image}
+                      alt={`${dish.name} at ${restaurant.name} in ${restaurant.city}`}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                   ) : (
                     <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-surface-variant">
@@ -499,7 +499,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
                  {/* Repeat array multiple times to ensure enough width for seamless scrolling */}
                  {[...displayGallery, ...displayGallery, ...displayGallery, ...displayGallery].map((img, idx) => (
                     <div key={`${img.url || img._id}-${idx}`} className="w-[180px] h-[240px] sm:w-[260px] sm:h-[320px] rounded-[24px] overflow-hidden shrink-0 shadow-sm border border-outline-variant/30 hover:scale-[1.02] transition-transform duration-300">
-                       <img src={img.url} alt={img.alt || 'Gallery image'} className="w-full h-full object-cover pointer-events-none" />
+                       <img src={img.url} alt={img.alt || `Gallery image of ${restaurant.name} in ${restaurant.city}`} className="w-full h-full object-cover pointer-events-none" />
                     </div>
                  ))}
                </div>
@@ -562,7 +562,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
                 if (displayGallery.length === 1) {
                   return (
                     <div key={img._id || idx} className="relative bg-white p-2 sm:p-3 rounded-xl shadow-xl z-20 hover:scale-105 transition-transform duration-300 cursor-pointer">
-                      <img src={img.url} alt={img.alt} className="w-48 h-56 sm:w-64 sm:h-80 object-cover rounded-lg" />
+                      <img src={img.url} alt={img.alt || `Photo at ${restaurant.name} ${restaurant.city}`} className="w-48 h-56 sm:w-64 sm:h-80 object-cover rounded-lg" />
                     </div>
                   );
                 }
@@ -571,7 +571,7 @@ export default function RestaurantProfile({ restaurant, menu, reviews = [], gall
                    const transforms = isLeft ? "-rotate-3 -mr-6 sm:-mr-8 z-10" : "rotate-3 -ml-6 sm:-ml-8 z-20";
                    return (
                     <div key={img._id || idx} className={`relative bg-white p-2 sm:p-3 rounded-xl shadow-xl transition-all duration-500 hover:z-30 hover:scale-105 hover:rotate-0 cursor-pointer ${transforms}`}>
-                      <img src={img.url} alt={img.alt} className="w-40 h-48 sm:w-56 sm:h-72 object-cover rounded-lg" />
+                      <img src={img.url} alt={img.alt || `Dining at ${restaurant.name} ${restaurant.city}`} className="w-40 h-48 sm:w-56 sm:h-72 object-cover rounded-lg" />
                     </div>
                   );
                 }

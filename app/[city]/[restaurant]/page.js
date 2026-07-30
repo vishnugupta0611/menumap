@@ -196,6 +196,27 @@ export default async function RestaurantPage({ params }) {
     },
   };
 
+  const menuItemListSchema = menu?.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": `${restaurant.name} Menu Items`,
+    "description": `Top menu items and dishes served at ${restaurant.name} in ${restaurant.city}.`,
+    "itemListElement": menu.slice(0, 20).map((item, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "MenuItem",
+        "name": item.name,
+        "description": item.description || `Delicious ${item.name} at ${restaurant.name}`,
+        "offers": {
+          "@type": "Offer",
+          "price": item.price,
+          "priceCurrency": "INR"
+        }
+      }
+    }))
+  } : undefined;
+
   const faqs = [
     {
       question: `Where is ${restaurant.name} located?`,
@@ -257,6 +278,12 @@ export default async function RestaurantPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
+      {menuItemListSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(menuItemListSchema) }}
+        />
+      )}
 
       <article>
         <RestaurantProfile
@@ -288,6 +315,11 @@ export default async function RestaurantPage({ params }) {
               </details>
             ))}
           </div>
+        </div>
+
+        {/* SEO About Text (Visible for crawlers and users) */}
+        <div className="mb-10 text-on-surface-variant text-sm leading-relaxed border-t border-surface-container-highest/20 pt-8 text-center max-w-3xl mx-auto opacity-80">
+          <p>{aboutText}</p>
         </div>
 
         {/* Internal Linking / Local SEO Footer */}
