@@ -1,6 +1,7 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
@@ -22,6 +23,16 @@ const createCustomIcon = (emoji) => {
 const restroIcon = createCustomIcon("🍽️");
 const userIcon = createCustomIcon("📍");
 
+function MapUpdater({ center, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center) {
+      map.setView(center, zoom);
+    }
+  }, [center, zoom, map]);
+  return null;
+}
+
 export default function RestaurantMap({ restaurants, center, zoom = 13 }) {
   // Default to a central point if no center is provided
   const mapCenter = center || [25.4358, 81.8463]; // Allahabad fallback
@@ -38,6 +49,7 @@ export default function RestaurantMap({ restaurants, center, zoom = 13 }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapUpdater center={mapCenter} zoom={zoom} />
         
         {/* Render a marker for the user's location if provided via center prop */}
         {center && (
