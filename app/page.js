@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MaterialIcon from "@/components/stitch/MaterialIcon";
@@ -8,12 +8,74 @@ import { listNearbyRestaurants, findDishResults, getApproxLocationFromIp, listGa
 import Fuse from "fuse.js";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGlobalStore } from "@/stores/global-store";
+import {
+  Search,
+  MapPin,
+  Star,
+  Clock,
+  Bike,
+  ChevronRight,
+  ChevronLeft,
+  Flame,
+  Sparkles,
+  Award,
+  UtensilsCrossed,
+  ArrowUpRight,
+  X,
+  MapPinOff,
+  Map,
+} from "lucide-react";
+
+/* ------------------------------------------------------------------ *
+ *  HeyRestro — Discovery Hub
+ * ------------------------------------------------------------------ */
+
+const CATEGORIES = [
+  { label: "Pizza", emoji: "🍕" },
+  { label: "Burger", emoji: "🍔" },
+  { label: "Chinese", emoji: "🥡" },
+  { label: "South Indian", emoji: "🥞" },
+  { label: "Momos", emoji: "🥟" },
+  { label: "Biryani", emoji: "🍛" },
+  { label: "Dessert", emoji: "🍰" },
+  { label: "Coffee", emoji: "☕" },
+];
+
+const COLLECTIONS = [
+  { title: "Best Rooftop Cafes", count: "32 places", img: "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=700&q=80" },
+  { title: "Street Food", count: "48 places", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=700&q=80" },
+  { title: "Family Restaurants", count: "27 places", img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=700&q=80" },
+  { title: "Romantic Dinner", count: "19 places", img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&q=80" },
+  { title: "Budget Eats", count: "61 places", img: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=700&q=80" },
+  { title: "Luxury Dining", count: "14 places", img: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=700&q=80" },
+];
+
+function ScrollRow({ children, id }) {
+  const ref = useRef(null);
+  const scroll = (dir) => {
+    if (ref.current) ref.current.scrollBy({ left: dir * 340, behavior: "smooth" });
+  };
+  return (
+    <div className="scroll-row-wrap">
+      <button className="scroll-nav left" onClick={() => scroll(-1)} aria-label="Scroll left">
+        <ChevronLeft size={18} strokeWidth={2.4} />
+      </button>
+      <div className="scroll-row" ref={ref} id={id}>
+        {children}
+      </div>
+      <button className="scroll-nav right" onClick={() => scroll(1)} aria-label="Scroll right">
+        <ChevronRight size={18} strokeWidth={2.4} />
+      </button>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [mode, setMode] = useState("restaurant"); // 'restaurant' | 'dish'
+  const [query, setQuery] = useState("");
+  const [mapOpen, setMapOpen] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -23,12 +85,9 @@ export default function HomePage() {
 
   const [loadError, setLoadError] = useState("");
   const [userLocation, setUserLocation] = useState(null);
-  
-  // Derived state: it's loading if we haven't loaded data yet AND there's no error
+  const [locationDenied, setLocationDenied] = useState(false);
+  const [galleryPhotos, setGalleryPhotos] = useState([]);
   const loading = !homeDataLoaded && !loadError;
-  const [greeting, setGreeting] = useState("Good morning");
-
-  console.log("RENDER app/page.js:", { loading, homeDataLoaded, nearbyLen: nearbyRestaurants?.length, trendingLen: trendingDishes?.length });
 
   const formatDistance = (distKm) => {
     if (distKm === undefined) return "Locating...";
@@ -41,7 +100,7 @@ export default function HomePage() {
   // Load data dynamically
   useEffect(() => {
     async function loadData(location = {}) {
-      if (homeDataLoaded) return; // Use cached data instantly
+      if (homeDataLoaded) return;
       
       try {
         const { lat, lng, city } = location;
@@ -52,13 +111,14 @@ export default function HomePage() {
         };
         const TRENDING_KEYWORDS = "Idli Chowmein Dosa Sambhar Pasta Chhole Bhature Pizza Burger Momos";
         
-        // Fetch primary data and all fallbacks in ONE parallel burst to eliminate ALL sequential waiting!
+        const safeFetch = (promise, fallback) => promise.catch(e => { console.error(e); return fallback; });
+        
         const [restaurantsList, dishesRes, recRes, fallbackRes, ultimateFallbackRes] = await Promise.all([
-          listNearbyRestaurants(locationFilters),
-          findDishResults(TRENDING_KEYWORDS, { ...locationFilters, limit: 10 }),
-          findDishResults("", { ...locationFilters, limit: 20 }),
-          findDishResults(TRENDING_KEYWORDS, { limit: 10 }),
-          findDishResults("", { limit: 20 })
+          safeFetch(listNearbyRestaurants(locationFilters), []),
+          safeFetch(findDishResults(TRENDING_KEYWORDS, { ...locationFilters, limit: 10 }), { data: [] }),
+          safeFetch(findDishResults("", { ...locationFilters, limit: 20 }), { data: [] }),
+          safeFetch(findDishResults(TRENDING_KEYWORDS, { limit: 10 }), { data: [] }),
+          safeFetch(findDishResults("", { limit: 20 }), { data: [] })
         ]);
         
         const shuffleArray = (array) => {
@@ -70,7 +130,7 @@ export default function HomePage() {
           return arr;
         };
         
-        const broadRestaurants = restaurantsList.length ? restaurantsList : await listNearbyRestaurants({});
+        const broadRestaurants = restaurantsList.length ? restaurantsList : await safeFetch(listNearbyRestaurants({}), []);
         
         let dishes = dishesRes.data || [];
         
@@ -103,7 +163,6 @@ export default function HomePage() {
         const finalRecDishes = [];
         const seenRecRestros = new Set();
         
-        // First try to get up to 5 items from distinct restaurants
         for (const dish of rawRecDishes) {
           const restroId = String(dish.restaurantId?._id || dish.restaurantId || "unknown");
           if (!seenRecRestros.has(restroId)) {
@@ -113,7 +172,6 @@ export default function HomePage() {
           }
         }
         
-        // If we still need more to reach 5, pad with remaining items
         if (finalRecDishes.length < 5) {
           for (const dish of rawRecDishes) {
             if (!finalRecDishes.find(d => d._id === dish._id)) {
@@ -152,7 +210,6 @@ export default function HomePage() {
                   if (results.length > 0 && results[0].item.url) {
                     dish.image = results[0].item.url;
                   } else {
-                    // Fallback to ANY gallery image if fuse doesn't find a specific match
                     const randomGalleryImg = gallery[i % gallery.length];
                     if (randomGalleryImg?.url) {
                       dish.image = randomGalleryImg.url;
@@ -173,42 +230,75 @@ export default function HomePage() {
           trendingDishes: finalTrending,
           recommendedDishes: finalRecDishes
         });
+
+        try {
+          const shuffledRestros = shuffleArray(broadRestaurants).slice(0, 10);
+          const galleryPromises = shuffledRestros.map(r => safeFetch(listGallery(r.city, r.slug), []));
+          const galleries = await Promise.all(galleryPromises);
+          
+          let allPhotos = [];
+          galleries.forEach((g, idx) => {
+            if (g && g.length > 0) {
+              allPhotos.push(...g.map(img => img.url).filter(Boolean));
+            } else if (shuffledRestros[idx]?.image) {
+              allPhotos.push(shuffledRestros[idx].image);
+            }
+          });
+          
+          allPhotos = shuffleArray(allPhotos).filter(url => url && !url.includes('placeholder')).slice(0, 15);
+          if (allPhotos.length === 0) {
+             allPhotos = [
+               "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80",
+               "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80",
+               "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80",
+               "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80"
+             ];
+          }
+          setGalleryPhotos(allPhotos);
+        } catch(e) { console.error("Gallery fetch error:", e); }
       } catch {
         setLoadError("Food discovery is temporarily unavailable. Please try again in a moment.");
       }
     }
     
+    async function fetchDetailedLocation(lat, lng) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&addressdetails=1`);
+        const data = await res.json();
+        return data?.address?.neighbourhood || data?.address?.suburb || data?.address?.city_district || data?.address?.city || data?.address?.town || null;
+      } catch (e) {
+        return null;
+      }
+    }
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        async (pos) => {
+          setLocationDenied(false);
+          const address = await fetchDetailedLocation(pos.coords.latitude, pos.coords.longitude);
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, city: address });
           loadData({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
-        async () => {
+        async (err) => {
+          if (err.code === 1) setLocationDenied(true);
           const ipLocation = await getApproxLocationFromIp();
           if (ipLocation?.lat && ipLocation?.lng) {
-            setUserLocation({ lat: ipLocation.lat, lng: ipLocation.lng, approximate: true });
+            setUserLocation({ lat: ipLocation.lat, lng: ipLocation.lng, approximate: true, city: ipLocation.city });
           }
           loadData(ipLocation || {});
         },
-        { timeout: 3000, maximumAge: 60000 } // Don't wait longer than 3 seconds for GPS
+        { timeout: 3000, maximumAge: 60000 }
       );
     } else {
       getApproxLocationFromIp().then((ipLocation) => {
         if (ipLocation?.lat && ipLocation?.lng) {
-          setUserLocation({ lat: ipLocation.lat, lng: ipLocation.lng, approximate: true });
+          setUserLocation({ lat: ipLocation.lat, lng: ipLocation.lng, approximate: true, city: ipLocation.city });
         }
         loadData(ipLocation || {});
       });
     }
-
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Good morning");
-    else if (hour < 18) setGreeting("Good afternoon");
-    else setGreeting("Good evening");
   }, [homeDataLoaded]);
 
-  // Handle header show/hide on scroll
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -226,9 +316,23 @@ export default function HomePage() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    if (!query.trim()) return;
+
+    if (mode === 'restaurant' && nearbyRestaurants && nearbyRestaurants.length > 0) {
+      const fuse = new Fuse(nearbyRestaurants, {
+        keys: ['name', 'cuisine', 'tags', 'city'],
+        threshold: 0.4,
+        ignoreLocation: true
+      });
+      const results = fuse.search(query.trim());
+      if (results.length > 0) {
+        const topMatch = results[0].item;
+        router.push(`/${topMatch.city || 'kanpur'}/${topMatch.slug}`);
+        return;
+      }
     }
+
+    router.push(`/search?q=${encodeURIComponent(query.trim())}`);
   };
 
   const openMapExplore = () => {
@@ -261,38 +365,34 @@ export default function HomePage() {
     );
   };
 
-  const categories = [
-    { label: "All", emoji: "🍽️" },
-    { label: "Starters", emoji: "🍕" },
-    { label: "Main Course", emoji: "🍛" },
-    { label: "Chinese", emoji: "🍜" },
-    { label: "Bowls", emoji: "🥗" },
-  ];
-
   return (
-    <div className="bg-background text-on-background font-body-md antialiased pb-16 min-h-screen">
-      {/* Top App Bar */}
+    <div className="bg-background text-on-background min-h-screen relative overflow-hidden">
+      {/* Existing Header Component */}
       <header
-        className={`fixed top-0 left-0 w-full z-40 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl transition-transform duration-300 ${
-          headerVisible ? "translate-y-0" : "-translate-y-full"
+        className={`fixed top-0 left-0 w-full z-[100] transition-all duration-300 ${
+          headerVisible 
+            ? "translate-y-0 bg-white/85 backdrop-blur-xl border-b border-black/5 shadow-[0_2px_10px_rgba(0,0,0,0.03)]" 
+            : "-translate-y-full bg-transparent"
         }`}
       >
-        <div className="flex justify-between items-center w-full px-margin-mobile py-4 max-w-7xl mx-auto">
+        <div className="flex justify-between items-center w-full px-5 md:px-8 py-3 max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
-              <img src="/images/logo.png?v=2" alt="HeyRestro" className="h-12 w-auto" />
+            <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-105 active:scale-95">
+              <img src="/images/logo.png?v=2" alt="HeyRestro" className="h-10 w-auto" />
             </Link>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {(!user || (user.role !== "owner" && user.role !== "employee" && !user.isEmployee)) && (
-              <Link href="/customer/profile#orders" className="w-10 h-10 flex items-center justify-center hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95 duration-200 text-primary cursor-pointer border-none bg-transparent no-underline">
-                <MaterialIcon name="shopping_cart" />
+              <Link href="/customer/profile#orders" className="relative w-10 h-10 flex items-center justify-center hover:bg-black/5 rounded-full transition-all active:scale-95 duration-200 text-gray-700 cursor-pointer border-none bg-transparent no-underline">
+                <MaterialIcon name="shopping_cart" className="text-[22px]" />
+                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-[#FF6B35] rounded-full border-2 border-white"></span>
               </Link>
             )}
             
             {user ? (
-              <Link href={(user.role === "owner" || user.role === "employee" || user.isEmployee) ? "/admin/dashboard" : "/customer/profile"} className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-sm flex items-center justify-center bg-primary text-on-primary font-bold">
+              <Link href={(user.role === "owner" || user.role === "employee" || user.isEmployee) ? "/admin/dashboard" : "/customer/profile"} 
+                className="w-10 h-10 rounded-full overflow-hidden shadow-sm flex items-center justify-center bg-gray-100 text-gray-700 font-bold transition-all hover:scale-105 active:scale-95 ring-2 ring-transparent hover:ring-[#FF6B35]/40">
                 {(user.role === "owner" || user.role === "employee" || user.isEmployee) ? (
                   <MaterialIcon name="admin_panel_settings" className="text-[20px]" />
                 ) : user.photo ? (
@@ -310,262 +410,440 @@ export default function HomePage() {
                 )}
               </Link>
             ) : (
-              <Link href="/login" className="px-4 h-10 rounded-full border border-outline-variant shadow-sm flex items-center justify-center gap-2 text-on-surface hover:bg-surface-variant transition-colors font-bold">
-                <MaterialIcon name="login" className="text-[18px]" />
-                <span className="text-sm">Login</span>
+              <Link href="/login" className="px-5 h-10 rounded-full bg-[#140E0A] text-white hover:bg-black shadow-md flex items-center justify-center gap-2 transition-all hover:-translate-y-[1px] active:scale-95 font-semibold no-underline text-[14px]">
+                <span>Login</span>
+                <ArrowUpRight size={16} className="opacity-80" />
               </Link>
             )}
           </div>
         </div>
       </header>
 
-      <main className="pt-24 px-margin-mobile max-w-4xl mx-auto pb-16">
-        {/* Hero Greeting */}
-        <section className="mb-8">
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-2">{greeting}, Foodie!</h2>
-          <p className="font-body-md text-on-surface-variant opacity-80">Ready to discover your next favorite meal?</p>
-        </section>
+      {/* -------------------- New Design Integration -------------------- */}
+      <div className="hr-root pt-20 pb-16">
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap');
 
-        {/* Search Bar */}
-        <section className="relative z-30 mb-8">
-          <form
-            onSubmit={handleSearchSubmit}
-            className="relative flex items-center shadow-md hover:shadow-lg transition-shadow duration-300 rounded-full overflow-hidden bg-surface border-2 border-primary/20 focus-within:border-primary/60 pr-2 pl-4 py-1"
-          >
-            <MaterialIcon name="search" className="text-primary text-[22px]" />
-            <input
-              className="w-full py-3 px-3 bg-transparent border-none focus:ring-0 text-on-surface font-semibold placeholder:text-on-surface-variant/70 outline-none"
-              placeholder="Search dishes, restaurants..."
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button type="submit" className="bg-primary text-on-primary px-4 py-2 rounded-full text-sm font-bold flex items-center justify-center cursor-pointer border-none shadow-sm shrink-0 hover:scale-105 active:scale-95 transition-transform">
-              Search
-            </button>
-          </form>
-        </section>
+          .hr-root {
+            --bg: transparent;
+            --surface: #FFFFFF;
+            --primary: #FF6B35;
+            --primary-deep: #E6552A;
+            --amber: #FFB258;
+            --ink: #241C18;
+            --ink-soft: #7A6E66;
+            --ink-faint: #A79C93;
+            --border: rgba(36,28,24,0.08);
+            --glass: rgba(255,255,255,0.6);
+            --glass-strong: rgba(255,255,255,0.78);
+            --glass-border: rgba(255,255,255,0.7);
+            --shadow-sm: 0 2px 10px rgba(36,28,24,0.05);
+            --shadow-md: 0 10px 30px rgba(255,107,53,0.10), 0 2px 10px rgba(36,28,24,0.05);
+            --shadow-lg: 0 24px 60px rgba(255,107,53,0.16), 0 8px 24px rgba(36,28,24,0.08);
+            --r-xl: 28px;
+            --r-lg: 22px;
+            --r-md: 16px;
+            --r-full: 999px;
 
-        {/* Quick Search Chips */}
-        <section className="mb-10 -mx-margin-mobile overflow-x-auto hide-scrollbar flex gap-3 px-margin-mobile">
-          {categories.map((cat, index) => (
-            <div key={cat.label} className="flex gap-3">
-              <button
-                onClick={() => {
-                  setActiveCategory(cat.label);
-                  if (cat.label !== "All") {
-                    router.push(`/search?q=${encodeURIComponent(cat.label)}`);
-                  }
-                }}
-                className={`whitespace-nowrap px-5 py-2.5 rounded-full font-bold text-sm shadow-sm transition-all duration-300 flex items-center gap-2 cursor-pointer border ${
-                  activeCategory === cat.label
-                    ? "bg-primary text-on-primary border-transparent scale-105"
-                    : "bg-surface text-on-surface border-outline-variant/30 hover:bg-surface-variant hover:border-primary/40 active:scale-95"
-                }`}
-              >
-                <span>{cat.emoji}</span>
-                {cat.label}
-              </button>
-              
-              {/* Inject All Restros button right after All */}
-              {index === 0 && (
-                <Link
-                  href="/restaurants"
-                  className="whitespace-nowrap px-5 py-2.5 rounded-full font-bold text-sm shadow-sm transition-all duration-300 flex items-center gap-2 cursor-pointer border bg-secondary text-on-secondary border-transparent hover:brightness-110 active:scale-95 no-underline"
-                >
-                  <MaterialIcon name="storefront" className="text-[18px]" />
-                  All Restros
-                </Link>
-              )}
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-feature-settings: "tnum" 1;
+            position: relative;
+          }
+
+          .hr-root * { box-sizing: border-box; }
+
+          .hr-root ::-webkit-scrollbar { display: none; }
+          .hr-root { scrollbar-width: none; }
+
+          /* ---------- ambient background ---------- */
+          .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 0;
+          }
+          .bg-orb.one { width: 480px; height: 480px; background: radial-gradient(circle, #FFB258, transparent 70%); top: -180px; right: -120px; }
+          .bg-orb.two { width: 380px; height: 380px; background: radial-gradient(circle, #FF6B35, transparent 70%); top: 420px; left: -160px; opacity: 0.18; }
+
+          .hr-container { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+
+          /* ---------- hero ---------- */
+          .hero { padding: 40px 0 40px; text-align: center; }
+          .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; font-weight: 600; color: var(--primary-deep);
+            background: rgba(255,107,53,0.09); padding: 7px 16px; border-radius: var(--r-full);
+            margin-bottom: 26px; letter-spacing: 0.01em;
+          }
+          .hero h1 {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-weight: 800;
+            font-size: clamp(40px, 6vw, 68px);
+            line-height: 1.04;
+            letter-spacing: -0.03em;
+            margin: 0 0 18px;
+            color: var(--ink);
+          }
+          .hero h1 em { font-style: normal; color: var(--primary); font-weight: 800; }
+          .hero p { font-size: 17px; color: var(--ink-soft); max-width: 460px; margin: 0 auto; line-height: 1.55; }
+
+          /* ---------- search island (signature element) ---------- */
+          .search-island {
+            max-width: 700px; margin: 44px auto 0;
+            background: var(--glass-strong);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            box-shadow: var(--shadow-lg);
+            padding: 10px;
+          }
+          .mode-track {
+            position: relative;
+            display: flex;
+            background: rgba(36,28,24,0.045);
+            border-radius: 22px;
+            padding: 5px;
+            margin-bottom: 10px;
+          }
+          .mode-indicator {
+            position: absolute; top: 5px; bottom: 5px; left: 5px;
+            width: calc(50% - 5px);
+            background: var(--ink);
+            border-radius: 17px;
+            transition: transform .38s cubic-bezier(.65,0,.35,1);
+            box-shadow: 0 6px 16px rgba(36,28,24,0.25);
+          }
+          .mode-indicator.dish { transform: translateX(calc(100% + 0px)); background: var(--primary); box-shadow: 0 6px 16px rgba(255,107,53,0.35); }
+          .mode-btn {
+            position: relative; z-index: 1; flex: 1;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            padding: 11px 0; border: none; background: transparent; cursor: pointer;
+            font-size: 14px; font-weight: 600; color: var(--ink-soft);
+            transition: color .3s ease;
+          }
+          .mode-btn.active { color: #fff; }
+          .search-input-row { display: flex; align-items: center; gap: 12px; padding: 6px 8px 6px 18px; }
+          .search-input-row svg { color: var(--ink-faint); flex-shrink: 0; }
+          .search-input-row input {
+            flex: 1; border: none; outline: none; background: transparent;
+            font-size: 16.5px; font-family: 'Inter', sans-serif; color: var(--ink);
+            padding: 10px 0;
+            margin: 0;
+            box-shadow: none;
+          }
+          .search-input-row input::placeholder { color: var(--ink-faint); font-weight: 400; }
+          .search-go {
+            width: 44px; height: 44px; border-radius: 15px; border: none; cursor: pointer;
+            background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 18px rgba(255,107,53,0.35);
+            transition: transform .2s ease;
+            flex-shrink: 0;
+          }
+          .search-go:hover { transform: scale(1.06) rotate(-4deg); }
+
+          /* ---------- categories ---------- */
+          .categories { padding: 52px 0 8px; }
+          .cat-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 4px 0; }
+          .cat-chip {
+            flex-shrink: 0; display: flex; align-items: center; gap: 8px;
+            padding: 11px 20px; border-radius: var(--r-full);
+            background: var(--surface); border: 1px solid var(--border);
+            font-size: 14.5px; font-weight: 600; color: var(--ink);
+            cursor: pointer; transition: all .25s ease; box-shadow: var(--shadow-sm);
+            text-decoration: none;
+          }
+          .cat-chip span.emoji { font-size: 17px; }
+          .cat-chip:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 10px 22px rgba(255,107,53,0.16); color: var(--ink); }
+
+          /* ---------- section header ---------- */
+          .section { padding: 46px 0 6px; }
+          .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; }
+          .section-head h2 { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; letter-spacing: -0.01em; margin: 0; color: var(--ink); }
+          .section-head .sub { font-size: 13.5px; color: var(--ink-soft); margin-top: 4px; font-weight: 500; }
+          .see-all { font-size: 13.5px; font-weight: 700; color: var(--primary-deep); display: flex; align-items: center; gap: 3px; cursor: pointer; background:none; border:none; text-decoration:none; }
+          .see-all:hover { text-decoration: underline; color: var(--primary-deep); }
+
+          /* ---------- scroll rows ---------- */
+          .scroll-row-wrap { position: relative; }
+          .scroll-row { display: flex; gap: 18px; overflow-x: auto; scroll-behavior: smooth; padding: 6px 2px 14px; }
+          .scroll-nav {
+            position: absolute; top: 40%; z-index: 5; width: 36px; height: 36px; border-radius: 50%;
+            background: var(--glass-strong); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            box-shadow: var(--shadow-md); transition: transform .2s ease;
+            color: var(--ink);
+          }
+          .scroll-nav:hover { transform: scale(1.1); }
+          .scroll-nav.left { left: -6px; } .scroll-nav.right { right: -6px; }
+
+          /* restaurant card */
+          .r-card { flex-shrink: 0; width: 268px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); overflow: hidden; cursor: pointer; transition: all .35s cubic-bezier(.2,.8,.2,1); box-shadow: var(--shadow-sm); text-decoration: none; display: block; color: var(--ink); }
+          .r-card:hover { transform: translateY(-7px); box-shadow: var(--shadow-md); color: var(--ink); }
+          .r-img-wrap { position: relative; height: 150px; overflow: hidden; }
+          .r-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+          .r-card:hover .r-img-wrap img { transform: scale(1.08); }
+          .r-badge { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: var(--r-full); backdrop-filter: blur(8px); }
+          .r-badge.open { background: rgba(46,140,80,0.85); color: #fff; }
+          .r-badge.closed { background: rgba(36,28,24,0.7); color: #fff; }
+          .r-rating { position: absolute; top: 10px; right: 10px; display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); padding: 5px 9px; border-radius: var(--r-full); font-size: 12px; font-weight: 700; color: var(--ink); }
+          .r-body { padding: 14px 16px 16px; }
+          .r-body h3 { font-size: 15.5px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; color: var(--ink); }
+          .r-meta { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 10px; }
+          .r-foot { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+          .r-foot .pill { display: flex; align-items: center; gap: 4px; }
+
+          /* dish card */
+          .d-card { flex-shrink: 0; width: 220px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); overflow: hidden; cursor: pointer; transition: all .35s cubic-bezier(.2,.8,.2,1); box-shadow: var(--shadow-sm); text-decoration: none; display: block; color: var(--ink); }
+          .d-card:hover { transform: translateY(-7px) scale(1.01); box-shadow: var(--shadow-md); color: var(--ink); }
+          .d-img { height: 130px; overflow: hidden; }
+          .d-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+          .d-card:hover .d-img img { transform: scale(1.1); }
+          .d-body { padding: 12px 14px 14px; }
+          .d-body h4 { font-size: 14.5px; font-weight: 700; margin: 0 0 2px; color: var(--ink); }
+          .d-body .rest { font-size: 12px; color: var(--ink-soft); margin-bottom: 8px; }
+          .d-foot { display: flex; align-items: center; justify-content: space-between; }
+          .d-price { font-weight: 800; color: var(--primary-deep); font-size: 14px; }
+          .d-rate { display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; color: var(--ink); }
+
+
+
+          /* gallery slider */
+          .gallery-slider-wrap { overflow: hidden; width: 100%; padding-bottom: 20px; margin-top: 10px; }
+          .gallery-slider { display: flex; gap: 16px; width: max-content; animation: scrollGallery 40s linear infinite; }
+          .gallery-slider:hover { animation-play-state: paused; }
+          .gallery-slide { width: 260px; height: 180px; border-radius: 20px; overflow: hidden; flex-shrink: 0; box-shadow: var(--shadow-sm); position: relative; cursor: pointer; }
+          .gallery-slide img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+          .gallery-slide:hover img { transform: scale(1.08); }
+          @keyframes scrollGallery { to { transform: translateX(calc(-50% - 8px)); } }
+
+          /* map panel */
+          .map-panel {
+            position: fixed; inset: 0; z-index: 150; background: rgba(20,14,10,0.45); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center; animation: fadeIn .25s ease;
+          }
+          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+          .map-panel-card {
+            width: min(560px, 90vw); background: var(--surface); border-radius: 28px; padding: 36px;
+            box-shadow: var(--shadow-lg); text-align: center; position: relative; color: var(--ink);
+          }
+          .map-panel-close { position: absolute; top: 18px; right: 18px; width: 32px; height: 32px; border-radius: 50%; background: rgba(36,28,24,0.06); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink); }
+          .map-panel-card h3 { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; margin: 18px 0 8px; }
+          .map-panel-card p { color: var(--ink-soft); font-size: 14px; margin: 0 0 24px; }
+          
+          /* map floating button */
+          .map-fab-wrap { position: fixed; bottom: 30px; right: 30px; z-index: 50; }
+          .map-ping { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--primary); animation: ping 2.4s cubic-bezier(0,0,0.2,1) infinite; }
+          .map-fab {
+            position: relative; width: 48px; height: 48px; border-radius: 50%;
+            background: rgba(255,255,255,0.55);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.8);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 16px 40px rgba(255,107,53,0.35), 0 4px 14px rgba(36,28,24,0.12);
+            cursor: pointer; transition: all .3s cubic-bezier(.34,1.56,.64,1);
+          }
+          .map-fab:hover { transform: scale(1.08); }
+          .map-fab .core {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+            display: flex; align-items: center; justify-content: center; color: #fff;
+          }
+          @keyframes ping { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.9); opacity: 0; } }
+
+          @keyframes fireFlicker {
+            0%, 100% { transform: scale(1); color: #FF6B35; filter: drop-shadow(0 0 2px rgba(255,107,53,0.3)); opacity: 0.9; }
+            50% { transform: scale(1.08); color: #FFB258; filter: drop-shadow(0 0 6px rgba(255,178,88,0.8)); opacity: 1; }
+          }
+          .fire-icon {
+            animation: fireFlicker 2s ease-in-out infinite;
+            transform-origin: center bottom;
+          }
+
+          @media (max-width: 860px) {
+            .coll-grid { grid-template-columns: repeat(2, 1fr); }
+            .hr-container { padding: 0 18px; }
+          }
+          @media (max-width: 560px) {
+            .coll-grid { grid-template-columns: 1fr; }
+            .hero { padding: 30px 0 30px; }
+          }
+        `}</style>
+
+        <div className="bg-orb one" />
+        <div className="bg-orb two" />
+
+        <div className="hr-container">
+          {/* Hero */}
+          <div className="hero">
+            <div className={`hero-eyebrow cursor-pointer transition-opacity ${locationDenied ? 'opacity-70' : 'hover:opacity-80'}`} onClick={() => {
+              if (locationDenied) {
+                alert("Location access is blocked. Please enable it in your browser settings (click the lock icon in the address bar) to explore nearby places.");
+              } else {
+                openMapExplore();
+              }
+            }}>
+              {locationDenied ? <MapPinOff size={14} strokeWidth={2.5} /> : <MapPin size={14} strokeWidth={2.5} />}
+              <span className={locationDenied ? "line-through decoration-primary decoration-2" : ""}>
+                {locationDenied ? "Location Disabled" : (userLocation?.city || "Locating...")}
+              </span>
             </div>
-          ))}
-        </section>
+            <h1>
+              Find your next
+              <br />
+              <em>favorite meal.</em>
+            </h1>
+            <p>Restaurants, dishes, and hidden gems around you — discover it all in one place.</p>
 
-        {/* Clean, Professional Trending Dishes */}
-        <section className="mb-12">
-          {loadError && (
-            <div className="mb-6 rounded-2xl border border-error-container bg-error-container/40 p-4 text-sm text-on-error-container">
-              {loadError}
+            {/* Search Island */}
+            <div className="search-island">
+              <div className="mode-track">
+                <div className={`mode-indicator ${mode === 'dish' ? 'dish' : ''}`} />
+                <button type="button" className={`mode-btn ${mode === 'restaurant' ? 'active' : ''}`} onClick={() => setMode('restaurant')}>
+                  <UtensilsCrossed size={15} /> Restaurants
+                </button>
+                <button type="button" className={`mode-btn ${mode === 'dish' ? 'active' : ''}`} onClick={() => setMode('dish')}>
+                  <Flame size={15} className="fire-icon" /> Dishes
+                </button>
+              </div>
+              <form className="search-input-row" onSubmit={handleSearchSubmit}>
+                <Search size={19} strokeWidth={2.2} />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={mode === 'restaurant' ? 'Search restaurants, cafes, bakeries…' : 'Search dishes like Paneer Tikka, Pizza, Momos…'}
+                />
+                <button type="submit" className="search-go"><ArrowUpRight size={18} /></button>
+              </form>
+            </div>
+          </div>
+
+          {/* Categories */}
+          <div className="categories">
+            <div className="cat-scroll">
+              {CATEGORIES.map((c) => (
+                <Link href={`/search?q=${encodeURIComponent(c.label)}`} className="cat-chip" key={c.label}>
+                  <span className="emoji">{c.emoji}</span>
+                  {c.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Nearby restaurants (Replaced with Real Data) */}
+          <div className="section">
+            <div className="section-head">
+              <div>
+                <h2>Nearby Restaurants</h2>
+                <div className="sub">Within walking distance, ready to serve</div>
+              </div>
+              <Link href="/restaurants" className="see-all">See all <ChevronRight size={14} /></Link>
+            </div>
+            <ScrollRow id="nearby">
+              {loading ? (
+                Array(4).fill(0).map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-[268px] h-[260px] bg-black/5 rounded-2xl animate-pulse"></div>
+                ))
+              ) : nearbyRestaurants.map((r) => (
+                <Link href={`/${r.city || 'kanpur'}/${r.slug}`} className="r-card" key={r._id || r.id || r.name}>
+                  <div className="r-img-wrap">
+                    <img src={r.heroImage || r.logoImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.name)}&background=random&size=300`} alt={r.name} />
+                    <div className="r-rating"><Star size={11} fill="#FF6B35" color="#FF6B35" /> {r.rating || '4.5'}</div>
+                  </div>
+                  <div className="r-body">
+                    <h3>{r.name}</h3>
+                    <div className="r-meta">{r.cuisine?.split(', ')[0] || 'Restaurant'}</div>
+                    <div className="r-foot">
+                      <span className="pill"><MapPin size={12} /> {formatDistance(r.distanceKm)}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </ScrollRow>
+          </div>
+
+          {/* Trending dishes (Replaced with Real Data) */}
+          <div className="section">
+            <div className="section-head">
+              <div>
+                <h2>Trending Near You</h2>
+                <div className="sub">The dishes everyone's ordering right now</div>
+              </div>
+              <Link href="/search?trending=true" className="see-all">See all <ChevronRight size={14} /></Link>
+            </div>
+            <ScrollRow id="trending">
+              {loading ? (
+                Array(4).fill(0).map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-[220px] h-[240px] bg-black/5 rounded-2xl animate-pulse"></div>
+                ))
+              ) : trendingDishes.map((d, index) => (
+                <Link href={d.restaurant ? `/${d.restaurant.city || 'kanpur'}/${d.restaurant.slug}` : '/search'} className="d-card" key={d._id || index}>
+                  <div className="d-img"><img src={d.image || '/placeholder-food.jpg'} alt={d.name} /></div>
+                  <div className="d-body">
+                    <h4>{d.name}</h4>
+                    <div className="rest">{d.restaurant?.name || 'Kitchen Studio'}</div>
+                    <div className="d-foot">
+                      <span className="d-price">₹{d.price}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </ScrollRow>
+          </div>
+
+
+
+          {/* Gallery Slider */}
+          {galleryPhotos.length > 0 && (
+            <div className="section mb-20">
+              <div className="section-head">
+                <div>
+                  <h2>Food Gallery</h2>
+                  <div className="sub">Delicious moments from nearby restaurants</div>
+                </div>
+              </div>
+              <div className="gallery-slider-wrap">
+                <div className="gallery-slider">
+                  {[...galleryPhotos, ...galleryPhotos].map((url, i) => (
+                    <div key={i} className="gallery-slide">
+                      <img src={url} alt="Gallery item" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
-          <div className="flex justify-between items-end mb-6">
-            <div>
-              <h2 className="font-headline-md text-headline-md text-on-surface mb-1">Trending Near You</h2>
-              <p className="font-body-sm text-on-surface-variant opacity-80">Most loved dishes in your area</p>
-            </div>
-            <Link href="/search?trending=true" className="font-label-sm text-primary font-bold hover:underline">
-              See all
-            </Link>
-          </div>
-          <div className="flex overflow-x-auto hide-scrollbar gap-4 pb-6 pt-2 w-[100vw] relative left-1/2 -translate-x-1/2 px-margin-mobile md:w-auto md:left-auto md:translate-x-0 md:px-0">
-            {loading ? (
-              Array(4).fill(0).map((_, i) => (
-                <div key={i} className="flex-shrink-0 w-44 sm:w-52">
-                  <div className="h-56 sm:h-64 w-full rounded-2xl bg-surface-variant animate-pulse"></div>
-                </div>
-              ))
-            ) : trendingDishes.map((dish, index) => (
-              <Link
-                key={dish._id || index}
-                href={dish.restaurant ? `/${dish.restaurant.city || 'kanpur'}/${dish.restaurant.slug}` : '/search?trending=true'}
-                className="flex-shrink-0 w-44 sm:w-52 group block relative rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-outline-variant/20 h-56 sm:h-64"
-              >
-                <img
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  alt={dish.name}
-                  src={dish.image || '/placeholder-food.jpg'}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                
-                <div className="absolute top-3 left-3">
-                  {index < 2 && (
-                    <span className="px-2 py-1 bg-primary text-white rounded text-[10px] font-bold uppercase tracking-wider shadow-sm">
-                      Top Pick
-                    </span>
-                  )}
-                </div>
-                
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <h4 className="font-bold text-[16px] sm:text-lg text-white mb-1 leading-tight line-clamp-2">{dish.name}</h4>
-                  <p className="text-xs sm:text-sm text-white/80 font-medium flex items-center gap-1 truncate">
-                    <MaterialIcon name="restaurant_menu" className="text-[14px]" />
-                    {dish.restaurant?.name || "Kitchen Studio"}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* Premium Nearby Restaurants */}
-        <section className="mb-12">
-          <div className="flex justify-between items-end mb-6">
-            <h3 className="font-headline-md text-headline-md text-on-surface">Nearby Spots</h3>
-            <button
-              onClick={openMapExplore}
-              className="text-primary font-bold text-sm uppercase tracking-wider cursor-pointer border-none bg-transparent hover:underline flex items-center gap-1"
-            >
-              Map View
-            </button>
-          </div>
-          <div className="flex overflow-x-auto hide-scrollbar gap-5 pb-8 pt-2 w-[100vw] relative left-1/2 -translate-x-1/2 px-margin-mobile md:w-auto md:left-auto md:translate-x-0 md:px-0">
-            {loading ? (
-              Array(3).fill(0).map((_, i) => (
-                <div key={i} className="flex-shrink-0 w-[240px]">
-                  <div className="h-44 w-full rounded-2xl bg-surface-variant animate-pulse mb-3"></div>
-                  <div className="h-5 w-3/4 bg-surface-variant animate-pulse rounded mb-2"></div>
-                  <div className="h-4 w-1/2 bg-surface-variant animate-pulse rounded"></div>
-                </div>
-              ))
-            ) : (
-              <>
-                {nearbyRestaurants.map((restaurant) => (
-                  <Link
-                    key={restaurant._id}
-                    href={`/${restaurant.city}/${restaurant.slug}`}
-                    prefetch={true}
-                    className="flex-shrink-0 w-[240px] group block"
-                  >
-                    <div className="relative h-44 w-full rounded-2xl overflow-hidden shadow-sm border border-outline-variant/20 mb-3 transition-all duration-300 group-hover:shadow-md group-hover:border-primary/30">
-                      <img
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        alt={restaurant.name}
-                        src={restaurant.heroImage || restaurant.logoImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(restaurant.name)}&background=random&size=300`}
-                      />
-                      {/* Vibrant Rating Pill */}
-                      <div className="absolute top-3 right-3 bg-white shadow-sm px-2 py-1 rounded-full flex items-center gap-1 z-10">
-                        <MaterialIcon name="star" className="text-xs text-yellow-500 fill" />
-                        <span className="text-xs font-extrabold text-on-surface leading-none">{restaurant.rating || "4.5"}</span>
-                      </div>
-                    </div>
-                    <div className="px-1">
-                      <h4 className="font-headline-md text-[16px] font-bold text-on-surface group-hover:text-primary transition-colors truncate">
-                        {restaurant.name}
-                      </h4>
-                      <p className="text-on-surface-variant text-xs flex items-center gap-1 mt-1 font-medium truncate">
-                        <MaterialIcon name="storefront" className="text-[14px] text-primary/70" />
-                        {restaurant.cuisine?.split(", ")[0]} • <span className="text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded-md">{formatDistance(restaurant.distanceKm)}</span>
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-                <Link
-                  href="/restaurants"
-                  className="flex-shrink-0 w-[240px] group block h-auto min-h-[220px] rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary bg-primary/5 hover:bg-primary/10 transition-all flex flex-col items-center justify-center gap-3 shadow-sm"
-                >
-                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-primary transition-all duration-300 text-primary group-hover:text-white">
-                    <MaterialIcon name="arrow_forward" className="text-xl" />
-                  </div>
-                  <h4 className="font-headline-md text-[16px] font-bold text-primary">View All</h4>
-                </Link>
-              </>
-            )}
-          </div>
-        </section>
-
-        {/* Professional Recommended Dishes */}
-        <section className="mb-12">
-          <h3 className="font-headline-md text-headline-md text-on-surface mb-6">Recommended</h3>
-          <div className="space-y-4">
-            {loading ? (
-              Array(4).fill(0).map((_, i) => (
-                <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-outline-variant/20">
-                  <div className="w-24 h-24 rounded-xl bg-surface-variant animate-pulse flex-shrink-0"></div>
-                  <div className="flex flex-col justify-between py-1 flex-1">
-                    <div>
-                      <div className="h-5 w-3/4 bg-surface-variant animate-pulse rounded mb-2"></div>
-                      <div className="h-3 w-1/2 bg-surface-variant animate-pulse rounded"></div>
-                    </div>
-                    <div className="h-5 w-1/4 bg-surface-variant animate-pulse rounded mt-2"></div>
-                  </div>
-                </div>
-              ))
-            ) : recommendedDishes.map((dish) => (
-              <Link
-                key={dish._id}
-                href={dish.restaurant ? `/${dish.restaurant.city || 'kanpur'}/${dish.restaurant.slug}` : '/search'}
-                className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-outline-variant/20 hover:shadow-md transition-shadow duration-300 group"
-              >
-                <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
-                  <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={dish.name} src={dish.image || '/placeholder-food.jpg'} />
-                  {/* Veg/Non-Veg Indicator embedded in image */}
-                  <div className="absolute top-1.5 left-1.5 bg-white/90 backdrop-blur-sm p-0.5 rounded shadow-sm">
-                    <div className={`w-2.5 h-2.5 border flex items-center justify-center ${dish.veg ? 'border-green-600' : 'border-red-600'}`}>
-                      <div className={`w-1 h-1 rounded-full ${dish.veg ? 'bg-green-600' : 'bg-red-600'}`}></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col justify-between py-0.5 flex-1 min-w-0">
-                  <div>
-                    <h4 className="font-bold text-[16px] text-on-surface group-hover:text-primary transition-colors truncate">{dish.name}</h4>
-                    <p className="text-xs text-on-surface-variant mt-0.5 font-medium truncate">
-                      {dish.restaurant?.name || "Kitchen Studio"}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="font-bold text-[15px] text-on-surface">₹{dish.price}</span>
-                    <span className="text-primary font-bold text-sm hover:underline flex items-center gap-1">
-                      View <MaterialIcon name="arrow_forward" className="text-[16px]" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      </main>
+        </div>
+      </div>
 
       {/* Floating Map Button */}
-      <button
-        onClick={openMapExplore}
-        className="fixed bottom-8 right-6 z-40 bg-primary text-white flex items-center gap-2 px-6 py-3 rounded-full shadow-lg hover:shadow-primary/30 transition-all hover:scale-105 active:scale-95 group cursor-pointer border-none"
-      >
-        <MaterialIcon name="map" className="fill text-white" />
-        <span className="font-label-sm text-label-sm">Explore Map</span>
-      </button>
+      <div className="map-fab-wrap">
+        <div className="map-ping" />
+        <div className="map-fab" onClick={openMapExplore}>
+          <div className="core"><Map size={16} strokeWidth={2.4} color="#000000" /></div>
+        </div>
+      </div>
+
+      {mapOpen && (
+        <div className="map-panel" onClick={() => setMapOpen(false)}>
+          <div className="map-panel-card" onClick={(e) => e.stopPropagation()}>
+            <button className="map-panel-close" onClick={() => setMapOpen(false)}><X size={16} /></button>
+            <MapPin size={30} color="#FF6B35" />
+            <h3>Map view</h3>
+            <p>This is where the live map opens — every nearby restaurant, plotted and ready to explore.</p>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
-      <footer className="bg-surface-container-low text-on-surface py-12 px-margin-mobile md:px-margin-desktop mt-20 border-t border-outline-variant/20">
+      <footer className="bg-surface-container-low text-on-surface py-12 px-margin-mobile md:px-margin-desktop border-t border-outline-variant/20 relative z-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <h2 className="font-display-sm text-primary font-bold mb-4 flex items-center gap-2">
