@@ -114,7 +114,7 @@ export default function HomePage() {
         const safeFetch = (promise, fallback) => promise.catch(e => { console.error(e); return fallback; });
         
         const [restaurantsList, dishesRes, recRes, fallbackRes, ultimateFallbackRes] = await Promise.all([
-          safeFetch(listNearbyRestaurants(locationFilters), []),
+          listNearbyRestaurants(locationFilters), // Let this throw if backend is down!
           safeFetch(findDishResults(TRENDING_KEYWORDS, { ...locationFilters, limit: 10 }), { data: [] }),
           safeFetch(findDishResults("", { ...locationFilters, limit: 20 }), { data: [] }),
           safeFetch(findDishResults(TRENDING_KEYWORDS, { limit: 10 }), { data: [] }),
@@ -130,12 +130,20 @@ export default function HomePage() {
           return arr;
         };
         
-        const broadRestaurants = restaurantsList.length ? restaurantsList : await safeFetch(listNearbyRestaurants({}), []);
+        let parsedRestaurants = restaurantsList?.data || restaurantsList;
+        let broadRestaurants = (Array.isArray(parsedRestaurants) && parsedRestaurants.length) ? parsedRestaurants : [];
+        if (!broadRestaurants.length) {
+          const fb = await safeFetch(listNearbyRestaurants({}), []);
+          const parsedFb = fb?.data || fb;
+          if (Array.isArray(parsedFb)) broadRestaurants = parsedFb;
+        }
         
-        let dishes = dishesRes.data || [];
+        const extractData = (res) => (Array.isArray(res) ? res : res?.data || []);
+        
+        let dishes = extractData(dishesRes);
         
         if (dishes.length < 3) {
-          const fallbackDishes = fallbackRes.data || [];
+          const fallbackDishes = extractData(fallbackRes);
           const seen = new Set(dishes.map(d => String(d._id || d.id)));
           for (const d of fallbackDishes) {
             if (!seen.has(String(d._id || d.id))) {
@@ -146,7 +154,7 @@ export default function HomePage() {
         }
         
         if (dishes.length < 3) {
-          const ultimateFallbackDishes = ultimateFallbackRes.data || [];
+          const ultimateFallbackDishes = extractData(ultimateFallbackRes);
           const seen = new Set(dishes.map(d => String(d._id || d.id)));
           for (const d of ultimateFallbackDishes) {
             if (!seen.has(String(d._id || d.id))) {
@@ -159,7 +167,9 @@ export default function HomePage() {
         dishes = shuffleArray(dishes);
         const finalTrending = dishes.slice(0, 3);
         
-        const rawRecDishes = shuffleArray((recRes.data?.length ? recRes.data : ultimateFallbackRes.data) || []);
+        const recData = extractData(recRes);
+        const ultData = extractData(ultimateFallbackRes);
+        const rawRecDishes = shuffleArray(recData.length ? recData : ultData);
         const finalRecDishes = [];
         const seenRecRestros = new Set();
         
@@ -225,6 +235,12 @@ export default function HomePage() {
 
         await fallbackProcessDishes([...finalTrending, ...finalRecDishes]);
 
+        console.log("Setting home data:", {
+          nearbyRestaurants: broadRestaurants,
+          trendingDishes: finalTrending,
+          recommendedDishes: finalRecDishes
+        });
+
         setHomeData({
           nearbyRestaurants: broadRestaurants,
           trendingDishes: finalTrending,
@@ -256,8 +272,9 @@ export default function HomePage() {
           }
           setGalleryPhotos(allPhotos);
         } catch(e) { console.error("Gallery fetch error:", e); }
-      } catch {
-        setLoadError("Food discovery is temporarily unavailable. Please try again in a moment.");
+      } catch (e) {
+        console.error("PAGE LOAD ERROR IN LOADDATA:", e);
+        setLoadError("Food discovery is temporarily unavailable. Please try again in a moment. Error: " + e.message);
       }
     }
     
@@ -736,89 +753,119 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Nearby restaurants (Replaced with Real Data) */}
-          <div className="section">
-            <div className="section-head">
-              <div>
-                <h2>Nearby Restaurants</h2>
-                <div className="sub">Within walking distance, ready to serve</div>
+          {loadError ? (
+            <div className="flex flex-col items-center justify-center py-20 px-4 text-center w-full">
+              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4">
+                <MaterialIcon name="error_outline" className="text-3xl" />
               </div>
-              <Link href="/restaurants" className="see-all">See all <ChevronRight size={14} /></Link>
+              <h3 className="text-xl font-bold mb-2">Oops! Something went wrong</h3>
+              <p className="text-gray-500 max-w-md">{loadError}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="mt-6 px-6 py-2.5 bg-black text-white font-bold rounded-full hover:bg-gray-800 transition-opacity"
+              >
+                Try Again
+              </button>
             </div>
-            <ScrollRow id="nearby">
-              {loading ? (
-                Array(4).fill(0).map((_, i) => (
-                  <div key={i} className="flex-shrink-0 w-[268px] h-[260px] bg-black/5 rounded-2xl animate-pulse"></div>
-                ))
-              ) : nearbyRestaurants.map((r) => (
-                <Link href={`/${r.city || 'kanpur'}/${r.slug}`} className="r-card" key={r._id || r.id || r.name}>
-                  <div className="r-img-wrap">
-                    <img src={r.heroImage || r.logoImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.name)}&background=random&size=300`} alt={r.name} />
-                    <div className="r-rating"><Star size={11} fill="#FF6B35" color="#FF6B35" /> {r.rating || '4.5'}</div>
+          ) : (
+            <>
+              {/* Nearby restaurants */}
+              <div className="section">
+                <div className="section-head">
+                  <div>
+                    <h2>Nearby Restaurants</h2>
+                    <div className="sub">Within walking distance, ready to serve</div>
                   </div>
-                  <div className="r-body">
-                    <h3>{r.name}</h3>
-                    <div className="r-meta">{r.cuisine?.split(', ')[0] || 'Restaurant'}</div>
-                    <div className="r-foot">
-                      <span className="pill"><MapPin size={12} /> {formatDistance(r.distanceKm)}</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </ScrollRow>
-          </div>
-
-          {/* Trending dishes (Replaced with Real Data) */}
-          <div className="section">
-            <div className="section-head">
-              <div>
-                <h2>Trending Near You</h2>
-                <div className="sub">The dishes everyone's ordering right now</div>
-              </div>
-              <Link href="/search?trending=true" className="see-all">See all <ChevronRight size={14} /></Link>
-            </div>
-            <ScrollRow id="trending">
-              {loading ? (
-                Array(4).fill(0).map((_, i) => (
-                  <div key={i} className="flex-shrink-0 w-[220px] h-[240px] bg-black/5 rounded-2xl animate-pulse"></div>
-                ))
-              ) : trendingDishes.map((d, index) => (
-                <Link href={d.restaurant ? `/${d.restaurant.city || 'kanpur'}/${d.restaurant.slug}` : '/search'} className="d-card" key={d._id || index}>
-                  <div className="d-img"><img src={d.image || '/placeholder-food.jpg'} alt={d.name} /></div>
-                  <div className="d-body">
-                    <h4>{d.name}</h4>
-                    <div className="rest">{d.restaurant?.name || 'Kitchen Studio'}</div>
-                    <div className="d-foot">
-                      <span className="d-price">₹{d.price}</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </ScrollRow>
-          </div>
-
-
-
-          {/* Gallery Slider */}
-          {galleryPhotos.length > 0 && (
-            <div className="section mb-20">
-              <div className="section-head">
-                <div>
-                  <h2>Food Gallery</h2>
-                  <div className="sub">Delicious moments from nearby restaurants</div>
+                  <Link href="/restaurants" className="see-all">See all <ChevronRight size={14} /></Link>
                 </div>
-              </div>
-              <div className="gallery-slider-wrap">
-                <div className="gallery-slider">
-                  {[...galleryPhotos, ...galleryPhotos].map((url, i) => (
-                    <div key={i} className="gallery-slide">
-                      <img src={url} alt="Gallery item" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                <ScrollRow id="nearby">
+                  {loading ? (
+                    Array(4).fill(0).map((_, i) => (
+                      <div key={i} className="flex-shrink-0 w-[268px] h-[260px] bg-black/5 rounded-2xl animate-pulse"></div>
+                    ))
+                  ) : nearbyRestaurants.length > 0 ? (
+                    nearbyRestaurants.map((r) => (
+                      <Link href={`/${r.city || 'kanpur'}/${r.slug}`} className="r-card" key={r._id || r.id || r.name}>
+                        <div className="r-img-wrap">
+                          <img src={r.heroImage || r.logoImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.name)}&background=random&size=300`} alt={r.name} />
+                          <div className="r-rating"><Star size={11} fill="#FF6B35" color="#FF6B35" /> {r.rating || '4.5'}</div>
+                        </div>
+                        <div className="r-body">
+                          <h3>{r.name}</h3>
+                          <div className="r-meta">{r.cuisine?.split(', ')[0] || 'Restaurant'}</div>
+                          <div className="r-foot">
+                            <span className="pill"><MapPin size={12} /> {formatDistance(r.distanceKm)}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="w-full py-10 flex flex-col items-center justify-center text-gray-400">
+                      <MaterialIcon name="restaurant_menu" className="text-4xl mb-2 opacity-50" />
+                      <p>No restaurants found nearby.</p>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </ScrollRow>
               </div>
-            </div>
+
+              {/* Trending dishes */}
+              <div className="section">
+                <div className="section-head">
+                  <div>
+                    <h2>Trending Near You</h2>
+                    <div className="sub">The dishes everyone's ordering right now</div>
+                  </div>
+                  <Link href="/search?trending=true" className="see-all">See all <ChevronRight size={14} /></Link>
+                </div>
+                <ScrollRow id="trending">
+                  {loading ? (
+                    Array(4).fill(0).map((_, i) => (
+                      <div key={i} className="flex-shrink-0 w-[220px] h-[240px] bg-black/5 rounded-2xl animate-pulse"></div>
+                    ))
+                  ) : trendingDishes.length > 0 ? (
+                    trendingDishes.map((d, index) => (
+                      <Link href={d.restaurant ? `/${d.restaurant.city || 'kanpur'}/${d.restaurant.slug}` : '/search'} className="d-card" key={d._id || index}>
+                        <div className="d-img"><img src={d.image || '/placeholder-food.jpg'} alt={d.name} /></div>
+                        <div className="d-body">
+                          <h4>{d.name}</h4>
+                          <div className="rest">{d.restaurant?.name || 'Kitchen Studio'}</div>
+                          <div className="d-foot">
+                            <span className="d-price">₹{d.price}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="w-full py-10 flex flex-col items-center justify-center text-gray-400">
+                      <MaterialIcon name="local_dining" className="text-4xl mb-2 opacity-50" />
+                      <p>No trending dishes found.</p>
+                    </div>
+                  )}
+                </ScrollRow>
+              </div>
+
+              {/* Gallery Slider */}
+              {galleryPhotos.length > 0 && (
+                <div className="section mb-20">
+                  <div className="section-head">
+                    <div>
+                      <h2>Food Gallery</h2>
+                      <div className="sub">Delicious moments from nearby restaurants</div>
+                    </div>
+                  </div>
+                  <div className="gallery-slider-wrap">
+                    <div className="gallery-slider">
+                      {[...galleryPhotos, ...galleryPhotos].map((url, i) => (
+                        <div key={i} className="gallery-slide">
+                          <img src={url} alt="Gallery item" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
