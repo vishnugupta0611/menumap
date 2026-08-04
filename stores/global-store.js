@@ -3,15 +3,22 @@ import { create } from 'zustand';
 export const useGlobalStore = create((set) => ({
   // --- Homepage State ---
   homeDataLoaded: false,
+  galleryLoaded: false,
   nearbyRestaurants: [],
   trendingDishes: [],
   recommendedDishes: [],
+  galleryPhotos: [],
   
   setHomeData: (data) => set({
     nearbyRestaurants: data.nearbyRestaurants,
     trendingDishes: data.trendingDishes,
     recommendedDishes: data.recommendedDishes,
     homeDataLoaded: true,
+  }),
+  
+  setGalleryData: (photos) => set({
+    galleryPhotos: photos,
+    galleryLoaded: true,
   }),
   
   // --- Search Page State ---

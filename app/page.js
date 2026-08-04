@@ -80,13 +80,13 @@ export default function HomePage() {
   const [lastScrollY, setLastScrollY] = useState(0);
 
   const {
-    homeDataLoaded, nearbyRestaurants, trendingDishes, recommendedDishes, setHomeData
+    homeDataLoaded, nearbyRestaurants, trendingDishes, recommendedDishes, setHomeData,
+    galleryLoaded, galleryPhotos, setGalleryData
   } = useGlobalStore();
 
   const [loadError, setLoadError] = useState("");
   const [userLocation, setUserLocation] = useState(null);
   const [locationDenied, setLocationDenied] = useState(false);
-  const [galleryPhotos, setGalleryPhotos] = useState([]);
   const loading = !homeDataLoaded && !loadError;
 
   const formatDistance = (distKm) => {
@@ -281,7 +281,7 @@ export default function HomePage() {
                { url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80", restaurantName: "Sample Restro", city: "kanpur", slug: "sample" }
              ];
           }
-          setGalleryPhotos(allPhotos);
+          setGalleryData(allPhotos);
         } catch(e) { console.error("Gallery fetch error:", e); }
       } catch (e) {
         console.error("PAGE LOAD ERROR IN LOADDATA:", e);
@@ -846,15 +846,21 @@ export default function HomePage() {
               </div>
 
               {/* Gallery Slider */}
-              {galleryPhotos.length > 0 && (
-                <div className="section mb-6">
-                  <div className="section-head">
-                    <div>
-                      <h2>Food Gallery</h2>
-                      <div className="sub">Delicious moments from nearby restaurants</div>
-                    </div>
+              <div className="section mb-6">
+                <div className="section-head">
+                  <div>
+                    <h2>Food Gallery</h2>
+                    <div className="sub">Delicious moments from nearby restaurants</div>
                   </div>
-                  <div className="gallery-slider-wrap">
+                </div>
+                <div className="gallery-slider-wrap">
+                  {!galleryLoaded ? (
+                    <div className="flex gap-4 overflow-hidden px-2">
+                      {Array(5).fill(0).map((_, i) => (
+                        <div key={i} className="flex-shrink-0 w-[260px] h-[180px] bg-black/5 rounded-2xl animate-pulse"></div>
+                      ))}
+                    </div>
+                  ) : galleryPhotos.length > 0 ? (
                     <div className="gallery-slider">
                       {[...galleryPhotos, ...galleryPhotos].map((photo, i) => (
                         <Link href={`/${photo.city}/${photo.slug}`} key={i} className="gallery-slide block group">
@@ -869,9 +875,9 @@ export default function HomePage() {
                         </Link>
                       ))}
                     </div>
-                  </div>
+                  ) : null}
                 </div>
-              )}
+              </div>
             </>
           )}
         </div>
