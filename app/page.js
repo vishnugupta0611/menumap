@@ -346,21 +346,11 @@ export default function HomePage() {
     e.preventDefault();
     if (!query.trim()) return;
 
-    if (mode === 'restaurant' && nearbyRestaurants && nearbyRestaurants.length > 0) {
-      const fuse = new Fuse(nearbyRestaurants, {
-        keys: ['name', 'cuisine', 'tags', 'city'],
-        threshold: 0.4,
-        ignoreLocation: true
-      });
-      const results = fuse.search(query.trim());
-      if (results.length > 0) {
-        const topMatch = results[0].item;
-        router.push(`/${topMatch.city || 'kanpur'}/${topMatch.slug}`);
-        return;
-      }
+    if (mode === 'restaurant') {
+      router.push(`/restaurants?q=${encodeURIComponent(query.trim())}`);
+    } else {
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
     }
-
-    router.push(`/search?q=${encodeURIComponent(query.trim())}`);
   };
 
   const openMapExplore = () => {
