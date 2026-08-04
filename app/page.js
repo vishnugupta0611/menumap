@@ -846,7 +846,7 @@ export default function HomePage() {
 
               {/* Gallery Slider */}
               {galleryPhotos.length > 0 && (
-                <div className="section mb-20">
+                <div className="section mb-6">
                   <div className="section-head">
                     <div>
                       <h2>Food Gallery</h2>
