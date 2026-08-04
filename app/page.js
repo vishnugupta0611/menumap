@@ -23,7 +23,7 @@ import {
   ArrowUpRight,
   X,
   MapPinOff,
-  Map,
+  Map as MapIcon,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ *
@@ -874,7 +874,7 @@ export default function HomePage() {
       <div className="map-fab-wrap">
         <div className="map-ping" />
         <div className="map-fab" onClick={openMapExplore}>
-          <div className="core"><Map size={16} strokeWidth={2.4} color="#000000" /></div>
+          <div className="core"><MapIcon size={16} strokeWidth={2.4} color="#000000" /></div>
         </div>
       </div>
 
