@@ -254,20 +254,31 @@ export default function HomePage() {
           
           let allPhotos = [];
           galleries.forEach((g, idx) => {
+            const restro = shuffledRestros[idx];
             if (g && g.length > 0) {
-              allPhotos.push(...g.map(img => img.url).filter(Boolean));
-            } else if (shuffledRestros[idx]?.image) {
-              allPhotos.push(shuffledRestros[idx].image);
+              allPhotos.push(...g.map(img => img.url).filter(Boolean).map(url => ({
+                url,
+                restaurantName: restro.name,
+                city: restro.city || 'kanpur',
+                slug: restro.slug
+              })));
+            } else if (restro?.image) {
+              allPhotos.push({
+                url: restro.image,
+                restaurantName: restro.name,
+                city: restro.city || 'kanpur',
+                slug: restro.slug
+              });
             }
           });
           
-          allPhotos = shuffleArray(allPhotos).filter(url => url && !url.includes('placeholder')).slice(0, 15);
+          allPhotos = shuffleArray(allPhotos).filter(photo => photo && photo.url && !photo.url.includes('placeholder')).slice(0, 15);
           if (allPhotos.length === 0) {
              allPhotos = [
-               "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80",
-               "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80",
-               "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80",
-               "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80"
+               { url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80", restaurantName: "Sample Restaurant", city: "kanpur", slug: "sample" },
+               { url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80", restaurantName: "Sample Cafe", city: "kanpur", slug: "sample" },
+               { url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80", restaurantName: "Sample Eatery", city: "kanpur", slug: "sample" },
+               { url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80", restaurantName: "Sample Restro", city: "kanpur", slug: "sample" }
              ];
           }
           setGalleryPhotos(allPhotos);
@@ -855,11 +866,17 @@ export default function HomePage() {
                   </div>
                   <div className="gallery-slider-wrap">
                     <div className="gallery-slider">
-                      {[...galleryPhotos, ...galleryPhotos].map((url, i) => (
-                        <div key={i} className="gallery-slide">
-                          <img src={url} alt="Gallery item" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-                        </div>
+                      {[...galleryPhotos, ...galleryPhotos].map((photo, i) => (
+                        <Link href={`/${photo.city}/${photo.slug}`} key={i} className="gallery-slide block group">
+                          <img src={photo.url} alt={photo.restaurantName} />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none opacity-90 transition-opacity group-hover:opacity-100" />
+                          <div className="absolute bottom-3 left-3 right-3 text-white flex items-center justify-between">
+                            <div className="font-bold text-[14px] truncate drop-shadow-md">{photo.restaurantName}</div>
+                            <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">
+                              <ChevronRight size={14} className="text-white" />
+                            </div>
+                          </div>
+                        </Link>
                       ))}
                     </div>
                   </div>
